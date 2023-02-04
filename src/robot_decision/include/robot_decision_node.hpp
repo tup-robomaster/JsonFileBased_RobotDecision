@@ -19,6 +19,6 @@ namespace robotdecision
         ~RobotDecisionNode();
 
     public:
-        void process_once();
+        void process_once(int _HP,int mode, float _x, float _y, int time, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions);
     };
 }

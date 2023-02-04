@@ -205,4 +205,28 @@ namespace robotdecision
         }
         return decision;
     }
+
+    WayPoint RobotDecision::getWayPointByID(int id)
+    {
+        for (auto &it : this->wayPointMap)
+        {
+            if (it.id == id)
+            {
+                return it;
+            }
+            
+        }
+    }
+
+    Decision RobotDecision::getDecisionByID(int id)
+    {
+        for (auto &it : this->decisions)
+        {
+            if (it.id == id)
+            {
+                return it;
+            }
+            
+        }
+    }
 }

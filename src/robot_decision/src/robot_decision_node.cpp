@@ -21,9 +21,16 @@ namespace robotdecision
     {
     }
 
-    void RobotDecisionNode::process_once()
+    void RobotDecisionNode::process_once(int _HP, int mode, float _x, float _y, int time, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions)
     {
-        // this->myRD->checkNowWayPoint();
+        int myWayPointID = this->myRD->checkNowWayPoint(_x, _y);
+        Decision myDecision = this->myRD->decide(myWayPointID, mode, _HP, time, friendPositions, enemyPositions);
+        DecisionMsg msg;
+        msg.set__mode(myDecision.decide_mode);
+        WayPoint aimWayPoint = this->myRD->getWayPointByID(myDecision.decide_wayPoint);
+        msg.set__x(aimWayPoint.x);
+        msg.set__y(aimWayPoint.y);
+        this->_decision_pub->publish(msg);
     }
 
 }
