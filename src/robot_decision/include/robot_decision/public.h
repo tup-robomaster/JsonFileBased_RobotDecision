@@ -17,5 +17,3 @@
 #include <message_filters/time_synchronizer.h>
 
 #include "./configs.h"
-
-using namespace std;

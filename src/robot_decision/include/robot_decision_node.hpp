@@ -2,7 +2,7 @@
 
 #include "robot_interface/msg/decision.hpp"
 
-namespace robotdecisionsystem
+namespace rdsys
 {
     class RobotDecisionNode : public rclcpp::Node
     {

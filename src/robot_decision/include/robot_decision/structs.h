@@ -3,7 +3,7 @@
 
 #include "./public.h"
 
-namespace robotdecisionsystem
+namespace rdsys
 {
     typedef struct RobotPosition
     {

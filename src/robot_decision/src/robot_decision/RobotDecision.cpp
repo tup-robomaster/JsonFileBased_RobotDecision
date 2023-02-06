@@ -1,7 +1,7 @@
 #include "../../include/robot_decision/RobotDecision.h"
 #include "../../include/Json/json.h"
 
-namespace robotdecisionsystem
+namespace rdsys
 {
     int RobotDecisionSys::calculatePosition(RobotPosition &pos)
     {

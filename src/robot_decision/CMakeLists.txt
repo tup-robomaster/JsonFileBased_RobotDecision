@@ -40,12 +40,13 @@ ament_target_dependencies(
 
 add_executable(${PROJECT_NAME}_node
 src/${PROJECT_NAME}_node.cpp
+src/robot_decision/RobotDecision.cpp
 src/Json/jsoncpp.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_node 
   ${PROJECT_NAME}
-  # ${dependencies}
+  ${dependencies}
 )
 
 rclcpp_components_register_nodes(${PROJECT_NAME} 

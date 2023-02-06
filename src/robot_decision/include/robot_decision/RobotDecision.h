@@ -3,7 +3,7 @@
 
 #include "./structs.h"
 
-namespace robotdecisionsystem
+namespace rdsys
 {
     class RobotDecisionSys
     {

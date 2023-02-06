@@ -1,10 +1,10 @@
 #include "../include/robot_decision_node.hpp"
 
 using namespace std::placeholders;
-namespace robotdecisionsystem
+namespace rdsys
 {
     RobotDecisionNode::RobotDecisionNode(const rclcpp::NodeOptions &options)
-        : Node("robot_decision", options)
+        : rclcpp::Node("robot_decision", options)
     {
         RCLCPP_WARN(this->get_logger(), "RobotDecision node...");
 
@@ -49,10 +49,10 @@ namespace robotdecisionsystem
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<robotdecisionsystem::RobotDecisionNode>());
+    rclcpp::spin(std::make_shared<rdsys::RobotDecisionNode>());
     rclcpp::shutdown();
     return 0;
 }
 
 #include "rclcpp_components/register_node_macro.hpp"
-RCLCPP_COMPONENTS_REGISTER_NODE(robotdecisionsystem::RobotDecisionNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(rdsys::RobotDecisionNode)
