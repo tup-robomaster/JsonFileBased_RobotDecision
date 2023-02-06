@@ -3,31 +3,32 @@
 
 #include "./structs.h"
 
-namespace robotdecision
+namespace robotdecisionsystem
 {
-    class RobotDecision
+    class RobotDecisionSys
     {
     private:
         std::vector<WayPoint> wayPointMap;
-        std::vector<Decision> decisions;
+        std::vector<std::vector<int>> connectionList;
+        std::vector<Decision *> decisions;
 
     private:
         int calculatePosition(RobotPosition &pos);
-        std::vector<WayPoint> calculatePath(int startWapPointID, int endWapPointID);
+        std::vector<WayPoint *> calculatePath(int startWapPointID, int endWapPointID);
 
     public:
-        RobotDecision();
-        ~RobotDecision();
+        RobotDecisionSys();
+        ~RobotDecisionSys();
 
         bool decodeWayPoints(char *filePath);
         bool decodeDecisions(char *filePath);
-        
+
         int checkNowWayPoint(float x, float y);
         int checkNowWayPoint(RobotPosition pos);
-        Decision decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions);
+        Decision *decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions);
 
         WayPoint getWayPointByID(int id);
-        Decision getDecisionByID(int id);
+        Decision *getDecisionByID(int id);
     };
 }
 #endif

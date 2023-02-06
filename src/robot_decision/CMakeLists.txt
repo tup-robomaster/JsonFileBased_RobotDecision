@@ -49,7 +49,7 @@ target_link_libraries(${PROJECT_NAME}_node
 )
 
 rclcpp_components_register_nodes(${PROJECT_NAME} 
-  PLUGIN "robotdecision::decision_process"
+  PLUGIN "robotdecisionsystem::decision_process"
   EXECUTABLE ${PROJECT_NAME}_node  
 )
 

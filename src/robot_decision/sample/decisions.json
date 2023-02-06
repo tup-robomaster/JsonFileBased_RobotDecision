@@ -1,0 +1,20 @@
+{
+    "data" : [
+        {
+            "id" : 0,
+            "name" : "test",
+            "wayPointID" : 0,
+            "weight" : 1000,
+            "start_time" : 0,
+            "end_time" : 1000,
+            "robot_mode" : 0,
+            "minHP" : 100,
+            "maxHP" : 500,
+            "decide_mode" : 0,
+            "decide_wayPoint" : 1,
+            "if_succession" : false,
+            "enemyPosition" : [[-1],[-1],[-1],[-1],[-1]],
+            "friendPosition" : [[-1],[-1],[-1],[-1],[-1]]
+        }
+    ]
+}

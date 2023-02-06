@@ -2,7 +2,7 @@
 
 #include "robot_interface/msg/decision.hpp"
 
-namespace robotdecision
+namespace robotdecisionsystem
 {
     class RobotDecisionNode : public rclcpp::Node
     {
@@ -12,13 +12,14 @@ namespace robotdecision
         // message_filters::Subscriber
         rclcpp::Publisher<DecisionMsg>::SharedPtr _decision_pub;
 
-        std::unique_ptr<RobotDecision> myRD;
+        std::unique_ptr<RobotDecisionSys> myRD;
 
     public:
         RobotDecisionNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
         ~RobotDecisionNode();
 
     public:
-        void process_once(int _HP,int mode, float _x, float _y, int time, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions);
+        void init(char *waypointsPath, char *decisionsPath);
+        void process_once(int _HP, int mode, float _x, float _y, int time, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions);
     };
 }

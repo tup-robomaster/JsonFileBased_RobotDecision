@@ -3,7 +3,7 @@
 
 #include "./public.h"
 
-namespace robotdecision
+namespace robotdecisionsystem
 {
     typedef struct RobotPosition
     {
@@ -22,11 +22,9 @@ namespace robotdecision
     typedef struct WayPoint
     {
         int id;
-        const char *name;
         int type;
         float x;
         float y;
-        std::vector<int> connect;
     } WayPoint;
 
     typedef struct Decision
