@@ -41,7 +41,7 @@ namespace rdsys
         Json::Value arrayValue = jsonValue["data"];
         std::vector<WayPoint> tempwayPointMap;
         std::vector<std::vector<int>> tempconnectionList;
-        for (int i(0); i < int(arrayValue.size()); ++i)
+        for (int i = 0; i < int(arrayValue.size()); ++i)
         {
             WayPoint *wayPoint;
             std::vector<int> connect;
@@ -97,7 +97,7 @@ namespace rdsys
             for (int j = 0; j < int(enemyPositionArray.size()); ++j)
             {
                 std::vector<int> temp;
-                for (int k(0); k < int(enemyPositionArray[j].size()); ++k)
+                for (int k = 0; k < int(enemyPositionArray[j].size()); ++k)
                 {
                     temp.emplace_back(enemyPositionArray[j][k].asInt());
                 }
@@ -107,7 +107,7 @@ namespace rdsys
             for (int j = 0; j < int(friendPositionArray.size()); ++j)
             {
                 std::vector<int> temp;
-                for (int k(0); k < int(friendPositionArray[j].size()); ++k)
+                for (int k = 0; k < int(friendPositionArray[j].size()); ++k)
                 {
                     temp.emplace_back(friendPositionArray[j][k].asInt());
                 }
@@ -167,7 +167,7 @@ namespace rdsys
                     continue;
                 int temp_pos;
                 temp_pos = id_pos_f[char(i + 1)];
-                for (int j(0); j < size; ++j)
+                for (int j = 0; j < size; ++j)
                 {
                     if (it->friend_position[i][j] == temp_pos || it->friend_position[i][j] == -1)
                     {
