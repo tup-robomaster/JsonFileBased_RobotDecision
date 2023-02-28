@@ -50,12 +50,12 @@ namespace rdsys
             wayPoint->x = arrayValue[i]["x"].asFloat();
             wayPoint->y = arrayValue[i]["y"].asFloat();
             Json::Value connectedPoints = arrayValue[i]["connect"];
-            for (int j(0); j < int(connectedPoints.size()); ++j)
+            for (int j = 0; j < int(connectedPoints.size()); ++j)
             {
                 connect.emplace_back(connectedPoints[j].asInt());
             }
             Json::Value enemyWeightsArray = arrayValue[i]["enemyWeights"];
-            for (int j(0); j < int(enemyWeightsArray.size()); ++j)
+            for (int j = 0; j < int(enemyWeightsArray.size()); ++j)
             {
                 wayPoint->enemyWeights[0] = enemyWeightsArray[j].asInt();
             }
@@ -78,7 +78,7 @@ namespace rdsys
             return false;
         }
         Json::Value arrayValue = jsonValue["data"];
-        for (int i(0); i < int(arrayValue.size()); ++i)
+        for (int i = 0; i < int(arrayValue.size()); ++i)
         {
             Decision *decision = new Decision();
             decision->id = arrayValue[i]["id"].asInt();
@@ -94,7 +94,7 @@ namespace rdsys
             decision->decide_wayPoint = arrayValue[i]["decide_wayPoint"].asInt();
             decision->if_succession = arrayValue[i]["if_succession"].asBool();
             Json::Value enemyPositionArray = arrayValue[i]["enemyPosition"];
-            for (int j(0); j < int(enemyPositionArray.size()); ++j)
+            for (int j = 0; j < int(enemyPositionArray.size()); ++j)
             {
                 std::vector<int> temp;
                 for (int k(0); k < int(enemyPositionArray[j].size()); ++k)
@@ -104,7 +104,7 @@ namespace rdsys
                 decision->enemy_position.emplace_back(temp);
             }
             Json::Value friendPositionArray = arrayValue[i]["friendPosition"];
-            for (int j(0); j < int(friendPositionArray.size()); ++j)
+            for (int j = 0; j < int(friendPositionArray.size()); ++j)
             {
                 std::vector<int> temp;
                 for (int k(0); k < int(friendPositionArray[j].size()); ++k)
@@ -158,7 +158,7 @@ namespace rdsys
             if (it->start_time != -1 && nowtime <= it->start_time)
                 continue;
             bool fpFLAG = false;
-            for (int i(0); i < int(it->friend_position.size()); ++i)
+            for (int i = 0; i < int(it->friend_position.size()); ++i)
             {
                 int size = it->friend_position[i].size();
                 if (size == 0)
@@ -179,7 +179,7 @@ namespace rdsys
                     break;
             }
             bool epFLAG = false;
-            for (int i(0); i < int(it->enemy_position.size()); ++i)
+            for (int i = 0; i < int(it->enemy_position.size()); ++i)
             {
                 int size = it->enemy_position[i].size();
                 if (size == 0)
@@ -188,7 +188,7 @@ namespace rdsys
                     continue;
                 int temp_pos;
                 temp_pos = id_pos_e[char(i + 1)];
-                for (int j(0); j < size; ++j)
+                for (int j = 0; j < size; ++j)
                 {
                     if (it->enemy_position[i][j] == temp_pos || it->enemy_position[i][j] == -1)
                         epFLAG = true;
@@ -256,18 +256,18 @@ namespace rdsys
         for (auto &it : detectedEnemy)
         {
             auto iter = myWayPoint->enemyWeights.find(it);
-            if(iter != myWayPoint->enemyWeights.end())
+            if (iter != myWayPoint->enemyWeights.end())
             {
-                if(iter->second > baseWeight)
+                if (iter->second > baseWeight)
                 {
                     selectId = iter->first;
                     baseWeight = iter->second;
                 }
-                if(iter->second == baseWeight)
+                if (iter->second == baseWeight)
                 {
                     auto iterA = distances.find(selectId);
                     auto iterB = distances.find(iter->first);
-                    if(iterA != distances.end() && iterB != distances.end() && iterB->second - iterA->second < 0)
+                    if (iterA != distances.end() && iterB != distances.end() && iterB->second - iterA->second < 0)
                     {
                         selectId = iter->first;
                         baseWeight = iter->second;
