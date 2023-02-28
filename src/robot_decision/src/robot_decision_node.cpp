@@ -38,9 +38,11 @@ namespace rdsys
         Decision* myDecision = this->myRD->decide(myWayPointID, mode, _HP, time, friendPositions, enemyPositions);
         DecisionMsg msg;
         msg.set__mode(myDecision->decide_mode);
-        WayPoint aimWayPoint = this->myRD->getWayPointByID(myDecision->decide_wayPoint);
-        msg.set__x(aimWayPoint.x);
-        msg.set__y(aimWayPoint.y);
+        WayPoint *aimWayPoint = this->myRD->getWayPointByID(myDecision->decide_wayPoint);
+        if(aimWayPoint == nullptr)
+            return;
+        msg.set__x(aimWayPoint->x);
+        msg.set__y(aimWayPoint->y);
         this->_decision_pub->publish(msg);
     }
 

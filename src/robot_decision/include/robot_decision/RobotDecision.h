@@ -8,7 +8,7 @@ namespace rdsys
     class RobotDecisionSys
     {
     private:
-        std::vector<WayPoint> wayPointMap;
+        std::vector<WayPoint *> wayPointMap;
         std::vector<std::vector<int>> connectionList;
         std::vector<Decision *> decisions;
 
@@ -25,10 +25,12 @@ namespace rdsys
 
         int checkNowWayPoint(float x, float y);
         int checkNowWayPoint(RobotPosition pos);
-        Decision *decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions);
+        Decision *decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
 
-        WayPoint getWayPointByID(int id);
+        WayPoint *getWayPointByID(int id);
         Decision *getDecisionByID(int id);
+
+        int decideAimTarget(RobotPosition &mypos, std::vector<RobotPosition> &enemyPositions, std::vector<int> &detectedEnemy, int &myWayPointID);
     };
 }
 #endif

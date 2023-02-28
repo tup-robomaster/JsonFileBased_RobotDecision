@@ -9,11 +9,11 @@ namespace rdsys
         int id = -1;
         for (auto it : this->wayPointMap)
         {
-            float tempDistance = std::sqrt((it.x - pos.x) * (it.x - pos.x) + (it.y - pos.y) * (it.y - pos.y));
+            float tempDistance = std::sqrt((it->x - pos.x) * (it->x - pos.x) + (it->y - pos.y) * (it->y - pos.y));
             if (tempDistance < distance)
             {
                 distance = tempDistance;
-                id = it.id;
+                id = it->id;
             }
         }
         return id;
@@ -43,16 +43,21 @@ namespace rdsys
         std::vector<std::vector<int>> tempconnectionList;
         for (int i(0); i < int(arrayValue.size()); ++i)
         {
-            WayPoint wayPoint;
+            WayPoint *wayPoint;
             std::vector<int> connect;
-            wayPoint.id = arrayValue[i]["id"].asInt();
-            wayPoint.type = arrayValue[i]["type"].asInt();
-            wayPoint.x = arrayValue[i]["x"].asFloat();
-            wayPoint.y = arrayValue[i]["y"].asFloat();
+            wayPoint->id = arrayValue[i]["id"].asInt();
+            wayPoint->type = arrayValue[i]["type"].asInt();
+            wayPoint->x = arrayValue[i]["x"].asFloat();
+            wayPoint->y = arrayValue[i]["y"].asFloat();
             Json::Value connectedPoints = arrayValue[i]["connect"];
             for (int j(0); j < int(connectedPoints.size()); ++j)
             {
                 connect.emplace_back(connectedPoints[j].asInt());
+            }
+            Json::Value enemyWeightsArray = arrayValue[i]["enemyWeights"];
+            for (int j(0); j < int(enemyWeightsArray.size()); ++j)
+            {
+                wayPoint->enemyWeights[0] = enemyWeightsArray[j].asInt();
             }
             this->wayPointMap.push_back(wayPoint);
             this->connectionList.push_back(connect);
@@ -89,22 +94,22 @@ namespace rdsys
             decision->decide_wayPoint = arrayValue[i]["decide_wayPoint"].asInt();
             decision->if_succession = arrayValue[i]["if_succession"].asBool();
             Json::Value enemyPositionArray = arrayValue[i]["enemyPosition"];
-            for (int j(1); j < int(enemyPositionArray.size()); ++j)
+            for (int j(0); j < int(enemyPositionArray.size()); ++j)
             {
                 std::vector<int> temp;
-                for (int k(0); k < int(enemyPositionArray[char(j)].size()); ++k)
+                for (int k(0); k < int(enemyPositionArray[j].size()); ++k)
                 {
-                    temp.emplace_back(enemyPositionArray[char(j)][k].asInt());
+                    temp.emplace_back(enemyPositionArray[j][k].asInt());
                 }
                 decision->enemy_position.emplace_back(temp);
             }
             Json::Value friendPositionArray = arrayValue[i]["friendPosition"];
-            for (int j(1); j < int(friendPositionArray.size()); ++j)
+            for (int j(0); j < int(friendPositionArray.size()); ++j)
             {
                 std::vector<int> temp;
-                for (int k(0); k < int(friendPositionArray[char(j)].size()); ++k)
+                for (int k(0); k < int(friendPositionArray[j].size()); ++k)
                 {
-                    temp.emplace_back(friendPositionArray[char(j)][k].asInt());
+                    temp.emplace_back(friendPositionArray[j][k].asInt());
                 }
                 decision->friend_position.emplace_back(temp);
             }
@@ -127,7 +132,7 @@ namespace rdsys
         return this->calculatePosition(pos);
     }
 
-    Decision *RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions)
+    Decision *RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
     {
         std::vector<Decision *> tempDecision;
         std::map<int, int> id_pos_f;
@@ -213,16 +218,16 @@ namespace rdsys
         return decision;
     }
 
-    WayPoint RobotDecisionSys::getWayPointByID(int id)
+    WayPoint *RobotDecisionSys::getWayPointByID(int id)
     {
         for (auto &it : this->wayPointMap)
         {
-            if (it.id == id)
+            if (it->id == id)
             {
                 return it;
             }
         }
-        return WayPoint();
+        return nullptr;
     }
 
     Decision *RobotDecisionSys::getDecisionByID(int id)
@@ -235,5 +240,41 @@ namespace rdsys
             }
         }
         return nullptr;
+    }
+
+    int RobotDecisionSys::decideAimTarget(RobotPosition &mypos, std::vector<RobotPosition> &enemyPositions, std::vector<int> &detectedEnemy, int &myWayPointID)
+    {
+        std::map<int, float> distances;
+        for (auto &it : enemyPositions)
+        {
+            float tempDistance = std::sqrt((it.x - mypos.x) * (it.x - mypos.x) + (it.y - mypos.y) * (it.y - mypos.y));
+            distances[it.robot_id] = tempDistance;
+        }
+        WayPoint *myWayPoint = this->getWayPointByID(myWayPointID);
+        int baseWeight = 0;
+        int selectId = -1;
+        for (auto &it : detectedEnemy)
+        {
+            auto iter = myWayPoint->enemyWeights.find(it);
+            if(iter != myWayPoint->enemyWeights.end())
+            {
+                if(iter->second > baseWeight)
+                {
+                    selectId = iter->first;
+                    baseWeight = iter->second;
+                }
+                if(iter->second == baseWeight)
+                {
+                    auto iterA = distances.find(selectId);
+                    auto iterB = distances.find(iter->first);
+                    if(iterA != distances.end() && iterB != distances.end() && iterB->second - iterA->second < 0)
+                    {
+                        selectId = iter->first;
+                        baseWeight = iter->second;
+                    }
+                }
+            }
+        }
+        return selectId;
     }
 }

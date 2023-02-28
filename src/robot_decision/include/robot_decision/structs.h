@@ -25,6 +25,7 @@ namespace rdsys
         int type;
         float x;
         float y;
+        std::map<int, int> enemyWeights;
     } WayPoint;
 
     typedef struct Decision
