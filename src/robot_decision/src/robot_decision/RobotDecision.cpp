@@ -263,7 +263,7 @@ namespace rdsys
                     selectId = iter->first;
                     baseWeight = iter->second;
                 }
-                if (iter->second == baseWeight)
+                else if (iter->second == baseWeight)
                 {
                     auto iterA = distances.find(selectId);
                     auto iterB = distances.find(iter->first);
@@ -277,4 +277,6 @@ namespace rdsys
         }
         return selectId;
     }
+
+    
 }
