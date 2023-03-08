@@ -19,6 +19,59 @@ namespace rdsys
         return id;
     }
 
+    std::vector<int> RobotDecisionSys::calculatePath(int startWapPointID, int endWapPointID)
+    {
+        std::vector<std::vector<int>> paths;
+        std::vector<int> result;
+        bool flag = true;
+        for (int i = 0; i < int(connectionList.size()) && flag; ++i)
+        {
+            if (paths.size() == 0)
+            {
+                for (int &it : this->connectionList[startWapPointID])
+                {
+                    paths.emplace_back(std::vector<int>(1, it));
+                }
+            }
+            else
+            {
+                for (int j = 0; j < int(paths.size()) && flag; ++j)
+                {
+                    int count = 0;
+                    for (int &it : this->connectionList[paths[i][paths.size() - 1]])
+                    {
+                        if(this->connectionList[paths[i][paths.size() - 1]].size() > 1 && it == this->connectionList[paths[i][paths.size() - 1]][this->connectionList[paths[i][paths.size() - 1]].size() - 1])
+                        {
+                            continue;
+                        }
+                        if(count == 0)
+                        {
+                            paths[i].emplace_back(it);
+                            if(it == endWapPointID)
+                            {
+                                result.swap(paths[i]);
+                                flag = false;
+                            }
+                        }
+                        else
+                        {
+                            std::vector<int> temp(paths[i]);
+                            temp.emplace_back(it);
+                            paths.push_back(temp);
+                            if(it == endWapPointID)
+                            {
+                                result.swap(temp);
+                                flag = false;
+                            }
+                        }
+                        ++count;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     RobotDecisionSys::RobotDecisionSys()
     {
     }
@@ -278,5 +331,4 @@ namespace rdsys
         return selectId;
     }
 
-    
 }
