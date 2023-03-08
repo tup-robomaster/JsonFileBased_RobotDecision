@@ -5,6 +5,11 @@
 
 namespace rdsys
 {
+    enum class DecisonState {
+        SUCCESS,
+        EXCETING,
+        FAILURE
+    }
     /**
      * @brief 决策系统类
      * 提供机器人决策相关处理接口
@@ -30,7 +35,7 @@ namespace rdsys
          * @param endWapPointID
          * 终点路径点ID
          */
-        std::vector<WayPoint *> calculatePath(int startWapPointID, int endWapPointID);
+        std::vector<int > calculatePath(int startWapPointID, int endWapPointID);
 
     public:
         RobotDecisionSys();
