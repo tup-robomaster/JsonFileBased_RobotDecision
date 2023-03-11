@@ -9,7 +9,7 @@ namespace rdsys
         SUCCESS,
         EXCETING,
         FAILURE
-    }
+    };
     /**
      * @brief 决策系统类
      * 提供机器人决策相关处理接口

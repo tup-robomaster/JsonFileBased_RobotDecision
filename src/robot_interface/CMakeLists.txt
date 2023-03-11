@@ -27,7 +27,11 @@ if(BUILD_TESTING)
 endif()
  
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Decision.msg"
+  "msg/CarHP.msg"
+  "msg/CarPos.msg"
+  "msg/GameInfo.msg"
+  "msg/Point2f.msg"
+  "msg/Sentry.msg"
   DEPENDENCIES
   builtin_interfaces
   std_msgs

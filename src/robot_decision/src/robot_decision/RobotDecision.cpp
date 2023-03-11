@@ -16,6 +16,10 @@ namespace rdsys
                 id = it->id;
             }
         }
+        if (distance - DISTANCE_THR > 0)
+        {
+            id = -1;
+        }
         return id;
     }
 
@@ -200,7 +204,7 @@ namespace rdsys
         }
         for (auto it : this->decisions)
         {
-            if (it->wayPointID != wayPointID || it->robot_mode != robot_mode)
+            if ((it->wayPointID != wayPointID || it->robot_mode != robot_mode) && it->wayPointID != -1)
                 continue;
             if (it->_maxHP != -1 && _HP > it->_maxHP)
                 continue;
