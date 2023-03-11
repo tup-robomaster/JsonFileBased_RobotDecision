@@ -106,6 +106,7 @@ namespace rdsys
             wayPoint->type = arrayValue[i]["type"].asInt();
             wayPoint->x = arrayValue[i]["x"].asFloat();
             wayPoint->y = arrayValue[i]["y"].asFloat();
+            wayPoint->theta = arrayValue[i]["angle"].asDouble();
             Json::Value connectedPoints = arrayValue[i]["connect"];
             for (int j = 0; j < int(connectedPoints.size()); ++j)
             {

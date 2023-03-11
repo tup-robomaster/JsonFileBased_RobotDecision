@@ -38,6 +38,8 @@ namespace rdsys
     private:
         void makeNewGoal(double x, double y, double theta);
 
+        double decideAngleByEnemyPos();
+
         void messageCallBack(const robot_interface::msg::CarHP &carHP_msg_, const robot_interface::msg::CarPos &carPos_msg_, const robot_interface::msg::GameInfo gameInfo_msg_, const robot_interface::msg::Sentry &sentry_msg_);
 
     public:

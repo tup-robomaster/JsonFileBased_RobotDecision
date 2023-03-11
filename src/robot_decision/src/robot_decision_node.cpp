@@ -70,14 +70,22 @@ namespace rdsys
         acummulated_poses_.emplace_back(pose);
     }
 
+    void RobotDecisionNode::messageCallBack(const robot_interface::msg::CarHP &carHP_msg_, const robot_interface::msg::CarPos &carPos_msg_, const robot_interface::msg::GameInfo gameInfo_msg_, const robot_interface::msg::Sentry &sentry_msg_)
+    { 
+        auto nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
+        int myHP = carHP_msg_.hp[SELFINDEX];
+        float myPos_x_ = carPos_msg_.pos[SELFINDEX].x;
+        float myPos_y_ = carPos_msg_.pos[SELFINDEX].y;
+        int nowTime = gameInfo_msg_.timestamp;
+        
+    }
+
 }
 
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
     auto my_node = std::make_shared<rdsys::RobotDecisionNode>();
-
-    // auto nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
     if (rclcpp::ok())
     {
         rclcpp::spin(my_node);

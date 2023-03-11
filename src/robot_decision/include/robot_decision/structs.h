@@ -25,6 +25,7 @@ namespace rdsys
         int type;
         float x;
         float y;
+        double theta;
         std::map<int, int> enemyWeights;
     } WayPoint;
 
