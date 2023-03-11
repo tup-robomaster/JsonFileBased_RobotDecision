@@ -18,6 +18,7 @@ namespace rdsys
 
     void RobotDecisionNode::init(char *waypointsPath, char *decisionsPath)
     {
+        this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR, this->_seek_THR));
         if (!this->myRDS->decodeWayPoints(waypointsPath))
             RCLCPP_ERROR(this->get_logger(), "decode waypoints failed");
         if (!this->myRDS->decodeDecisions(decisionsPath))
@@ -31,8 +32,8 @@ namespace rdsys
         // qos.durability_volatile();
 
         RCLCPP_INFO(this->get_logger(), "Starting action_client");
-        this->action_client = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
-        if (!action_client->wait_for_action_server(std::chrono::seconds(20)))
+        this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
+        if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(20)))
         {
             RCLCPP_ERROR(this->get_logger(), "Action server not available after waiting");
             return;
@@ -47,16 +48,53 @@ namespace rdsys
         this->TS_sync_.registerCallback(RobotDecisionNode::messageCallBack);
     }
 
-    void RobotDecisionNode::process_once(int _HP, int mode, float _x, float _y, int time, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions)
+    bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
     {
+        acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         Decision *myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, friendPositions, enemyPositions);
         WayPoint *aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
         if (aimWayPoint == nullptr)
-            return;
+            return false;
+        double theta = this->myRDS->decideAngleByEnemyPos(aimWayPoint->x, aimWayPoint->y, enemyPositions);
+        if (theta == -1)
+            theta = aimWayPoint->theta;
+        this->makeNewGoal(aimWayPoint->x, aimWayPoint->y, theta);
+        this->nav_through_poses_goal_.poses = acummulated_poses_;
+        RCLCPP_DEBUG(
+            this->get_logger(), "Sending a path of %zu waypoints:",
+            this->nav_through_poses_goal_.poses.size());
+        for (auto waypoint : this->nav_through_poses_goal_.poses)
+        {
+            RCLCPP_DEBUG(
+                this->get_logger(),
+                "\t(%lf, %lf)", waypoint.pose.position.x, waypoint.pose.position.y);
+        }
+        auto send_goal_options =
+            rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
+        send_goal_options.result_callback = [this](auto)
+        {
+            nav_through_poses_goal_handle_.reset();
+        };
+
+        auto future_goal_handle =
+            nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
+        if (rclcpp::spin_until_future_complete(std::make_shared<RobotDecisionNode>(this), future_goal_handle, server_timeout_) !=
+            rclcpp::FutureReturnCode::SUCCESS)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Send goal call failed");
+            return false;
+        }
+
+        nav_through_poses_goal_handle_ = future_goal_handle.get();
+        if (!nav_through_poses_goal_handle_)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
+            return false;
+        }
     }
 
-    void RobotDecisionNode::makeNewGoal(double x, double y, double theta)
+    void RobotDecisionNode::makeNewGoal(double x, double y, double &theta)
     {
         auto pose = geometry_msgs::msg::PoseStamped();
 
@@ -70,14 +108,52 @@ namespace rdsys
         acummulated_poses_.emplace_back(pose);
     }
 
+    std::vector<RobotPosition> RobotDecisionNode::point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos)
+    {
+        if (pos.size() != 10)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Position msg not valid !");
+            return {};
+        }
+        std::vector<RobotPosition> result;
+        for (int i = 0; i < pos.size(); ++i)
+        {
+            result.emplace_back(RobotPosition(i, pos[i].x, pos[i].y));
+        }
+    }
+
     void RobotDecisionNode::messageCallBack(const robot_interface::msg::CarHP &carHP_msg_, const robot_interface::msg::CarPos &carPos_msg_, const robot_interface::msg::GameInfo gameInfo_msg_, const robot_interface::msg::Sentry &sentry_msg_)
-    { 
-        auto nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
-        int myHP = carHP_msg_.hp[SELFINDEX];
-        float myPos_x_ = carPos_msg_.pos[SELFINDEX].x;
-        float myPos_y_ = carPos_msg_.pos[SELFINDEX].y;
+    {
+        this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
+        int myHP = carHP_msg_.hp[this->_selfIndex];
+        float myPos_x_ = carPos_msg_.pos[this->_selfIndex].x;
+        float myPos_y_ = carPos_msg_.pos[this->_selfIndex].y;
         int nowTime = gameInfo_msg_.timestamp;
-        
+        int mode = sentry_msg_.mode;
+        std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_.pos);
+        std::vector<RobotPosition> friendPositions;
+        std::vector<RobotPosition> enemyPositions;
+        for (int i = 0; i < 9; ++i)
+        {
+            if (i < 5)
+            {
+                if (this->_IsRed)
+                    enemyPositions.emplace_back(allPositions[i]);
+                else
+                    friendPositions.emplace_back(allPositions[i]);
+            }
+            else
+            {
+                if (this->_IsRed)
+                    friendPositions.emplace_back(allPositions[i]);
+                else
+                    enemyPositions.emplace_back(allPositions[i]);
+            }
+        }
+        if (this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, friendPositions, enemyPositions))
+        {
+            RCLCPP_ERROR(this->get_logger(), "Decision failed!");
+        }
     }
 
 }

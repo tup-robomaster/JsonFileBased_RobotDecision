@@ -21,6 +21,12 @@ namespace rdsys
     class RobotDecisionNode : public rclcpp::Node
     {
     private:
+        int _selfIndex = 0;
+        bool _IsRed = false;
+        float _distance_THR = 0.5;
+        float _seek_THR = 10;
+
+    private:
         message_filters::Subscriber<robot_interface::msg::CarHP> carHP_sub_;
         message_filters::Subscriber<robot_interface::msg::CarPos> carPos_sub_;
         message_filters::Subscriber<robot_interface::msg::GameInfo> gameInfo_sub_;
@@ -29,17 +35,21 @@ namespace rdsys
         typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::CarHP, robot_interface::msg::CarPos, robot_interface::msg::GameInfo, robot_interface::msg::Sentry> ApproximateSyncPolicy;
         message_filters::Synchronizer<ApproximateSyncPolicy> TS_sync_;
 
-        std::unique_ptr<RobotDecisionSys> myRDS;
+        std::shared_ptr<RobotDecisionSys> myRDS;
 
-        rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SharedPtr action_client;
+        rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SharedPtr nav_through_poses_action_client_;
 
         std::vector<geometry_msgs::msg::PoseStamped> acummulated_poses_;
+        std::chrono::milliseconds server_timeout_;
+
+        using NavThroughPosesGoalHandle =
+            rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>;
+        NavThroughPosesGoalHandle::SharedPtr nav_through_poses_goal_handle_;
+        nav2_msgs::action::NavigateThroughPoses::Goal nav_through_poses_goal_;
 
     private:
-        void makeNewGoal(double x, double y, double theta);
-
-        double decideAngleByEnemyPos();
-
+        void makeNewGoal(double x, double y, double &theta);
+        std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
         void messageCallBack(const robot_interface::msg::CarHP &carHP_msg_, const robot_interface::msg::CarPos &carPos_msg_, const robot_interface::msg::GameInfo gameInfo_msg_, const robot_interface::msg::Sentry &sentry_msg_);
 
     public:
@@ -48,6 +58,6 @@ namespace rdsys
 
     public:
         void init(char *waypointsPath, char *decisionsPath);
-        void process_once(int _HP, int mode, float _x, float _y, int time, std::vector<RobotPosition> friendPositions, std::vector<RobotPosition> enemyPositions);
+        bool process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
     };
 }

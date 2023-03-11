@@ -16,7 +16,7 @@ namespace rdsys
                 id = it->id;
             }
         }
-        if (distance - DISTANCE_THR > 0)
+        if (distance - this->_distance_THR > 0)
         {
             id = -1;
         }
@@ -44,14 +44,14 @@ namespace rdsys
                     int count = 0;
                     for (int &it : this->connectionList[paths[i][paths.size() - 1]])
                     {
-                        if(this->connectionList[paths[i][paths.size() - 1]].size() > 1 && it == this->connectionList[paths[i][paths.size() - 1]][this->connectionList[paths[i][paths.size() - 1]].size() - 1])
+                        if (this->connectionList[paths[i][paths.size() - 1]].size() > 1 && it == this->connectionList[paths[i][paths.size() - 1]][this->connectionList[paths[i][paths.size() - 1]].size() - 1])
                         {
                             continue;
                         }
-                        if(count == 0)
+                        if (count == 0)
                         {
                             paths[i].emplace_back(it);
-                            if(it == endWapPointID)
+                            if (it == endWapPointID)
                             {
                                 result.swap(paths[i]);
                                 flag = false;
@@ -62,7 +62,7 @@ namespace rdsys
                             std::vector<int> temp(paths[i]);
                             temp.emplace_back(it);
                             paths.push_back(temp);
-                            if(it == endWapPointID)
+                            if (it == endWapPointID)
                             {
                                 result.swap(temp);
                                 flag = false;
@@ -76,8 +76,10 @@ namespace rdsys
         return result;
     }
 
-    RobotDecisionSys::RobotDecisionSys()
+    RobotDecisionSys::RobotDecisionSys(float &_distance_THR, float &_seek_THR)
     {
+        this->_distance_THR = _distance_THR;
+        this->_seek_THR = _seek_THR;
     }
 
     RobotDecisionSys::~RobotDecisionSys()
@@ -336,4 +338,43 @@ namespace rdsys
         return selectId;
     }
 
+    double RobotDecisionSys::decideAngleByEnemyPos(float _x, float _y, std::vector<RobotPosition> &enemyPositions)
+    {
+        int index = -1;
+        float min_distance = MAXFLOAT;
+        for (int i = 0; i < int(enemyPositions.size()); ++i)
+        {
+            if (enemyPositions[i].x == 0 || enemyPositions[i].y == 0)
+                continue;
+            float temp_distance = std::sqrt((enemyPositions[i].x - _x) * (enemyPositions[i].x - _x) + (enemyPositions[i].y - _y) * (enemyPositions[i].y - _y));
+            if (temp_distance < min_distance)
+            {
+                min_distance = temp_distance;
+                index = i;
+            }
+        }
+        if (index == -1 || min_distance > this->_seek_THR)
+            return -1;
+        else
+            return this->calculateAngle(_x, _y, enemyPositions[index].x, enemyPositions[index].y);
+    }
+
+    double RobotDecisionSys::calculateAngle(double x1, double y1, double x2, double y2)
+    {
+        double angle_temp;
+        double xx, yy;
+        xx = x2 - x1;
+        yy = y2 - y1;
+        if (xx == 0.0)
+            angle_temp = PI / 2.0;
+        else
+            angle_temp = atan(fabs(yy / xx));
+        if ((xx < 0.0) && (yy >= 0.0))
+            angle_temp = PI - angle_temp;
+        else if ((xx < 0.0) && (yy < 0.0))
+            angle_temp = PI + angle_temp;
+        else if ((xx >= 0.0) && (yy < 0.0))
+            angle_temp = PI * 2.0 - angle_temp;
+        return (angle_temp);
+    }
 }

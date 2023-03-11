@@ -5,6 +5,7 @@
 #include <math.h>
 #include <map>
 #include <float.h>
+#include <memory>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/publisher.hpp>
