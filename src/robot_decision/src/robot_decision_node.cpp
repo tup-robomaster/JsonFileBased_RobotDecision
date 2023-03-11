@@ -162,10 +162,7 @@ int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
     auto my_node = std::make_shared<rdsys::RobotDecisionNode>();
-    if (rclcpp::ok())
-    {
-        rclcpp::spin(my_node);
-    }
+    rclcpp::spin(my_node);
     rclcpp::shutdown();
     return 0;
 }
