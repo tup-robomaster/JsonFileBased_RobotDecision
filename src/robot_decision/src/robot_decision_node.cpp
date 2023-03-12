@@ -5,7 +5,7 @@ using namespace std::placeholders;
 namespace rdsys
 {
     RobotDecisionNode::RobotDecisionNode(const rclcpp::NodeOptions &options)
-        : rclcpp::Node("robot_decision", options)
+        : rclcpp::Node("robot_decision_node", options)
     {
         RCLCPP_WARN(this->get_logger(), "RobotDecision node...");
         RCLCPP_WARN(this->get_logger(), "starting...");
@@ -20,13 +20,12 @@ namespace rdsys
     {
         this->declare_parameter<float>("distance_thr", 0.5);
         this->declare_parameter<float>("seek_thr", 5.0);
-        this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR, this->_seek_THR));
+        this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
         if (!this->myRDS->decodeWayPoints(waypointsPath))
-            RCLCPP_ERROR(this->get_logger(), "decode waypoints failed");
+            RCLCPP_ERROR(this->get_logger(), "Decode waypoints failed");
         if (!this->myRDS->decodeDecisions(decisionsPath))
-            RCLCPP_ERROR(this->get_logger(), "decode decisions failed");
-
+            RCLCPP_ERROR(this->get_logger(), "Decode decisions failed");
         // rclcpp::QoS qos(0);
         // qos.keep_last(10);
         // qos.best_effort();
@@ -47,8 +46,8 @@ namespace rdsys
         this->gameInfo_sub_.subscribe(this, "/game_info", rclcpp::SensorDataQoS().get_rmw_qos_profile());
         this->sentry_sub_.subscribe(this, "/sentry_msg", rclcpp::SensorDataQoS().get_rmw_qos_profile());
 
-        this->TS_sync_.connectInput(this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->sentry_sub_);
-        this->TS_sync_.registerCallback(RobotDecisionNode::messageCallBack);
+        this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->sentry_sub_));
+        this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
     }
 
     bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
@@ -82,7 +81,7 @@ namespace rdsys
 
         auto future_goal_handle =
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
-        if (rclcpp::spin_until_future_complete(std::make_shared<RobotDecisionNode>(this), future_goal_handle, server_timeout_) !=
+        if (rclcpp::spin_until_future_complete(this->shared_from_this(), future_goal_handle, server_timeout_) !=
             rclcpp::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Send goal call failed");
@@ -95,6 +94,7 @@ namespace rdsys
             RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
             return false;
         }
+        return true;
     }
 
     void RobotDecisionNode::makeNewGoal(double x, double y, double &theta)
@@ -102,7 +102,7 @@ namespace rdsys
         auto pose = geometry_msgs::msg::PoseStamped();
 
         pose.header.stamp = rclcpp::Clock().now();
-        pose.header.frame_id = 'Robot_Goal';
+        pose.header.frame_id = "Robot_Goal";
         pose.pose.position.x = x;
         pose.pose.position.y = y;
         pose.pose.position.z = 0.0;
@@ -119,21 +119,22 @@ namespace rdsys
             return {};
         }
         std::vector<RobotPosition> result;
-        for (int i = 0; i < pos.size(); ++i)
+        for (int i = 0; i < int(pos.size()); ++i)
         {
             result.emplace_back(RobotPosition(i, pos[i].x, pos[i].y));
         }
+        return result;
     }
 
-    void RobotDecisionNode::messageCallBack(const robot_interface::msg::CarHP &carHP_msg_, const robot_interface::msg::CarPos &carPos_msg_, const robot_interface::msg::GameInfo gameInfo_msg_, const robot_interface::msg::Sentry &sentry_msg_)
+    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_, const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_, const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_, const std::shared_ptr<robot_interface::msg::Sentry const> &sentry_msg_)
     {
         this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
-        int myHP = carHP_msg_.hp[this->_selfIndex];
-        float myPos_x_ = carPos_msg_.pos[this->_selfIndex].x;
-        float myPos_y_ = carPos_msg_.pos[this->_selfIndex].y;
-        int nowTime = gameInfo_msg_.timestamp;
-        int mode = sentry_msg_.mode;
-        std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_.pos);
+        int myHP = carHP_msg_->hp[this->_selfIndex];
+        float myPos_x_ = carPos_msg_->pos[this->_selfIndex].x;
+        float myPos_y_ = carPos_msg_->pos[this->_selfIndex].y;
+        int nowTime = gameInfo_msg_->timestamp;
+        int mode = sentry_msg_->mode;
+        std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_->pos);
         std::vector<RobotPosition> friendPositions;
         std::vector<RobotPosition> enemyPositions;
         for (int i = 0; i < 9; ++i)
@@ -161,17 +162,17 @@ namespace rdsys
 
     void RobotDecisionNode::respond()
     {
-        this->get_parameter("distance_thr",this->_distance_THR);
-        this->get_parameter("seek_thr",this->_seek_THR);
+        this->get_parameter("distance_thr", this->_distance_THR);
+        this->get_parameter("seek_thr", this->_seek_THR);
 
-        if(this->myRDS->getDistanceTHR() != this->_distance_THR)
+        if (this->myRDS->getDistanceTHR() != this->_distance_THR)
         {
-            RCLCPP_INFO(this->get_logger(), "set _distance_THR to %d",this->_distance_THR);
+            RCLCPP_INFO(this->get_logger(), "set _distance_THR to %f", this->_distance_THR);
             this->myRDS->setDistanceTHR(this->_distance_THR);
         }
-        if(this->myRDS->getSeekTHR() != this->_seek_THR)
+        if (this->myRDS->getSeekTHR() != this->_seek_THR)
         {
-            RCLCPP_INFO(this->get_logger(), "set _seek_THR to %d",this->_seek_THR);
+            RCLCPP_INFO(this->get_logger(), "set _seek_THR to %f", this->_seek_THR);
             this->myRDS->setSeekTHR(this->_seek_THR);
         }
     }

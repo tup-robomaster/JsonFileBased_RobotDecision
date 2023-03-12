@@ -9,12 +9,19 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   
+  <depend>geometry_msgs</depend>
+  <depend>nav2_util</depend>
+  <depend>nav2_lifecycle_manager</depend>
+  <depend>nav2_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
-  <depend>robot_interfaces</depend>
+  <depend>robot_interface</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>message_filters</depend>
   <depend>robot_state_publisher</depend>
+
   <build_depend>rosidl_default_generators</build_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>
   <member_of_group>rosidl_interface_packages</member_of_group>

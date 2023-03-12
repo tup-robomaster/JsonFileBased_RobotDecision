@@ -99,7 +99,6 @@ namespace rdsys
         }
         Json::Value arrayValue = jsonValue["data"];
         std::vector<WayPoint> tempwayPointMap;
-        std::vector<std::vector<int>> tempconnectionList;
         for (int i = 0; i < int(arrayValue.size()); ++i)
         {
             WayPoint *wayPoint;
@@ -117,10 +116,10 @@ namespace rdsys
             Json::Value enemyWeightsArray = arrayValue[i]["enemyWeights"];
             for (int j = 0; j < int(enemyWeightsArray.size()); ++j)
             {
-                wayPoint->enemyWeights[0] = enemyWeightsArray[j].asInt();
+                // wayPoint->enemyWeights.insert(j, enemyWeightsArray[j].asInt());
             }
-            this->wayPointMap.push_back(wayPoint);
-            this->connectionList.push_back(connect);
+            this->wayPointMap.emplace_back(wayPoint);
+            this->connectionList.emplace_back(connect);
         }
         jsonFile.close();
         return true;
@@ -313,28 +312,28 @@ namespace rdsys
         WayPoint *myWayPoint = this->getWayPointByID(myWayPointID);
         int baseWeight = 0;
         int selectId = -1;
-        for (auto &it : detectedEnemy)
-        {
-            auto iter = myWayPoint->enemyWeights.find(it);
-            if (iter != myWayPoint->enemyWeights.end())
-            {
-                if (iter->second > baseWeight)
-                {
-                    selectId = iter->first;
-                    baseWeight = iter->second;
-                }
-                else if (iter->second == baseWeight)
-                {
-                    auto iterA = distances.find(selectId);
-                    auto iterB = distances.find(iter->first);
-                    if (iterA != distances.end() && iterB != distances.end() && iterB->second - iterA->second < 0)
-                    {
-                        selectId = iter->first;
-                        baseWeight = iter->second;
-                    }
-                }
-            }
-        }
+        // for (auto &it : detectedEnemy)
+        // {
+        //     auto iter = myWayPoint->enemyWeights.find(it);
+        //     if (iter != myWayPoint->enemyWeights.end())
+        //     {
+        //         if (iter->second > baseWeight)
+        //         {
+        //             selectId = iter->first;
+        //             baseWeight = iter->second;
+        //         }
+        //         else if (iter->second == baseWeight)
+        //         {
+        //             auto iterA = distances.find(selectId);
+        //             auto iterB = distances.find(iter->first);
+        //             if (iterA != distances.end() && iterB != distances.end() && iterB->second - iterA->second < 0)
+        //             {
+        //                 selectId = iter->first;
+        //                 baseWeight = iter->second;
+        //             }
+        //         }
+        //     }
+        // }
         return selectId;
     }
 
@@ -366,15 +365,15 @@ namespace rdsys
         xx = x2 - x1;
         yy = y2 - y1;
         if (xx == 0.0)
-            angle_temp = PI / 2.0;
+            angle_temp = _PI / 2.0;
         else
             angle_temp = atan(fabs(yy / xx));
         if ((xx < 0.0) && (yy >= 0.0))
-            angle_temp = PI - angle_temp;
+            angle_temp = _PI - angle_temp;
         else if ((xx < 0.0) && (yy < 0.0))
-            angle_temp = PI + angle_temp;
+            angle_temp = _PI + angle_temp;
         else if ((xx >= 0.0) && (yy < 0.0))
-            angle_temp = PI * 2.0 - angle_temp;
+            angle_temp = _PI * 2.0 - angle_temp;
         return (angle_temp);
     }
 

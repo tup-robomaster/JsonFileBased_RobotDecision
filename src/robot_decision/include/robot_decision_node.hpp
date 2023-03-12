@@ -35,7 +35,7 @@ namespace rdsys
         message_filters::Subscriber<robot_interface::msg::Sentry> sentry_sub_;
 
         typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::CarHP, robot_interface::msg::CarPos, robot_interface::msg::GameInfo, robot_interface::msg::Sentry> ApproximateSyncPolicy;
-        message_filters::Synchronizer<ApproximateSyncPolicy> TS_sync_;
+        std::unique_ptr<message_filters::Synchronizer<ApproximateSyncPolicy>> TS_sync_;
 
         std::shared_ptr<RobotDecisionSys> myRDS;
 
@@ -54,7 +54,7 @@ namespace rdsys
     private:
         void makeNewGoal(double x, double y, double &theta);
         std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
-        void messageCallBack(const robot_interface::msg::CarHP &carHP_msg_, const robot_interface::msg::CarPos &carPos_msg_, const robot_interface::msg::GameInfo gameInfo_msg_, const robot_interface::msg::Sentry &sentry_msg_);
+        void messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_, const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_, const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_, const std::shared_ptr<robot_interface::msg::Sentry const> &sentry_msg_);
         void respond();
 
     public:
