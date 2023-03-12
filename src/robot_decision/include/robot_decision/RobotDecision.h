@@ -5,6 +5,7 @@
 
 namespace rdsys
 {
+#define _PI 3.1415926
     enum class DecisonState
     {
         SUCCESS,
