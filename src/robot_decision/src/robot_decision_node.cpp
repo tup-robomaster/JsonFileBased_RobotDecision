@@ -41,12 +41,49 @@ namespace rdsys
             return;
         }
 
+        //_______________________________TEST__________________________________________
+
+        this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
+        double theta = 0.0;
+        this->makeNewGoal(1, 1, theta);
+        this->nav_through_poses_goal_.poses = acummulated_poses_;
+        RCLCPP_DEBUG(
+            this->get_logger(), "Sending a path of %zu waypoints:",
+            this->nav_through_poses_goal_.poses.size());
+        for (auto waypoint : this->nav_through_poses_goal_.poses)
+        {
+            RCLCPP_DEBUG(
+                this->get_logger(),
+                "\t(%lf, %lf)", waypoint.pose.position.x, waypoint.pose.position.y);
+        }
+        auto send_goal_options =
+            rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
+        send_goal_options.result_callback = [this](auto)
+        {
+            nav_through_poses_goal_handle_.reset();
+        };
+
+        auto future_goal_handle =
+            nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
+        if (rclcpp::spin_until_future_complete(this->shared_from_this(), future_goal_handle, server_timeout_) !=
+            rclcpp::FutureReturnCode::SUCCESS)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Send goal call failed");
+        }
+
+        nav_through_poses_goal_handle_ = future_goal_handle.get();
+        if (!nav_through_poses_goal_handle_)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
+        }
+
+        //_______________________________TEST__________________________________________
         this->carHP_sub_.subscribe(this, "/car_hp", rclcpp::SensorDataQoS().get_rmw_qos_profile());
         this->carPos_sub_.subscribe(this, "/car_pos", rclcpp::SensorDataQoS().get_rmw_qos_profile());
         this->gameInfo_sub_.subscribe(this, "/game_info", rclcpp::SensorDataQoS().get_rmw_qos_profile());
-        this->sentry_sub_.subscribe(this, "/sentry_msg", rclcpp::SensorDataQoS().get_rmw_qos_profile());
+        this->serial_sub_.subscribe(this, "/serial_msg", rclcpp::SensorDataQoS().get_rmw_qos_profile());
 
-        this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->sentry_sub_));
+        this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
         this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
     }
 
@@ -126,14 +163,14 @@ namespace rdsys
         return result;
     }
 
-    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_, const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_, const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_, const std::shared_ptr<robot_interface::msg::Sentry const> &sentry_msg_)
+    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_, const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_, const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_, const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_)
     {
         this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
         int myHP = carHP_msg_->hp[this->_selfIndex];
         float myPos_x_ = carPos_msg_->pos[this->_selfIndex].x;
         float myPos_y_ = carPos_msg_->pos[this->_selfIndex].y;
         int nowTime = gameInfo_msg_->timestamp;
-        int mode = sentry_msg_->mode;
+        int mode = serial_sub_->mode;
         std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_->pos);
         std::vector<RobotPosition> friendPositions;
         std::vector<RobotPosition> enemyPositions;
