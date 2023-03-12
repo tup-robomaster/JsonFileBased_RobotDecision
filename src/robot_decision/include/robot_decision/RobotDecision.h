@@ -23,7 +23,7 @@ namespace rdsys
         std::vector<Decision *> decisions;
 
         float _distance_THR = 0;
-        float _seek_THR = 10;
+        float _seek_THR = 5.0;
 
     private:
         /**
@@ -118,6 +118,11 @@ namespace rdsys
         int decideAimTarget(RobotPosition &mypos, std::vector<RobotPosition> &enemyPositions, std::vector<int> &detectedEnemy, int &myWayPointID);
 
         double decideAngleByEnemyPos(float _x, float _y, std::vector<RobotPosition> &enemyPositions);
+
+        float getDistanceTHR();
+        void setDistanceTHR(float thr);
+        float getSeekTHR();
+        void setSeekTHR(float thr);
     };
 }
 #endif

@@ -377,4 +377,24 @@ namespace rdsys
             angle_temp = PI * 2.0 - angle_temp;
         return (angle_temp);
     }
+
+    float RobotDecisionSys::getDistanceTHR()
+    {
+        return this->_distance_THR;
+    }
+
+    void RobotDecisionSys::setDistanceTHR(float thr)
+    {
+        this->_distance_THR = thr;
+    }
+
+    float RobotDecisionSys::getSeekTHR()
+    {
+        return this->_seek_THR;
+    }
+
+    void RobotDecisionSys::setSeekTHR(float thr)
+    {
+        this->_seek_THR = thr;
+    }
 }

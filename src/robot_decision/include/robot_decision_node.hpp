@@ -18,6 +18,8 @@
 
 namespace rdsys
 {
+    using namespace std::chrono_literals;
+
     class RobotDecisionNode : public rclcpp::Node
     {
     private:
@@ -47,10 +49,13 @@ namespace rdsys
         NavThroughPosesGoalHandle::SharedPtr nav_through_poses_goal_handle_;
         nav2_msgs::action::NavigateThroughPoses::Goal nav_through_poses_goal_;
 
+        std::shared_ptr<rclcpp::WallTimer<std::_Bind<void (rdsys::RobotDecisionNode::*(rdsys::RobotDecisionNode *))()>, (void *)nullptr>> timer_;
+
     private:
         void makeNewGoal(double x, double y, double &theta);
         std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
         void messageCallBack(const robot_interface::msg::CarHP &carHP_msg_, const robot_interface::msg::CarPos &carPos_msg_, const robot_interface::msg::GameInfo gameInfo_msg_, const robot_interface::msg::Sentry &sentry_msg_);
+        void respond();
 
     public:
         RobotDecisionNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());

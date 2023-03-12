@@ -18,6 +18,9 @@ namespace rdsys
 
     void RobotDecisionNode::init(char *waypointsPath, char *decisionsPath)
     {
+        this->declare_parameter<float>("distance_thr", 0.5);
+        this->declare_parameter<float>("seek_thr", 5.0);
+        this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR, this->_seek_THR));
         if (!this->myRDS->decodeWayPoints(waypointsPath))
             RCLCPP_ERROR(this->get_logger(), "decode waypoints failed");
@@ -153,6 +156,23 @@ namespace rdsys
         if (this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, friendPositions, enemyPositions))
         {
             RCLCPP_ERROR(this->get_logger(), "Decision failed!");
+        }
+    }
+
+    void RobotDecisionNode::respond()
+    {
+        this->get_parameter("distance_thr",this->_distance_THR);
+        this->get_parameter("seek_thr",this->_seek_THR);
+
+        if(this->myRDS->getDistanceTHR() != this->_distance_THR)
+        {
+            RCLCPP_INFO(this->get_logger(), "set _distance_THR to %d",this->_distance_THR);
+            this->myRDS->setDistanceTHR(this->_distance_THR);
+        }
+        if(this->myRDS->getSeekTHR() != this->_seek_THR)
+        {
+            RCLCPP_INFO(this->get_logger(), "set _seek_THR to %d",this->_seek_THR);
+            this->myRDS->setSeekTHR(this->_seek_THR);
         }
     }
 
