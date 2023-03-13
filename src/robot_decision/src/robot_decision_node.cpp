@@ -35,7 +35,7 @@ namespace rdsys
         qos.durability_volatile();
 
         RCLCPP_INFO(this->get_logger(), "Starting action_client");
-        this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
+        this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this->make_shared(), "navigate_through_poses");
         if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(20)))
         {
             RCLCPP_ERROR(this->get_logger(), "Action server not available after waiting");
