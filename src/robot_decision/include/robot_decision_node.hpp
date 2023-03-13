@@ -51,7 +51,6 @@ namespace rdsys
 
         std::shared_ptr<rclcpp::WallTimer<std::_Bind<void (rdsys::RobotDecisionNode::*(rdsys::RobotDecisionNode *))()>, (void *)nullptr>> timer_;
 
-        std::shared_future<std::shared_ptr<rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>>> future_goal_handle;
         rclcpp::Subscription<nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage>::SharedPtr
             nav_through_poses_feedback_sub_;
         rclcpp::Subscription<nav2_msgs::action::NavigateThroughPoses::Impl::GoalStatusMessage>::SharedPtr

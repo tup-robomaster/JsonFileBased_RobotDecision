@@ -89,8 +89,10 @@ namespace rdsys
             this->nav_through_poses_goal_handle_.reset();
         };
 
-        this->future_goal_handle =
+        auto future_goal_handle =
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
+        
+        this->nav_through_poses_goal_handle_ = future_goal_handle.get();
         return true;
     }
 
