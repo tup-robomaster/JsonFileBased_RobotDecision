@@ -42,33 +42,6 @@ namespace rdsys
             return;
         }
 
-        //_______________________________TEST__________________________________________
-
-        this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
-        double theta = 0.0;
-        this->makeNewGoal(1, 1, theta);
-        this->nav_through_poses_goal_.poses = acummulated_poses_;
-        RCLCPP_DEBUG(
-            this->get_logger(), "Sending a path of %zu waypoints:",
-            this->nav_through_poses_goal_.poses.size());
-        for (auto waypoint : this->nav_through_poses_goal_.poses)
-        {
-            RCLCPP_DEBUG(
-                this->get_logger(),
-                "\t(%lf, %lf)", waypoint.pose.position.x, waypoint.pose.position.y);
-        }
-        auto send_goal_options =
-            rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
-        send_goal_options.result_callback = [this](auto)
-        {
-            nav_through_poses_goal_handle_.reset();
-        };
-
-        auto future_goal_handle =
-            nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
-
-        //_______________________________TEST__________________________________________
-
         this->carHP_sub_.subscribe(this, "/car_hp", qos.get_rmw_qos_profile());
         this->carPos_sub_.subscribe(this, "/car_pos", qos.get_rmw_qos_profile());
         this->gameInfo_sub_.subscribe(this, "/game_info", qos.get_rmw_qos_profile());
@@ -91,12 +64,12 @@ namespace rdsys
             theta = aimWayPoint->theta;
         this->makeNewGoal(aimWayPoint->x, aimWayPoint->y, theta);
         this->nav_through_poses_goal_.poses = acummulated_poses_;
-        RCLCPP_DEBUG(
+        RCLCPP_INFO(
             this->get_logger(), "Sending a path of %zu waypoints:",
             this->nav_through_poses_goal_.poses.size());
         for (auto waypoint : this->nav_through_poses_goal_.poses)
         {
-            RCLCPP_DEBUG(
+            RCLCPP_INFO(
                 this->get_logger(),
                 "\t(%lf, %lf)", waypoint.pose.position.x, waypoint.pose.position.y);
         }
