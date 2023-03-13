@@ -101,7 +101,7 @@ namespace rdsys
         std::vector<WayPoint> tempwayPointMap;
         for (int i = 0; i < int(arrayValue.size()); ++i)
         {
-            WayPoint *wayPoint;
+            WayPoint *wayPoint = new WayPoint();
             std::vector<int> connect;
             wayPoint->id = arrayValue[i]["id"].asInt();
             wayPoint->type = arrayValue[i]["type"].asInt();
@@ -116,7 +116,7 @@ namespace rdsys
             Json::Value enemyWeightsArray = arrayValue[i]["enemyWeights"];
             for (int j = 0; j < int(enemyWeightsArray.size()); ++j)
             {
-                // wayPoint->enemyWeights.insert(j, enemyWeightsArray[j].asInt());
+                wayPoint->enemyWeights[j] = enemyWeightsArray[j].asInt();
             }
             this->wayPointMap.emplace_back(wayPoint);
             this->connectionList.emplace_back(connect);
@@ -312,28 +312,28 @@ namespace rdsys
         WayPoint *myWayPoint = this->getWayPointByID(myWayPointID);
         int baseWeight = 0;
         int selectId = -1;
-        // for (auto &it : detectedEnemy)
-        // {
-        //     auto iter = myWayPoint->enemyWeights.find(it);
-        //     if (iter != myWayPoint->enemyWeights.end())
-        //     {
-        //         if (iter->second > baseWeight)
-        //         {
-        //             selectId = iter->first;
-        //             baseWeight = iter->second;
-        //         }
-        //         else if (iter->second == baseWeight)
-        //         {
-        //             auto iterA = distances.find(selectId);
-        //             auto iterB = distances.find(iter->first);
-        //             if (iterA != distances.end() && iterB != distances.end() && iterB->second - iterA->second < 0)
-        //             {
-        //                 selectId = iter->first;
-        //                 baseWeight = iter->second;
-        //             }
-        //         }
-        //     }
-        // }
+        for (auto &it : detectedEnemy)
+        {
+            auto iter = myWayPoint->enemyWeights.find(it);
+            if (iter != myWayPoint->enemyWeights.end())
+            {
+                if (iter->second > baseWeight)
+                {
+                    selectId = iter->first;
+                    baseWeight = iter->second;
+                }
+                else if (iter->second == baseWeight)
+                {
+                    auto iterA = distances.find(selectId);
+                    auto iterB = distances.find(iter->first);
+                    if (iterA != distances.end() && iterB != distances.end() && iterB->second - iterA->second < 0)
+                    {
+                        selectId = iter->first;
+                        baseWeight = iter->second;
+                    }
+                }
+            }
+        }
         return selectId;
     }
 

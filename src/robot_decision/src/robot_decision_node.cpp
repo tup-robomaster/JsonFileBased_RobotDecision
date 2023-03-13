@@ -26,12 +26,13 @@ namespace rdsys
             RCLCPP_ERROR(this->get_logger(), "Decode waypoints failed");
         if (!this->myRDS->decodeDecisions(decisionsPath))
             RCLCPP_ERROR(this->get_logger(), "Decode decisions failed");
-        // rclcpp::QoS qos(0);
-        // qos.keep_last(10);
-        // qos.best_effort();
+
+        rclcpp::QoS qos(0);
+        qos.keep_last(10);
+        qos.best_effort();
         // qos.reliable();
-        // qos.durability();
-        // qos.durability_volatile();
+        qos.durability();
+        qos.durability_volatile();
 
         RCLCPP_INFO(this->get_logger(), "Starting action_client");
         this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
@@ -71,17 +72,18 @@ namespace rdsys
             RCLCPP_ERROR(this->get_logger(), "Send goal call failed");
         }
 
-        nav_through_poses_goal_handle_ = future_goal_handle.get();
+        nav_through_poses_goal_handle_ = future_goal_handle.get(); 
         if (!nav_through_poses_goal_handle_)
         {
             RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
         }
 
         //_______________________________TEST__________________________________________
-        this->carHP_sub_.subscribe(this, "/car_hp", rclcpp::SensorDataQoS().get_rmw_qos_profile());
-        this->carPos_sub_.subscribe(this, "/car_pos", rclcpp::SensorDataQoS().get_rmw_qos_profile());
-        this->gameInfo_sub_.subscribe(this, "/game_info", rclcpp::SensorDataQoS().get_rmw_qos_profile());
-        this->serial_sub_.subscribe(this, "/serial_msg", rclcpp::SensorDataQoS().get_rmw_qos_profile());
+
+        this->carHP_sub_.subscribe(this, "/car_hp", qos.get_rmw_qos_profile());
+        this->carPos_sub_.subscribe(this, "/car_pos", qos.get_rmw_qos_profile());
+        this->gameInfo_sub_.subscribe(this, "/game_info", qos.get_rmw_qos_profile());
+        this->serial_sub_.subscribe(this, "/serial_msg", qos.get_rmw_qos_profile());
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
         this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
