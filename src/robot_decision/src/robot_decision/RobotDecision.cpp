@@ -352,10 +352,7 @@ namespace rdsys
                 index = i;
             }
         }
-        if (index == -1 || min_distance > this->_seek_THR)
-            return -1;
-        else
-            return this->calculateAngle(_x, _y, enemyPositions[index].x, enemyPositions[index].y);
+        return (index == -1 || min_distance > this->_seek_THR) ? -1 : this->calculateAngle(_x, _y, enemyPositions[index].x, enemyPositions[index].y);
     }
 
     double RobotDecisionSys::calculateAngle(double x1, double y1, double x2, double y2)

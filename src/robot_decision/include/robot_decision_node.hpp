@@ -54,7 +54,10 @@ namespace rdsys
     private:
         void makeNewGoal(double x, double y, double &theta);
         std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
-        void messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_, const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_, const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_, const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
+        void messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_,
+                             const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
+                             const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
+                             const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
         void respond();
 
     public:
