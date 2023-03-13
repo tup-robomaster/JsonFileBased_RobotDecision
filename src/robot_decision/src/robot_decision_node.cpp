@@ -120,7 +120,7 @@ namespace rdsys
 
         auto future_goal_handle =
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
-        if (rclcpp::spin_until_future_complete(this->shared_from_this(), future_goal_handle, server_timeout_) !=
+        if (rclcpp::spin_until_future_complete(this->make_shared(), future_goal_handle, server_timeout_) !=
             rclcpp::FutureReturnCode::SUCCESS)
         {
             RCLCPP_ERROR(this->get_logger(), "Send goal call failed");
