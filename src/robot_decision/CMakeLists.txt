@@ -24,6 +24,7 @@ find_package(robot_interface REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(robot_state_publisher REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 include_directories(
   include
@@ -51,6 +52,7 @@ set(dependencies
   message_filters 
   robot_state_publisher 
   nav2_behavior_tree
+  rosidl_default_generators
 )
 
 ament_target_dependencies(
