@@ -50,11 +50,14 @@ namespace rdsys
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
         this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
 
-        nav_through_poses_feedback_sub_ =
-            this->create_subscription<nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage>(
-                "navigate_through_poses/_action/feedback",
-                rclcpp::SystemDefaultsQoS(),
-                std::bind(&RobotDecisionNode::nav2FeedBackCallBack, this, _1));
+        this->nav_through_poses_feedback_sub_ = this->create_subscription<nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage>(
+            "navigate_through_poses/_action/feedback",
+            qos,
+            std::bind(&RobotDecisionNode::nav2FeedBackCallBack, this, _1));
+        this->nav_through_poses_goal_status_sub_ = this->create_subscription<action_msgs::msg::GoalStatusArray>(
+            "navigate_through_poses/_action/status",
+            qos,
+            std::bind(&RobotDecisionNode::nav2GoalStatusCallBack, this, _1));
     }
 
     bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
@@ -160,6 +163,13 @@ namespace rdsys
     void RobotDecisionNode::nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg)
     {
         RCLCPP_INFO(this->get_logger(), "Nav2FeedBack Distance Remainimg: %f", msg->feedback.distance_remaining);
+    }
+
+    void RobotDecisionNode::nav2GoalStatusCallBack(const action_msgs::msg::GoalStatusArray::SharedPtr msg)
+    {
+        if (msg->status_list.back().status != action_msgs::msg::GoalStatus::STATUS_EXECUTING)
+        {
+        }
     }
 
     void RobotDecisionNode::respond()

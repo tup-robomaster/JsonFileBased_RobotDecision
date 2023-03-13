@@ -54,6 +54,8 @@ namespace rdsys
         std::shared_future<std::shared_ptr<rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>>> future_goal_handle;
         rclcpp::Subscription<nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage>::SharedPtr
             nav_through_poses_feedback_sub_;
+        rclcpp::Subscription<nav2_msgs::action::NavigateThroughPoses::Impl::GoalStatusMessage>::SharedPtr
+            nav_through_poses_goal_status_sub_;
 
     private:
         void makeNewGoal(double x, double y, double &theta);
@@ -63,6 +65,7 @@ namespace rdsys
                              const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                              const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
         void nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg);
+        void nav2GoalStatusCallBack(const action_msgs::msg::GoalStatusArray::SharedPtr msg);
         void respond();
 
     public:
