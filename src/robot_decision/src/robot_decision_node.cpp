@@ -49,6 +49,12 @@ namespace rdsys
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
         this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
+
+        nav_through_poses_feedback_sub_ =
+            this->create_subscription<nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage>(
+                "navigate_through_poses/_action/feedback",
+                rclcpp::SystemDefaultsQoS(),
+                std::bind(&RobotDecisionNode::nav2FeedBackCallBack, this, _1));
     }
 
     bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
@@ -77,10 +83,10 @@ namespace rdsys
             rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
         send_goal_options.result_callback = [this](auto)
         {
-            nav_through_poses_goal_handle_.reset();
+            this->nav_through_poses_goal_handle_.reset();
         };
 
-        auto future_goal_handle =
+        this->future_goal_handle =
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
         return true;
     }
@@ -149,6 +155,11 @@ namespace rdsys
         {
             RCLCPP_ERROR(this->get_logger(), "Decision failed!");
         }
+    }
+
+    void RobotDecisionNode::nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg)
+    {
+        RCLCPP_INFO(this->get_logger(), "Nav2FeedBack Distance Remainimg: %f", msg->feedback.distance_remaining);
     }
 
     void RobotDecisionNode::respond()

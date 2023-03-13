@@ -51,6 +51,10 @@ namespace rdsys
 
         std::shared_ptr<rclcpp::WallTimer<std::_Bind<void (rdsys::RobotDecisionNode::*(rdsys::RobotDecisionNode *))()>, (void *)nullptr>> timer_;
 
+        std::shared_future<std::shared_ptr<rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>>> future_goal_handle;
+        rclcpp::Subscription<nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage>::SharedPtr
+            nav_through_poses_feedback_sub_;
+
     private:
         void makeNewGoal(double x, double y, double &theta);
         std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
@@ -58,6 +62,7 @@ namespace rdsys
                              const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
                              const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                              const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
+        void nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg);
         void respond();
 
     public:
