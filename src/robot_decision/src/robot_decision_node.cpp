@@ -35,7 +35,7 @@ namespace rdsys
         qos.durability_volatile();
 
         RCLCPP_INFO(this->get_logger(), "Starting action_client");
-        this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this->make_shared(), "navigate_through_poses");
+        this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
         if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(20)))
         {
             RCLCPP_ERROR(this->get_logger(), "Action server not available after waiting");
@@ -66,17 +66,6 @@ namespace rdsys
 
         auto future_goal_handle =
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
-        if (rclcpp::spin_until_future_complete(this->make_shared(), future_goal_handle, server_timeout_) !=
-            rclcpp::FutureReturnCode::SUCCESS)
-        {
-            RCLCPP_ERROR(this->get_logger(), "Send goal call failed");
-        }
-
-        nav_through_poses_goal_handle_ = future_goal_handle.get();
-        if (!nav_through_poses_goal_handle_)
-        {
-            RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
-        }
 
         //_______________________________TEST__________________________________________
 
@@ -120,19 +109,6 @@ namespace rdsys
 
         auto future_goal_handle =
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
-        if (rclcpp::spin_until_future_complete(this->make_shared(), future_goal_handle, server_timeout_) !=
-            rclcpp::FutureReturnCode::SUCCESS)
-        {
-            RCLCPP_ERROR(this->get_logger(), "Send goal call failed");
-            return false;
-        }
-
-        nav_through_poses_goal_handle_ = future_goal_handle.get();
-        if (!nav_through_poses_goal_handle_)
-        {
-            RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
-            return false;
-        }
         return true;
     }
 
