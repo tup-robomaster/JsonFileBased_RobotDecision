@@ -72,7 +72,7 @@ namespace rdsys
             RCLCPP_ERROR(this->get_logger(), "Send goal call failed");
         }
 
-        nav_through_poses_goal_handle_ = future_goal_handle.get(); 
+        nav_through_poses_goal_handle_ = future_goal_handle.get();
         if (!nav_through_poses_goal_handle_)
         {
             RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
@@ -165,7 +165,10 @@ namespace rdsys
         return result;
     }
 
-    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_, const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_, const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_, const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_)
+    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_,
+                                            const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
+                                            const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
+                                            const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_)
     {
         this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
         int myHP = carHP_msg_->hp[this->_selfIndex];
