@@ -6,6 +6,8 @@
 #include <map>
 #include <float.h>
 #include <memory>
+#include <shared_mutex>
+#include <mutex>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/publisher.hpp>

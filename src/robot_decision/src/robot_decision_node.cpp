@@ -62,9 +62,40 @@ namespace rdsys
 
     bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
     {
+        if (_x == 0.0 || _y == 0.0)
+        {
+            std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_position);
+            if (this->current_position.x > 0.0 && this->current_position.y > 0.0)
+            {
+                _x = this->current_position.x;
+                _y = this->current_position.y;
+            }
+            else
+            {
+                return false;
+            }
+        }
         acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         Decision *myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, friendPositions, enemyPositions);
+        std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_status);
+        if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
+        {
+            if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight)
+            {
+                nav_through_poses_action_client_->async_cancel_goal(this->nav_through_poses_goal_handle_);
+                RCLCPP_INFO(this->get_logger(),"Cancel Previous Goal");
+            }
+            else
+            {
+                return true;
+            }
+        }
+        else
+        {
+            this->excuting_decision = myDecision;
+        }
+        slk.unlock();
         WayPoint *aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
         if (aimWayPoint == nullptr)
             return false;
@@ -88,10 +119,9 @@ namespace rdsys
         {
             this->nav_through_poses_goal_handle_.reset();
         };
-
         auto future_goal_handle =
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
-        
+
         this->nav_through_poses_goal_handle_ = future_goal_handle.get();
         return true;
     }
@@ -164,13 +194,27 @@ namespace rdsys
 
     void RobotDecisionNode::nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg)
     {
+        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_position);
+        this->current_position.set__x(msg->feedback.current_pose.pose.position.x);
+        this->current_position.set__y(msg->feedback.current_pose.pose.position.y);
+        ulk.unlock();
         RCLCPP_INFO(this->get_logger(), "Nav2FeedBack Distance Remainimg: %f", msg->feedback.distance_remaining);
     }
 
     void RobotDecisionNode::nav2GoalStatusCallBack(const action_msgs::msg::GoalStatusArray::SharedPtr msg)
     {
+        std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_status);
+        bool check = (this->goal_status != msg->status_list.back().status);
+        slk.unlock();
+        if (check)
+        {
+            std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_status);
+            this->goal_status = msg->status_list.back().status;
+            ulk.unlock();
+        }
         if (msg->status_list.back().status != action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
+            RCLCPP_INFO(this->get_logger(), "Nav2StatusCallBack Status: %d", msg->status_list.back().status);
         }
     }
 

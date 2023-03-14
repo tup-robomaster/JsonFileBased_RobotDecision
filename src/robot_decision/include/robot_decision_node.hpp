@@ -56,6 +56,14 @@ namespace rdsys
         rclcpp::Subscription<nav2_msgs::action::NavigateThroughPoses::Impl::GoalStatusMessage>::SharedPtr
             nav_through_poses_goal_status_sub_;
 
+        std::shared_timed_mutex myMutex_status;
+        std::shared_timed_mutex myMutex_position;
+
+        int8_t goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
+        geometry_msgs::msg::Point current_position;
+
+        Decision *excuting_decision = nullptr;
+
     private:
         void makeNewGoal(double x, double y, double &theta);
         std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
