@@ -7,8 +7,8 @@ namespace rdsys
     RobotDecisionNode::RobotDecisionNode(const rclcpp::NodeOptions &options)
         : rclcpp::Node("robot_decision_node", options)
     {
-        RCLCPP_WARN(this->get_logger(), "RobotDecision node...");
-        RCLCPP_WARN(this->get_logger(), "starting...");
+        RCLCPP_INFO(this->get_logger(), "RobotDecision node...");
+        RCLCPP_INFO(this->get_logger(), "starting...");
         this->init(WayPointsPATH, DecisionsPATH);
     }
 
