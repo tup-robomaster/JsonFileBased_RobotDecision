@@ -3,7 +3,7 @@
 <package format="3">
   <name>fake_msg_publisher</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>make fake msgs</description>
   <maintainer email="iratecat1@outlook.com">ninefish</maintainer>
   <license>TODO: License declaration</license>
 
@@ -12,8 +12,12 @@
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
 
-  <test_depend>robot_interface</test_depend>
+  <exec_depend>rclpy</exec_depend>
   
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>robot_interface</exec_depend>
+
   <export>
     <build_type>ament_python</build_type>
   </export>

@@ -33,15 +33,7 @@ namespace rdsys
         // qos.reliable();
         qos.durability();
         qos.durability_volatile();
-
-        RCLCPP_INFO(this->get_logger(), "Starting action_client");
-        this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
-        if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(20)))
-        {
-            RCLCPP_ERROR(this->get_logger(), "Action server not available after waiting");
-            return;
-        }
-
+        
         this->carHP_sub_.subscribe(this, "/car_hp", qos.get_rmw_qos_profile());
         this->carPos_sub_.subscribe(this, "/car_pos", qos.get_rmw_qos_profile());
         this->gameInfo_sub_.subscribe(this, "/game_info", qos.get_rmw_qos_profile());
@@ -58,6 +50,14 @@ namespace rdsys
             "navigate_through_poses/_action/status",
             qos,
             std::bind(&RobotDecisionNode::nav2GoalStatusCallBack, this, _1));
+
+        RCLCPP_INFO(this->get_logger(), "Starting action_client");
+        this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
+        if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(20)))
+        {
+            RCLCPP_ERROR(this->get_logger(), "Action server not available after waiting");
+            return;
+        }
     }
 
     bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
