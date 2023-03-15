@@ -2,7 +2,7 @@
     "data": [
         {
             "id": 0,
-            "name": "test",
+            "name": "test1",
             "type": 0,
             "x": 1.0,
             "y": 1.0,
@@ -22,8 +22,44 @@
             "id": 1,
             "name": "test2",
             "type": 0,
+            "x": 1.0,
+            "y": 2.0,
+            "angle": 0.0,
+            "connect": [
+                0
+            ],
+            "enemyWeights": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ]
+        },
+        {
+            "id": 1,
+            "name": "test3",
+            "type": 0,
             "x": 2.0,
             "y": 2.0,
+            "angle": 0.0,
+            "connect": [
+                0
+            ],
+            "enemyWeights": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ]
+        },
+        {
+            "id": 1,
+            "name": "test4",
+            "type": 0,
+            "x": 2.0,
+            "y": 1.0,
             "angle": 0.0,
             "connect": [
                 0

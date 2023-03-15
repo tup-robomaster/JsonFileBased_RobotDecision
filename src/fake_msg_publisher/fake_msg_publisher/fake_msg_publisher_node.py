@@ -35,7 +35,7 @@ class Lier(Node):
         self.carPos_msg = CarPosMsg()
         self.gameInfo_msg = GameInfoMsg()
         self.serial_msg = SerialMsg()
-
+        
 def main(args=None):
     rclpy.init(args=args)
     minimal_publisher = Lier()

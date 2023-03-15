@@ -206,7 +206,7 @@ namespace rdsys
         }
         for (auto it : this->decisions)
         {
-            if ((it->wayPointID != wayPointID || it->robot_mode != robot_mode) && it->wayPointID != -1)
+            if ((it->wayPointID != wayPointID || it->robot_mode != robot_mode) && it->wayPointID != -1 && it->robot_mode != -1)
                 continue;
             if (it->_maxHP != -1 && _HP > it->_maxHP)
                 continue;
@@ -310,6 +310,8 @@ namespace rdsys
             distances[it.robot_id] = tempDistance;
         }
         WayPoint *myWayPoint = this->getWayPointByID(myWayPointID);
+        if(myWayPoint == nullptr)
+            return -1;
         int baseWeight = 0;
         int selectId = -1;
         for (auto &it : detectedEnemy)
