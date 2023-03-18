@@ -29,6 +29,7 @@ class Lier(Node):
         self.publisher_CarPosMsg.publish(self.carPos_msg)
         self.publisher_GameInfoMsg.publish(self.gameInfo_msg)
         self.publisher_SerialMsg.publish(self.serial_msg)
+        self.get_logger().info("Publish Fake Msgs")
 
     def make_fake(self):
         self.carHP_msg = CarHPMsg()

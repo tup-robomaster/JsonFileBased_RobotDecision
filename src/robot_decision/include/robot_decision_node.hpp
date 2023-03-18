@@ -26,7 +26,7 @@ namespace rdsys
         int _selfIndex = 0;
         bool _IsRed = false;
         float _distance_THR = 0.5;
-        float _seek_THR = 10;
+        float _seek_THR = 5.0;
 
     private:
         message_filters::Subscriber<robot_interface::msg::CarHP> carHP_sub_;
