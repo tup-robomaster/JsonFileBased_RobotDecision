@@ -222,10 +222,10 @@ namespace rdsys
                 int size = it->friend_position[i].size();
                 if (size == 0)
                     continue;
-                if (0 == id_pos_f.count(char(i + 1)))
+                if (0 == id_pos_f.count(i + 1))
                     continue;
                 int temp_pos;
-                temp_pos = id_pos_f[char(i + 1)];
+                temp_pos = id_pos_f[i + 1];
                 for (int j = 0; j < size; ++j)
                 {
                     if (it->friend_position[i][j] == temp_pos || it->friend_position[i][j] == -1)
@@ -243,10 +243,10 @@ namespace rdsys
                 int size = it->enemy_position[i].size();
                 if (size == 0)
                     continue;
-                if (0 == id_pos_e.count(char(i + 1)))
+                if (0 == id_pos_e.count(i + 1))
                     continue;
                 int temp_pos;
-                temp_pos = id_pos_e[char(i + 1)];
+                temp_pos = id_pos_e[i + 1];
                 for (int j = 0; j < size; ++j)
                 {
                     if (it->enemy_position[i][j] == temp_pos || it->enemy_position[i][j] == -1)
