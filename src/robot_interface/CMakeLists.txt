@@ -34,6 +34,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/GameInfo.msg"
   "msg/Point2f.msg"
   "msg/Serial.msg"
+  "msg/Detection.msg"
+  "msg/DetectionArray.msg"
   DEPENDENCIES
   builtin_interfaces
   std_msgs

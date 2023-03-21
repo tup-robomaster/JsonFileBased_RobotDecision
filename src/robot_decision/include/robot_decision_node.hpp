@@ -4,6 +4,7 @@
 #include "robot_interface/msg/car_pos.hpp"
 #include "robot_interface/msg/game_info.hpp"
 #include "robot_interface/msg/serial.hpp"
+#include "robot_interface/msg/detection_array.hpp"
 
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose.hpp"
@@ -33,6 +34,8 @@ namespace rdsys
         message_filters::Subscriber<robot_interface::msg::CarPos> carPos_sub_;
         message_filters::Subscriber<robot_interface::msg::GameInfo> gameInfo_sub_;
         message_filters::Subscriber<robot_interface::msg::Serial> serial_sub_;
+
+        rclcpp::Subscription<robot_interface::msg::DetectionArray>::SharedPtr detectionArray_sub_;
 
         typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::CarHP, robot_interface::msg::CarPos, robot_interface::msg::GameInfo, robot_interface::msg::Serial> ApproximateSyncPolicy;
         std::unique_ptr<message_filters::Synchronizer<ApproximateSyncPolicy>> TS_sync_;
@@ -71,6 +74,7 @@ namespace rdsys
                              const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
                              const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                              const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
+        void detectionArrayCallBack(const robot_interface::msg::DetectionArray::SharedPtr msg);
         void nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg);
         void nav2GoalStatusCallBack(const action_msgs::msg::GoalStatusArray::SharedPtr msg);
         void respond();

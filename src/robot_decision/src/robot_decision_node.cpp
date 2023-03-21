@@ -33,11 +33,13 @@ namespace rdsys
         // qos.reliable();
         qos.durability();
         qos.durability_volatile();
-        
+
         this->carHP_sub_.subscribe(this, "/car_hp", qos.get_rmw_qos_profile());
         this->carPos_sub_.subscribe(this, "/car_pos", qos.get_rmw_qos_profile());
         this->gameInfo_sub_.subscribe(this, "/game_info", qos.get_rmw_qos_profile());
         this->serial_sub_.subscribe(this, "/serial_msg", qos.get_rmw_qos_profile());
+
+        this->detectionArray_sub_ = this->create_subscription<robot_interface::msg::DetectionArray>("/armor_detector/detections", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
         this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
@@ -84,17 +86,14 @@ namespace rdsys
             if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight)
             {
                 nav_through_poses_action_client_->async_cancel_goal(this->nav_through_poses_goal_handle_);
-                RCLCPP_INFO(this->get_logger(),"Cancel Previous Goal");
+                RCLCPP_INFO(this->get_logger(), "Cancel Previous Goal");
             }
             else
             {
                 return true;
             }
         }
-        else
-        {
-            this->excuting_decision = myDecision;
-        }
+        this->excuting_decision = myDecision;
         slk.unlock();
         WayPoint *aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
         if (aimWayPoint == nullptr)
@@ -190,6 +189,11 @@ namespace rdsys
         {
             RCLCPP_ERROR(this->get_logger(), "Decision failed!");
         }
+    }
+
+    void RobotDecisionNode::detectionArrayCallBack(const robot_interface::msg::DetectionArray::SharedPtr msg)
+    {
+        
     }
 
     void RobotDecisionNode::nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg)
