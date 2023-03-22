@@ -7,8 +7,12 @@ namespace rdsys
     RobotDecisionNode::RobotDecisionNode(const rclcpp::NodeOptions &options)
         : rclcpp::Node("robot_decision_node", options)
     {
-        RCLCPP_INFO(this->get_logger(), "RobotDecision node...");
-        RCLCPP_INFO(this->get_logger(), "starting...");
+        RCLCPP_INFO(
+            this->get_logger(),
+            "RobotDecision node...");
+        RCLCPP_INFO(
+            this->get_logger(),
+            "starting...");
         this->init(WayPointsPATH, DecisionsPATH);
     }
 
@@ -23,14 +27,17 @@ namespace rdsys
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR, this->_seek_THR));
         this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
         if (!this->myRDS->decodeWayPoints(waypointsPath))
-            RCLCPP_ERROR(this->get_logger(), "Decode waypoints failed");
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Decode waypoints failed");
         if (!this->myRDS->decodeDecisions(decisionsPath))
-            RCLCPP_ERROR(this->get_logger(), "Decode decisions failed");
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Decode decisions failed");
 
         rclcpp::QoS qos(0);
         qos.keep_last(10);
         qos.best_effort();
-        // qos.reliable();
         qos.durability();
         qos.durability_volatile();
 
@@ -53,11 +60,18 @@ namespace rdsys
             qos,
             std::bind(&RobotDecisionNode::nav2GoalStatusCallBack, this, _1));
 
-        RCLCPP_INFO(this->get_logger(), "Starting action_client");
+        this->aim_yaw_pub_ = this->create_publisher<std_msgs::msg::Float32>("robot_decision/aim_yaw", qos);
+        this->decision_pub_ = this->create_publisher<robot_interface::msg::Decision>("robot_decision/decision", qos);
+
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Starting action_client");
         this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
         if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(20)))
         {
-            RCLCPP_ERROR(this->get_logger(), "Action server not available after waiting");
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Action server not available after waiting");
             return;
         }
     }
@@ -66,27 +80,51 @@ namespace rdsys
     {
         if (_x == 0.0 || _y == 0.0)
         {
-            std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_position);
-            if (this->current_position.x > 0.0 && this->current_position.y > 0.0)
+            std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_position);
+            if (this->current_NTP_FeedBack->feedback.current_pose.pose.position.x > 0.0 && this->current_NTP_FeedBack->feedback.current_pose.pose.position.y > 0.0 && rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack->feedback.current_pose.header.stamp.sec <= 1)
             {
-                _x = this->current_position.x;
-                _y = this->current_position.y;
+                _x = this->current_NTP_FeedBack->feedback.current_pose.pose.position.x;
+                _y = this->current_NTP_FeedBack->feedback.current_pose.pose.position.y;
             }
             else
             {
+                RCLCPP_ERROR(
+                    this->get_logger(),
+                    "Cannot get current Position !");
                 return false;
             }
+            slk_1.unlock();
         }
+
+        double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
+        double roll, pitch, yaw;
+        tf2::Quaternion imu_quat(
+            this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.x,
+            this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.y,
+            this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.z,
+            this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.w);
+        tf2::Matrix3x3 m(imu_quat);
+        m.getRPY(roll, pitch, yaw);
+        std_msgs::msg::Float32 aim_yaw_msg;
+        aim_yaw_msg.set__data(float(aim_yaw - yaw));
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Publish Aim Yaw : %lf",
+            float(aim_yaw - yaw));
+        this->aim_yaw_pub_->publish(aim_yaw_msg);
+
         acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         Decision *myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, friendPositions, enemyPositions);
-        std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_status);
+        std::shared_lock<std::shared_timed_mutex> slk_2(this->myMutex_status);
         if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
             if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight)
             {
                 nav_through_poses_action_client_->async_cancel_goal(this->nav_through_poses_goal_handle_);
-                RCLCPP_INFO(this->get_logger(), "Cancel Previous Goal");
+                RCLCPP_INFO(
+                    this->get_logger(),
+                    "Cancel Previous Goal");
             }
             else
             {
@@ -94,7 +132,7 @@ namespace rdsys
             }
         }
         this->excuting_decision = myDecision;
-        slk.unlock();
+        slk_2.unlock();
         WayPoint *aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
         if (aimWayPoint == nullptr)
             return false;
@@ -104,7 +142,8 @@ namespace rdsys
         this->makeNewGoal(aimWayPoint->x, aimWayPoint->y, theta);
         this->nav_through_poses_goal_.poses = acummulated_poses_;
         RCLCPP_INFO(
-            this->get_logger(), "Sending a path of %zu waypoints:",
+            this->get_logger(),
+            "Sending a path of %zu waypoints:",
             this->nav_through_poses_goal_.poses.size());
         for (auto waypoint : this->nav_through_poses_goal_.poses)
         {
@@ -143,7 +182,9 @@ namespace rdsys
     {
         if (pos.size() != 10)
         {
-            RCLCPP_ERROR(this->get_logger(), "Position msg not valid !");
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Position msg not valid !");
             return {};
         }
         std::vector<RobotPosition> result;
@@ -166,6 +207,16 @@ namespace rdsys
         int nowTime = gameInfo_msg_->timestamp;
         int mode = serial_sub_->mode;
         std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_->pos);
+        std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
+        if (this->detectionArray != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray->header.stamp.sec <= 0)
+        {
+            for (auto it : this->detectionArray->detections)
+            {
+                allPositions[this->type_id.find(it.type)->second].x = it.center.position.x;
+                allPositions[this->type_id.find(it.type)->second].y = it.center.position.y;
+            }
+        }
+        slk.unlock();
         std::vector<RobotPosition> friendPositions;
         std::vector<RobotPosition> enemyPositions;
         for (int i = 0; i < 9; ++i)
@@ -187,22 +238,32 @@ namespace rdsys
         }
         if (this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, friendPositions, enemyPositions))
         {
-            RCLCPP_ERROR(this->get_logger(), "Decision failed!");
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Decision failed!");
         }
     }
 
     void RobotDecisionNode::detectionArrayCallBack(const robot_interface::msg::DetectionArray::SharedPtr msg)
     {
-        
+        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_detectionArray);
+        this->detectionArray = msg;
+        ulk.unlock();
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Detection Array Recived: %d || %d",
+            msg->header.stamp.sec, msg->header.stamp.nanosec);
     }
 
     void RobotDecisionNode::nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg)
     {
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_position);
-        this->current_position.set__x(msg->feedback.current_pose.pose.position.x);
-        this->current_position.set__y(msg->feedback.current_pose.pose.position.y);
+        this->current_NTP_FeedBack = msg;
         ulk.unlock();
-        RCLCPP_INFO(this->get_logger(), "Nav2FeedBack Distance Remainimg: %f", msg->feedback.distance_remaining);
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Nav2FeedBack Distance Remainimg: %f",
+            msg->feedback.distance_remaining);
     }
 
     void RobotDecisionNode::nav2GoalStatusCallBack(const action_msgs::msg::GoalStatusArray::SharedPtr msg)
@@ -218,7 +279,10 @@ namespace rdsys
         }
         if (msg->status_list.back().status != action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
-            RCLCPP_INFO(this->get_logger(), "Nav2StatusCallBack Status: %d", msg->status_list.back().status);
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Nav2StatusCallBack Status: %d",
+                msg->status_list.back().status);
         }
     }
 
@@ -229,12 +293,18 @@ namespace rdsys
 
         if (this->myRDS->getDistanceTHR() != this->_distance_THR)
         {
-            RCLCPP_INFO(this->get_logger(), "set _distance_THR to %f", this->_distance_THR);
+            RCLCPP_INFO(
+                this->get_logger(),
+                "set _distance_THR to %f",
+                this->_distance_THR);
             this->myRDS->setDistanceTHR(this->_distance_THR);
         }
         if (this->myRDS->getSeekTHR() != this->_seek_THR)
         {
-            RCLCPP_INFO(this->get_logger(), "set _seek_THR to %f", this->_seek_THR);
+            RCLCPP_INFO(
+                this->get_logger(),
+                "set _seek_THR to %f",
+                this->_seek_THR);
             this->myRDS->setSeekTHR(this->_seek_THR);
         }
     }

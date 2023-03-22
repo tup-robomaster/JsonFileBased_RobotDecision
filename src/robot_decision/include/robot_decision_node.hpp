@@ -5,9 +5,11 @@
 #include "robot_interface/msg/game_info.hpp"
 #include "robot_interface/msg/serial.hpp"
 #include "robot_interface/msg/detection_array.hpp"
+#include "robot_interface/msg/decision.hpp"
 
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "std_msgs/msg/float32.hpp"
 #include "nav2_util/geometry_utils.hpp"
 #include "nav2_behavior_tree/plugins/action/navigate_through_poses_action.hpp"
 
@@ -16,6 +18,7 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 namespace rdsys
 {
@@ -28,6 +31,17 @@ namespace rdsys
         bool _IsRed = false;
         float _distance_THR = 0.5;
         float _seek_THR = 5.0;
+
+        const std::map<std::string, int> type_id = {std::map<std::string, int>::value_type("B1", 0),
+                                                    std::map<std::string, int>::value_type("B2", 1),
+                                                    std::map<std::string, int>::value_type("B3", 2),
+                                                    std::map<std::string, int>::value_type("B4", 3),
+                                                    std::map<std::string, int>::value_type("B5", 4),
+                                                    std::map<std::string, int>::value_type("R1", 5),
+                                                    std::map<std::string, int>::value_type("R2", 6),
+                                                    std::map<std::string, int>::value_type("R3", 7),
+                                                    std::map<std::string, int>::value_type("R4", 8),
+                                                    std::map<std::string, int>::value_type("R5", 9)};
 
     private:
         message_filters::Subscriber<robot_interface::msg::CarHP> carHP_sub_;
@@ -59,11 +73,19 @@ namespace rdsys
         rclcpp::Subscription<nav2_msgs::action::NavigateThroughPoses::Impl::GoalStatusMessage>::SharedPtr
             nav_through_poses_goal_status_sub_;
 
+        rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr
+            aim_yaw_pub_;
+        rclcpp::Publisher<robot_interface::msg::Decision>::SharedPtr
+            decision_pub_;
+
         std::shared_timed_mutex myMutex_status;
         std::shared_timed_mutex myMutex_position;
+        std::shared_timed_mutex myMutex_detectionArray;
 
         int8_t goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
-        geometry_msgs::msg::Point current_position;
+        nav2_msgs::action::NavigateThroughPoses_FeedbackMessage::SharedPtr current_NTP_FeedBack;
+
+        robot_interface::msg::DetectionArray::SharedPtr detectionArray = nullptr;
 
         Decision *excuting_decision = nullptr;
 

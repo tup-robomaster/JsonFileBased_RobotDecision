@@ -36,6 +36,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Serial.msg"
   "msg/Detection.msg"
   "msg/DetectionArray.msg"
+  "msg/Decision.msg"
   DEPENDENCIES
   builtin_interfaces
   std_msgs
