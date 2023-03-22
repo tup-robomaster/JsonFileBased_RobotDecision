@@ -130,6 +130,9 @@ namespace rdsys
             }
             else
             {
+                RCLCPP_INFO(
+                    this->get_logger(),
+                    "Function Normal Contine");
                 return true;
             }
         }
