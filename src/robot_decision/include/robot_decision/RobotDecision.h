@@ -19,9 +19,9 @@ namespace rdsys
     class RobotDecisionSys
     {
     private:
-        std::vector<WayPoint *> wayPointMap;
+        std::vector<std::shared_ptr<WayPoint>> wayPointMap;
         std::vector<std::vector<int>> connectionList;
-        std::vector<Decision *> decisions;
+        std::vector<std::shared_ptr<Decision>> decisions;
 
         float _distance_THR = 0;
         float _seek_THR = 5.0;
@@ -90,20 +90,20 @@ namespace rdsys
          * @param enemtPositions
          * 敌方机器人位置
          */
-        Decision *decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
+        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
 
         /**
          * @brief 根据ID获取路径点
          * @param id
          * 路径点ID
          */
-        WayPoint *getWayPointByID(int id);
+        std::shared_ptr<WayPoint> getWayPointByID(int id);
         /**
          * @brief 根据ID获取决策
          * @param id
          * 决策ID
          */
-        Decision *getDecisionByID(int id);
+        std::shared_ptr<Decision> getDecisionByID(int id);
 
         /**
          * @brief 决策打击目标

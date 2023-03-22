@@ -87,7 +87,7 @@ namespace rdsys
 
         robot_interface::msg::DetectionArray::SharedPtr detectionArray = nullptr;
 
-        Decision *excuting_decision = nullptr;
+        std::shared_ptr<Decision> excuting_decision = nullptr;
 
     private:
         void makeNewGoal(double x, double y, double &theta);

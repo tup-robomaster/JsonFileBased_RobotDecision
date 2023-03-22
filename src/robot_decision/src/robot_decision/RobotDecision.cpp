@@ -191,9 +191,9 @@ namespace rdsys
         return this->calculatePosition(pos);
     }
 
-    Decision *RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
+    std::shared_ptr<Decision> RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
     {
-        std::vector<Decision *> tempDecision;
+        std::vector<std::shared_ptr<Decision>> tempDecision;
         std::map<int, int> id_pos_f;
         for (auto &it : friendPositions)
         {
@@ -260,7 +260,7 @@ namespace rdsys
                 tempDecision.emplace_back(it);
         }
         int max_weight = 0;
-        Decision *decision;
+        std::shared_ptr<Decision> decision;
         for (auto it : tempDecision)
         {
             if (it->weight > max_weight)
@@ -277,7 +277,7 @@ namespace rdsys
         return decision;
     }
 
-    WayPoint *RobotDecisionSys::getWayPointByID(int id)
+    std::shared_ptr<WayPoint> RobotDecisionSys::getWayPointByID(int id)
     {
         for (auto &it : this->wayPointMap)
         {
@@ -289,7 +289,7 @@ namespace rdsys
         return nullptr;
     }
 
-    Decision *RobotDecisionSys::getDecisionByID(int id)
+    std::shared_ptr<Decision> RobotDecisionSys::getDecisionByID(int id)
     {
         for (auto &it : this->decisions)
         {
@@ -309,7 +309,7 @@ namespace rdsys
             float tempDistance = std::sqrt((it.x - mypos.x) * (it.x - mypos.x) + (it.y - mypos.y) * (it.y - mypos.y));
             distances[it.robot_id] = tempDistance;
         }
-        WayPoint *myWayPoint = this->getWayPointByID(myWayPointID);
+        std::shared_ptr<WayPoint> myWayPoint = this->getWayPointByID(myWayPointID);
         if(myWayPoint == nullptr)
             return -1;
         int baseWeight = 0;

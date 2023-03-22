@@ -115,7 +115,7 @@ namespace rdsys
 
         acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
-        Decision *myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, friendPositions, enemyPositions);
+        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, friendPositions, enemyPositions);
         std::shared_lock<std::shared_timed_mutex> slk_2(this->myMutex_status);
         if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
@@ -161,6 +161,18 @@ namespace rdsys
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
 
         this->nav_through_poses_goal_handle_ = future_goal_handle.get();
+
+        robot_interface::msg::Decision myDecision_msg;
+        myDecision_msg.set__decision_id(myDecision->id);
+        myDecision_msg.set__mode(myDecision->decide_mode);
+        myDecision_msg.set__x(aimWayPoint->x);
+        myDecision_msg.set__y(aimWayPoint->y);
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Publish Decision : [id] %d [mode] %d [x,y] %lf %lf",
+            myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
+        this->decision_pub_->publish(myDecision_msg);
+        delete aimWayPoint;
         return true;
     }
 
