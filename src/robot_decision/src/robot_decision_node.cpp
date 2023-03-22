@@ -133,7 +133,7 @@ namespace rdsys
         }
         this->excuting_decision = myDecision;
         slk_2.unlock();
-        WayPoint *aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
+        std::shared_ptr<WayPoint> aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
         if (aimWayPoint == nullptr)
             return false;
         double theta = this->myRDS->decideAngleByEnemyPos(aimWayPoint->x, aimWayPoint->y, enemyPositions);
@@ -172,7 +172,6 @@ namespace rdsys
             "Publish Decision : [id] %d [mode] %d [x,y] %lf %lf",
             myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
         this->decision_pub_->publish(myDecision_msg);
-        delete aimWayPoint;
         return true;
     }
 
