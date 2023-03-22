@@ -81,7 +81,9 @@ namespace rdsys
         if (_x == 0.0 || _y == 0.0)
         {
             std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_position);
-            if (this->current_NTP_FeedBack->feedback.current_pose.pose.position.x > 0.0 && this->current_NTP_FeedBack->feedback.current_pose.pose.position.y > 0.0 && rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack->feedback.current_pose.header.stamp.sec <= 1)
+            if (this->current_NTP_FeedBack->feedback.current_pose.pose.position.x > 0.0 &&
+                this->current_NTP_FeedBack->feedback.current_pose.pose.position.y > 0.0 &&
+                rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack->feedback.current_pose.header.stamp.sec <= 1)
             {
                 _x = this->current_NTP_FeedBack->feedback.current_pose.pose.position.x;
                 _y = this->current_NTP_FeedBack->feedback.current_pose.pose.position.y;
@@ -98,12 +100,12 @@ namespace rdsys
 
         double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
         double roll, pitch, yaw;
-        tf2::Quaternion imu_quat(
+        tf2::Quaternion nv2_quat(
             this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.x,
             this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.y,
             this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.z,
             this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.w);
-        tf2::Matrix3x3 m(imu_quat);
+        tf2::Matrix3x3 m(nv2_quat);
         m.getRPY(roll, pitch, yaw);
         std_msgs::msg::Float32 aim_yaw_msg;
         aim_yaw_msg.set__data(float(aim_yaw - yaw));
