@@ -90,7 +90,7 @@ namespace rdsys
          * @param enemtPositions
          * 敌方机器人位置
          */
-        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
+        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime,int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
 
         /**
          * @brief 根据ID获取路径点

@@ -151,6 +151,7 @@ namespace rdsys
             decision->_maxHP = arrayValue[i]["maxHP"].asInt();
             decision->decide_mode = arrayValue[i]["decide_mode"].asInt();
             decision->decide_wayPoint = arrayValue[i]["decide_wayPoint"].asInt();
+            decision->out_post_HP_max = arrayValue[i]["out_post_HP_max"].asInt();
             decision->if_succession = arrayValue[i]["if_succession"].asBool();
             Json::Value enemyPositionArray = arrayValue[i]["enemyPosition"];
             for (int j = 0; j < int(enemyPositionArray.size()); ++j)
@@ -191,7 +192,7 @@ namespace rdsys
         return this->calculatePosition(pos);
     }
 
-    std::shared_ptr<Decision> RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
+    std::shared_ptr<Decision> RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
     {
         std::vector<std::shared_ptr<Decision>> tempDecision;
         std::map<int, int> id_pos_f;
@@ -215,6 +216,8 @@ namespace rdsys
             if (it->end_time != -1 && nowtime > it->end_time)
                 continue;
             if (it->start_time != -1 && nowtime <= it->start_time)
+                continue;
+            if (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max)
                 continue;
             bool fpFLAG = false;
             for (int i = 0; i < int(it->friend_position.size()); ++i)

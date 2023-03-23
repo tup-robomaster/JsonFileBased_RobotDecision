@@ -107,6 +107,6 @@ namespace rdsys
 
     public:
         void init(char *waypointsPath, char *decisionsPath);
-        bool process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
+        bool process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
     };
 }

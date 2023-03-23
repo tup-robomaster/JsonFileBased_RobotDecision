@@ -76,7 +76,7 @@ namespace rdsys
         }
     }
 
-    bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
+    bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
     {
         if (_x == 0.0 || _y == 0.0)
         {
@@ -117,7 +117,7 @@ namespace rdsys
 
         acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
-        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, friendPositions, enemyPositions);
+        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, friendPositions, enemyPositions);
         std::shared_lock<std::shared_timed_mutex> slk_2(this->myMutex_status);
         if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
@@ -222,6 +222,7 @@ namespace rdsys
         float myPos_y_ = carPos_msg_->pos[this->_selfIndex].y;
         int nowTime = gameInfo_msg_->timestamp;
         int mode = serial_sub_->mode;
+        int now_out_post_HP = gameInfo_msg_->out_post_hp;
         std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_->pos);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
         if (this->detectionArray != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray->header.stamp.sec <= 0)
@@ -252,7 +253,7 @@ namespace rdsys
                     enemyPositions.emplace_back(allPositions[i]);
             }
         }
-        if (this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, friendPositions, enemyPositions))
+        if (this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, friendPositions, enemyPositions))
         {
             RCLCPP_ERROR(
                 this->get_logger(),
@@ -324,7 +325,6 @@ namespace rdsys
             this->myRDS->setSeekTHR(this->_seek_THR);
         }
     }
-
 }
 
 int main(int argc, char *argv[])
