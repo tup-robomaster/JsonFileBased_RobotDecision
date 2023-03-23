@@ -41,14 +41,14 @@ namespace rdsys
         qos.durability();
         qos.durability_volatile();
 
-        this->carHP_sub_.subscribe(this, "/car_hp", qos.get_rmw_qos_profile());
+        this->objHP_sub_.subscribe(this, "/obj_hp", qos.get_rmw_qos_profile());
         this->carPos_sub_.subscribe(this, "/car_pos", qos.get_rmw_qos_profile());
         this->gameInfo_sub_.subscribe(this, "/game_info", qos.get_rmw_qos_profile());
         this->serial_sub_.subscribe(this, "/serial_msg", qos.get_rmw_qos_profile());
 
         this->detectionArray_sub_ = this->create_subscription<robot_interface::msg::DetectionArray>("/armor_detector/detections", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
 
-        this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->carHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
+        this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->objHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
         this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
 
         this->nav_through_poses_feedback_sub_ = this->create_subscription<nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage>(
@@ -211,18 +211,18 @@ namespace rdsys
         return result;
     }
 
-    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_,
+    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::ObjHP const> &ObjHP_msg_,
                                             const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
                                             const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                                             const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_)
     {
         this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
-        int myHP = carHP_msg_->hp[this->_selfIndex];
+        int myHP = ObjHP_msg_->hp[this->_selfIndex];
         float myPos_x_ = carPos_msg_->pos[this->_selfIndex].x;
         float myPos_y_ = carPos_msg_->pos[this->_selfIndex].y;
         int nowTime = gameInfo_msg_->timestamp;
         int mode = serial_sub_->mode;
-        int now_out_post_HP = gameInfo_msg_->out_post_hp;
+        int now_out_post_HP = ObjHP_msg_->hp[this->_friendOutPostIndex];
         std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_->pos);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
         if (this->detectionArray != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray->header.stamp.sec <= 0)

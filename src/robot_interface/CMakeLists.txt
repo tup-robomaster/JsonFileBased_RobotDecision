@@ -29,7 +29,7 @@ if(BUILD_TESTING)
 endif()
  
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/CarHP.msg"
+  "msg/ObjHP.msg"
   "msg/CarPos.msg"
   "msg/GameInfo.msg"
   "msg/Point2f.msg"

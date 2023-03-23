@@ -1,6 +1,6 @@
 #include "./robot_decision/RobotDecision.h"
 
-#include "robot_interface/msg/car_hp.hpp"
+#include "robot_interface/msg/obj_hp.hpp"
 #include "robot_interface/msg/car_pos.hpp"
 #include "robot_interface/msg/game_info.hpp"
 #include "robot_interface/msg/serial.hpp"
@@ -27,7 +27,9 @@ namespace rdsys
     class RobotDecisionNode : public rclcpp::Node
     {
     private:
+    //TODO： change here
         int _selfIndex = 0;
+        int _friendOutPostIndex = 0;
         bool _IsRed = false;
         float _distance_THR = 0.5;
         float _seek_THR = 5.0;
@@ -44,14 +46,14 @@ namespace rdsys
                                                     std::map<std::string, int>::value_type("R5", 9)};
 
     private:
-        message_filters::Subscriber<robot_interface::msg::CarHP> carHP_sub_;
+        message_filters::Subscriber<robot_interface::msg::ObjHP> objHP_sub_;
         message_filters::Subscriber<robot_interface::msg::CarPos> carPos_sub_;
         message_filters::Subscriber<robot_interface::msg::GameInfo> gameInfo_sub_;
         message_filters::Subscriber<robot_interface::msg::Serial> serial_sub_;
 
         rclcpp::Subscription<robot_interface::msg::DetectionArray>::SharedPtr detectionArray_sub_;
 
-        typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::CarHP, robot_interface::msg::CarPos, robot_interface::msg::GameInfo, robot_interface::msg::Serial> ApproximateSyncPolicy;
+        typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::ObjHP, robot_interface::msg::CarPos, robot_interface::msg::GameInfo, robot_interface::msg::Serial> ApproximateSyncPolicy;
         std::unique_ptr<message_filters::Synchronizer<ApproximateSyncPolicy>> TS_sync_;
 
         std::shared_ptr<RobotDecisionSys> myRDS;
@@ -92,7 +94,7 @@ namespace rdsys
     private:
         void makeNewGoal(double x, double y, double &theta);
         std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
-        void messageCallBack(const std::shared_ptr<robot_interface::msg::CarHP const> &carHP_msg_,
+        void messageCallBack(const std::shared_ptr<robot_interface::msg::ObjHP const> &carHP_msg_,
                              const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
                              const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                              const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
