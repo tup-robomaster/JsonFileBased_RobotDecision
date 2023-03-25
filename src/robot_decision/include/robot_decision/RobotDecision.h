@@ -18,8 +18,13 @@ namespace rdsys
      */
     class RobotDecisionSys
     {
-    public:
+    private:
         bool IfShowUI = true;
+        bool IfUIInited = false;
+
+    public:
+        bool getIfShowUI();
+        void setIfShowUI(bool ifShowUI);
 
     private:
         std::vector<std::shared_ptr<WayPoint>> wayPointMap;

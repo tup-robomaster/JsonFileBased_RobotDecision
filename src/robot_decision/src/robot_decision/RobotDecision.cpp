@@ -80,11 +80,6 @@ namespace rdsys
     {
         this->_distance_THR = _distance_THR;
         this->_seek_THR = _seek_THR;
-        if (this->IfShowUI)
-        {
-            this->decisionMap = cv::Mat::zeros(1920, 1080, CV_8UC3);
-            cv::namedWindow("DecisionMapUI", cv::WindowFlags::WINDOW_NORMAL);
-        }
     }
 
     RobotDecisionSys::~RobotDecisionSys()
@@ -407,6 +402,19 @@ namespace rdsys
 
     void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint)
     {
+        if (IfShowUI)
+        {
+            if (!IfUIInited)
+            {
+                this->decisionMap = cv::Mat::zeros(1920, 1080, CV_8UC3);
+                cv::namedWindow("DecisionMapUI", cv::WindowFlags::WINDOW_NORMAL);
+                this->IfUIInited = true;
+            }
+        }
+        else
+        {
+            return;
+        }
         this->decisionMap = cv::Mat::zeros(1080, 1920, CV_8UC3);
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
         std::vector<int> availableWayPointID;
@@ -475,5 +483,15 @@ namespace rdsys
     cv::Point2i RobotDecisionSys::transformPoint(float _x, float _y, float width, float height, int img_cols, int img_rows)
     {
         return cv::Point2i(int(_x / width) * img_cols, int(_y / height) * img_rows);
+    }
+
+    bool RobotDecisionSys::getIfShowUI()
+    {
+        return this->IfShowUI;
+    }
+
+    void RobotDecisionSys::setIfShowUI(bool ifShowUI)
+    {
+        this->IfShowUI = ifShowUI;
     }
 }

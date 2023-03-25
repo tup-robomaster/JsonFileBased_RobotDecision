@@ -30,9 +30,15 @@ namespace rdsys
     //TODO: change here
         int _selfIndex = 0;
         int _friendOutPostIndex = 0;
+        bool _IfShowUI = true;
         bool _IsRed = false;
-        float _distance_THR = 0.5;
-        float _seek_THR = 5.0;
+
+        float _distance_THR_Temp = 0.5;
+        float _seek_THR_Temp = 5.0;
+        bool _IfShowUI_Temp = true;
+        bool _IsRed_Temp = false;
+        int _selfIndex_Temp = 0;
+        int _friendOutPostIndex_Temp = 0;
 
         const std::map<std::string, int> type_id = {std::map<std::string, int>::value_type("B1", 0),
                                                     std::map<std::string, int>::value_type("B2", 1),

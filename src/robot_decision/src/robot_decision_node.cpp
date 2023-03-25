@@ -24,7 +24,11 @@ namespace rdsys
     {
         this->declare_parameter<float>("distance_thr", 0.5);
         this->declare_parameter<float>("seek_thr", 5.0);
-        this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR, this->_seek_THR));
+        this->declare_parameter<bool>("IsRed", false);
+        this->declare_parameter<bool>("IfShowUI", true);
+
+        this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp));
+
         this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
         if (!this->myRDS->decodeWayPoints(waypointsPath))
             RCLCPP_ERROR(
@@ -178,7 +182,8 @@ namespace rdsys
             "Publish Decision : [id] %d [mode] %d [x,y] %lf %lf",
             myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
         this->decision_pub_->publish(myDecision_msg);
-        this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID);
+        if (this->_IfShowUI)
+            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID);
         return true;
     }
 
@@ -307,24 +312,61 @@ namespace rdsys
 
     void RobotDecisionNode::respond()
     {
-        this->get_parameter("distance_thr", this->_distance_THR);
-        this->get_parameter("seek_thr", this->_seek_THR);
+        this->get_parameter("distance_thr", this->_distance_THR_Temp);
+        this->get_parameter("seek_thr", this->_seek_THR_Temp);
+        this->get_parameter("IfShowUI", this->_IfShowUI_Temp);
+        this->get_parameter("IsRed", this->_IsRed_Temp);
+        this->get_parameter("SelfIndex", this->_selfIndex_Temp);
+        this->get_parameter("friendOutPostIndex", this->_friendOutPostIndex_Temp);
 
-        if (this->myRDS->getDistanceTHR() != this->_distance_THR)
+        if (this->myRDS->getDistanceTHR() != this->_distance_THR_Temp)
         {
             RCLCPP_INFO(
                 this->get_logger(),
                 "set _distance_THR to %f",
-                this->_distance_THR);
-            this->myRDS->setDistanceTHR(this->_distance_THR);
+                this->_distance_THR_Temp);
+            this->myRDS->setDistanceTHR(this->_distance_THR_Temp);
         }
-        if (this->myRDS->getSeekTHR() != this->_seek_THR)
+        if (this->myRDS->getSeekTHR() != this->_seek_THR_Temp)
         {
             RCLCPP_INFO(
                 this->get_logger(),
                 "set _seek_THR to %f",
-                this->_seek_THR);
-            this->myRDS->setSeekTHR(this->_seek_THR);
+                this->_seek_THR_Temp);
+            this->myRDS->setSeekTHR(this->_seek_THR_Temp);
+        }
+        if (this->myRDS->getIfShowUI() != this->_IfShowUI_Temp)
+        {
+            RCLCPP_INFO(
+                this->get_logger(),
+                "set _IfShowUI to %d",
+                this->_IfShowUI_Temp);
+            this->myRDS->setIfShowUI(this->_IfShowUI_Temp);
+            this->_IfShowUI = this->_IfShowUI_Temp;
+        }
+        if (this->_IsRed != this->_IsRed_Temp)
+        {
+            RCLCPP_INFO(
+                this->get_logger(),
+                "set _IsRed to %d",
+                this->_IsRed_Temp);
+            this->_IsRed = this->_IsRed_Temp;
+        }
+        if (this->_selfIndex != this->_selfIndex_Temp)
+        {
+            RCLCPP_INFO(
+                this->get_logger(),
+                "set _selfIndex to %d",
+                this->_selfIndex_Temp);
+            this->_selfIndex = this->_selfIndex_Temp;
+        }
+        if (this->_friendOutPostIndex != this->_friendOutPostIndex_Temp)
+        {
+            RCLCPP_INFO(
+                this->get_logger(),
+                "set _friendOutPostIndex to %d",
+                this->_friendOutPostIndex_Temp);
+            this->_friendOutPostIndex = this->_friendOutPostIndex_Temp;
         }
     }
 }
