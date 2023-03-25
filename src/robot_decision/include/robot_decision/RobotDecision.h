@@ -114,10 +114,12 @@ namespace rdsys
          * 友方机器人位置
          * @param enemtPositions
          * 敌方机器人位置
+         * @param availableDecisionID
+         * 输入输出符合条件的决策ID
          * @return
          * 决策
          */
-        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
+        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions,std::vector<int> &availableDecisionID);
 
         /**
          * @brief 根据ID获取路径点
@@ -201,7 +203,7 @@ namespace rdsys
          * @param nowWayPoint
          * 当前所在路径点
          */
-        void UpdateDecisionMap(int activateDecisionID, std::vector<int> availableDecisionID, int nowWayPoint);
+        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint);
 
     private:
         /**

@@ -197,7 +197,7 @@ namespace rdsys
         return this->calculatePosition(pos);
     }
 
-    std::shared_ptr<Decision> RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
+    std::shared_ptr<Decision> RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID)
     {
         std::vector<std::shared_ptr<Decision>> tempDecision;
         std::map<int, int> id_pos_f;
@@ -277,6 +277,7 @@ namespace rdsys
                 decision = it;
                 decision->if_auto = false;
             }
+            availableDecisionID.emplace_back(it->id);
         }
         if (decision->decide_mode == -1)
             decision->decide_mode = decision->robot_mode;
@@ -404,7 +405,7 @@ namespace rdsys
         this->_seek_THR = thr;
     }
 
-    void RobotDecisionSys::UpdateDecisionMap(int activateDecisionID, std::vector<int> availableDecisionID, int nowWayPoint)
+    void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint)
     {
         this->decisionMap = cv::Mat::zeros(1080, 1920, CV_8UC3);
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
@@ -438,6 +439,7 @@ namespace rdsys
                 this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, 1920, 1080), temp_id, check_flag ? 1 : 0);
             }
         }
+        cv::imshow("DecisionMapUI", this->decisionMap);
     }
 
     void RobotDecisionSys::drawWayPoint(cv::Mat &img, cv::Point2i center, int id, int type)

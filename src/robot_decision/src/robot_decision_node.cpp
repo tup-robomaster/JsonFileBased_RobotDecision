@@ -117,7 +117,8 @@ namespace rdsys
 
         acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
-        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, friendPositions, enemyPositions);
+        std::vector<int> availableDecisionID;
+        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, friendPositions, enemyPositions, availableDecisionID);
         std::shared_lock<std::shared_timed_mutex> slk_2(this->myMutex_status);
         if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
@@ -177,6 +178,7 @@ namespace rdsys
             "Publish Decision : [id] %d [mode] %d [x,y] %lf %lf",
             myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
         this->decision_pub_->publish(myDecision_msg);
+        this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID);
         return true;
     }
 
