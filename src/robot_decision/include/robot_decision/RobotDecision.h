@@ -23,7 +23,17 @@ namespace rdsys
         bool IfUIInited = false;
 
     public:
+        /**
+         * @brief 获取UI显示标志位
+         * @return
+         * 当前UI显示标志位
+         */
         bool getIfShowUI();
+        /**
+         * @brief 设置UI显示标志位
+         * @param ifShowUI
+         * 目标UI显示标志位
+         */
         void setIfShowUI(bool ifShowUI);
 
     private:

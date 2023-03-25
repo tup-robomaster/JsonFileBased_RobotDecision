@@ -100,15 +100,46 @@ namespace rdsys
         std::shared_ptr<Decision> excuting_decision = nullptr;
 
     private:
+        /**
+         * @brief 向目标缓冲区添加目标点
+         * @param x
+         * 目标x坐标
+         * @param y
+         * 目标y坐标
+         * @param theta
+         * 目标theta角
+         */
         void makeNewGoal(double x, double y, double &theta);
+        /**
+         * @brief 将消息位置转换成RobotPosition结构体
+         * @param pos
+         * 位置集合
+         * @return
+         * RobotPosition集合
+         */
         std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
+        /**
+         * @brief 消息回调，由message_filters处理
+         */
         void messageCallBack(const std::shared_ptr<robot_interface::msg::ObjHP const> &carHP_msg_,
                              const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
                              const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                              const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
+        /**
+         * @brief 检测目标消息回调
+         */
         void detectionArrayCallBack(const robot_interface::msg::DetectionArray::SharedPtr msg);
+        /**
+         * @brief nav2反馈回调
+         */
         void nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg);
+        /**
+         * @brief nav2目标状态回调
+         */
         void nav2GoalStatusCallBack(const action_msgs::msg::GoalStatusArray::SharedPtr msg);
+        /**
+         * @brief 周期性参数回调
+         */
         void respond();
 
     public:
@@ -116,7 +147,33 @@ namespace rdsys
         ~RobotDecisionNode();
 
     public:
+        /**
+         * @brief 初始化
+         * @param waypointsPath
+         * 路径点Json文件路径
+         * @param decisionsPath
+         * 决策Json文件路径
+         */
         void init(char *waypointsPath, char *decisionsPath);
+        /**
+         * @brief 决策处理一次
+         * @param _HP
+         * 当前血量
+         * @param mode
+         * 当前模式
+         * @param _x
+         * 当前x轴坐标
+         * @param _y
+         * 当前y轴坐标
+         * @param time
+         * 比赛时间
+         * @param now_out_post_HP
+         * 友方前哨站当前血量
+         * @param friendPositions
+         * 友方位置集合
+         * @param enemyPositions
+         * 敌方位置集合
+         */
         bool process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
     };
 }
