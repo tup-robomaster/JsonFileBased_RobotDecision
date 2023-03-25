@@ -27,7 +27,7 @@ namespace rdsys
     class RobotDecisionNode : public rclcpp::Node
     {
     private:
-    //TODO： change here
+    //TODO: change here
         int _selfIndex = 0;
         int _friendOutPostIndex = 0;
         bool _IsRed = false;
@@ -53,7 +53,10 @@ namespace rdsys
 
         rclcpp::Subscription<robot_interface::msg::DetectionArray>::SharedPtr detectionArray_sub_;
 
-        typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::ObjHP, robot_interface::msg::CarPos, robot_interface::msg::GameInfo, robot_interface::msg::Serial> ApproximateSyncPolicy;
+        typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::ObjHP, 
+                                                                robot_interface::msg::CarPos, 
+                                                                robot_interface::msg::GameInfo, 
+                                                                robot_interface::msg::Serial> ApproximateSyncPolicy;
         std::unique_ptr<message_filters::Synchronizer<ApproximateSyncPolicy>> TS_sync_;
 
         std::shared_ptr<RobotDecisionSys> myRDS;
@@ -63,8 +66,7 @@ namespace rdsys
         std::vector<geometry_msgs::msg::PoseStamped> acummulated_poses_;
         std::chrono::milliseconds server_timeout_;
 
-        using NavThroughPosesGoalHandle =
-            rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>;
+        using NavThroughPosesGoalHandle = rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>;
         NavThroughPosesGoalHandle::SharedPtr nav_through_poses_goal_handle_;
         nav2_msgs::action::NavigateThroughPoses::Goal nav_through_poses_goal_;
 

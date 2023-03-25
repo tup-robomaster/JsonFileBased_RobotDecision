@@ -80,6 +80,11 @@ namespace rdsys
     {
         this->_distance_THR = _distance_THR;
         this->_seek_THR = _seek_THR;
+        if (this->IfShowUI)
+        {
+            this->decisionMap = cv::Mat::zeros(1920, 1080, CV_8UC3);
+            cv::namedWindow("DecisionMapUI", cv::WindowFlags::WINDOW_NORMAL);
+        }
     }
 
     RobotDecisionSys::~RobotDecisionSys()
@@ -313,7 +318,7 @@ namespace rdsys
             distances[it.robot_id] = tempDistance;
         }
         std::shared_ptr<WayPoint> myWayPoint = this->getWayPointByID(myWayPointID);
-        if(myWayPoint == nullptr)
+        if (myWayPoint == nullptr)
             return -1;
         int baseWeight = 0;
         int selectId = -1;
@@ -397,5 +402,76 @@ namespace rdsys
     void RobotDecisionSys::setSeekTHR(float thr)
     {
         this->_seek_THR = thr;
+    }
+
+    void RobotDecisionSys::UpdateDecisionMap(int activateDecisionID, std::vector<int> availableDecisionID, int nowWayPoint)
+    {
+        this->decisionMap = cv::Mat::zeros(1080, 1920, CV_8UC3);
+        int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
+        std::vector<int> availableWayPointID;
+        for (auto &it : availableDecisionID)
+        {
+            availableWayPointID.emplace_back(this->getDecisionByID(it)->decide_wayPoint);
+        }
+        for (int i = 0; i < int(this->wayPointMap.size()); ++i)
+        {
+            int temp_id = this->wayPointMap[i]->id;
+            if (temp_id == activateWayPointID)
+            {
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, 1920, 1080), temp_id, 2);
+            }
+            else if (temp_id == nowWayPoint)
+            {
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, 1920, 1080), temp_id, 3);
+            }
+            else
+            {
+                bool check_flag = false;
+                for (auto &it : availableWayPointID)
+                {
+                    if (it == temp_id)
+                    {
+                        check_flag = true;
+                        break;
+                    }
+                }
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, 1920, 1080), temp_id, check_flag ? 1 : 0);
+            }
+        }
+    }
+
+    void RobotDecisionSys::drawWayPoint(cv::Mat &img, cv::Point2i center, int id, int type)
+    {
+        cv::Scalar color;
+        cv::Scalar color_txt;
+        switch (type)
+        {
+        case 0:
+            color = cv::Scalar(135, 138, 128);
+            color_txt = cv::Scalar(255, 248, 248);
+            break;
+        case 1:
+            color = cv::Scalar(230, 224, 176);
+            color_txt = cv::Scalar(255, 105, 65);
+            break;
+        case 2:
+            color = cv::Scalar(0, 225, 0);
+            color_txt = cv::Scalar(20, 128, 48);
+            break;
+        case 3:
+            color = cv::Scalar(0, 255, 255);
+            color_txt = cv::Scalar(18, 153, 255);
+
+        default:
+            break;
+        }
+        cv::circle(img, center, 24, color_txt, -1);
+        cv::circle(img, center, 22, color, -1);
+        cv::putText(img, std::to_string(id), cv::Point2i(center.x - 5, center.y - 5), cv::FONT_HERSHEY_SIMPLEX, 5, color_txt);
+    }
+
+    cv::Point2i RobotDecisionSys::transformPoint(float _x, float _y, float width, float height, int img_cols, int img_rows)
+    {
+        return cv::Point2i(int(_x / width) * img_cols, int(_y / height) * img_rows);
     }
 }

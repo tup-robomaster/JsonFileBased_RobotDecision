@@ -27,6 +27,8 @@ find_package(robot_state_publisher REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(OpenCV REQUIRED)
+
 
 include_directories(
   include
@@ -57,6 +59,7 @@ set(dependencies
   rosidl_default_generators
   tf2_ros
   tf2
+  OpenCV
 )
 
 ament_target_dependencies(

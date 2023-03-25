@@ -15,4 +15,6 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/float64.hpp>
 
+#include "opencv2/opencv.hpp"
+
 #include "./configs.h"
