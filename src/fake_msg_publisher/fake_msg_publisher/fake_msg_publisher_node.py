@@ -2,7 +2,7 @@
 from ast import arg
 import rclpy
 from rclpy.node import Node
-from robot_interface.msg import CarHP as CarHPMsg
+from robot_interface.msg import ObjHP as ObjHPMsg
 from robot_interface.msg import CarPos as CarPosMsg
 from robot_interface.msg import GameInfo as GameInfoMsg
 from robot_interface.msg import Serial as SerialMsg
@@ -12,7 +12,7 @@ class Lier(Node):
     def __init__(self):
         super().__init__('fake_msg_publisher')
         self.publisher_CarHP = self.create_publisher(
-            CarHPMsg, '/car_hp', 10)
+            ObjHPMsg, '/obj_hp', 10)
         self.publisher_CarPosMsg = self.create_publisher(
             CarPosMsg, '/car_pos', 10)
         self.publisher_GameInfoMsg = self.create_publisher(
@@ -32,7 +32,7 @@ class Lier(Node):
         self.get_logger().info("Publish Fake Msgs")
 
     def make_fake(self):
-        self.carHP_msg = CarHPMsg()
+        self.carHP_msg = ObjHPMsg()
         self.carPos_msg = CarPosMsg()
         self.gameInfo_msg = GameInfoMsg()
         self.serial_msg = SerialMsg()
