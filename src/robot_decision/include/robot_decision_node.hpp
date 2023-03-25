@@ -27,12 +27,13 @@ namespace rdsys
     class RobotDecisionNode : public rclcpp::Node
     {
     private:
-    //TODO: change here
+    //RealParamValues:
         int _selfIndex = 0;
         int _friendOutPostIndex = 0;
         bool _IfShowUI = true;
         bool _IsRed = false;
 
+    //TempParams:
         float _distance_THR_Temp = 0.5;
         float _seek_THR_Temp = 5.0;
         bool _IfShowUI_Temp = true;
