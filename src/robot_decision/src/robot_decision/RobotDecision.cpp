@@ -471,6 +471,7 @@ namespace rdsys
         case 3:
             color = cv::Scalar(0, 255, 255);
             color_txt = cv::Scalar(18, 153, 255);
+            break;
 
         default:
             break;

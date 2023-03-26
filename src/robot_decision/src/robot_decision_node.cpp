@@ -82,9 +82,12 @@ namespace rdsys
 
     bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
     {
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Heartbeat Processing");
         if (_x == 0.0 || _y == 0.0)
         {
-            std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_position);
+            std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_NTP_FeedBack);
             if (this->current_NTP_FeedBack->feedback.current_pose.pose.position.x > 0.0 &&
                 this->current_NTP_FeedBack->feedback.current_pose.pose.position.y > 0.0 &&
                 rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack->feedback.current_pose.header.stamp.sec <= 1)
@@ -119,14 +122,15 @@ namespace rdsys
             float(aim_yaw - yaw));
         this->aim_yaw_pub_->publish(aim_yaw_msg);
 
-        acummulated_poses_.clear();
+        this->acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         std::vector<int> availableDecisionID;
         std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, friendPositions, enemyPositions, availableDecisionID);
         std::shared_lock<std::shared_timed_mutex> slk_2(this->myMutex_status);
+        std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_NTP_FeedBack);
         if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
-            if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight)
+            if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight && this->current_NTP_FeedBack->feedback.estimated_time_remaining.sec > GOAL_TIME_THR_SEC)
             {
                 nav_through_poses_action_client_->async_cancel_goal(this->nav_through_poses_goal_handle_);
                 RCLCPP_INFO(
@@ -137,12 +141,13 @@ namespace rdsys
             {
                 RCLCPP_INFO(
                     this->get_logger(),
-                    "Function Normal Contine");
+                    "Function Normal Continue");
                 return true;
             }
         }
         this->excuting_decision = myDecision;
         slk_2.unlock();
+        slk_3.unlock();
         std::shared_ptr<WayPoint> aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
         if (aimWayPoint == nullptr)
             return false;
@@ -150,7 +155,7 @@ namespace rdsys
         if (theta == -1)
             theta = aimWayPoint->theta;
         this->makeNewGoal(aimWayPoint->x, aimWayPoint->y, theta);
-        this->nav_through_poses_goal_.poses = acummulated_poses_;
+        this->nav_through_poses_goal_.poses = this->acummulated_poses_;
         RCLCPP_INFO(
             this->get_logger(),
             "Sending a path of %zu waypoints:",
@@ -198,7 +203,7 @@ namespace rdsys
         pose.pose.position.z = 0.0;
         pose.pose.orientation = nav2_util::geometry_utils::orientationAroundZAxis(theta);
 
-        acummulated_poses_.emplace_back(pose);
+        this->acummulated_poses_.emplace_back(pose);
     }
 
     std::vector<RobotPosition> RobotDecisionNode::point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos)
@@ -281,7 +286,7 @@ namespace rdsys
 
     void RobotDecisionNode::nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg)
     {
-        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_position);
+        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_NTP_FeedBack);
         this->current_NTP_FeedBack = msg;
         ulk.unlock();
         RCLCPP_INFO(

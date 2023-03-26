@@ -5,6 +5,9 @@
 
 namespace rdsys
 {
+    /**
+     * @brief 机器人位置信息
+     */
     typedef struct RobotPosition
     {
         int robot_id = -1;
@@ -19,6 +22,9 @@ namespace rdsys
         };
     } RobotPosition;
 
+    /**
+     * @brief 路径点信息
+     */
     typedef struct WayPoint
     {
         int id;
@@ -29,6 +35,9 @@ namespace rdsys
         std::map<int, int> enemyWeights;
     } WayPoint;
 
+    /**
+     * @brief 决策信息
+     */
     typedef struct Decision
     {
         bool if_auto = true;

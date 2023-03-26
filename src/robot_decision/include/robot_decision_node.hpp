@@ -90,7 +90,7 @@ namespace rdsys
             decision_pub_;
 
         std::shared_timed_mutex myMutex_status;
-        std::shared_timed_mutex myMutex_position;
+        std::shared_timed_mutex myMutex_NTP_FeedBack;
         std::shared_timed_mutex myMutex_detectionArray;
 
         int8_t goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
