@@ -24,16 +24,16 @@ namespace rdsys
 {
     using namespace std::chrono_literals;
 
-    class RobotDecisionNode : public rclcpp::Node
+    class  RobotDecisionNode : public rclcpp::Node
     {
     private:
-    //RealParamValues:
+        // RealParamValues:
         int _selfIndex = 0;
         int _friendOutPostIndex = 0;
         bool _IfShowUI = true;
         bool _IsRed = false;
 
-    //TempParams:
+        // TempParams:
         float _distance_THR_Temp = 0.5;
         float _seek_THR_Temp = 5.0;
         bool _IfShowUI_Temp = true;
@@ -58,12 +58,15 @@ namespace rdsys
         message_filters::Subscriber<robot_interface::msg::GameInfo> gameInfo_sub_;
         message_filters::Subscriber<robot_interface::msg::Serial> serial_sub_;
 
+        rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
+
         rclcpp::Subscription<robot_interface::msg::DetectionArray>::SharedPtr detectionArray_sub_;
 
-        typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::ObjHP, 
-                                                                robot_interface::msg::CarPos, 
-                                                                robot_interface::msg::GameInfo, 
-                                                                robot_interface::msg::Serial> ApproximateSyncPolicy;
+        typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::ObjHP,
+                                                                robot_interface::msg::CarPos,
+                                                                robot_interface::msg::GameInfo,
+                                                                robot_interface::msg::Serial>
+            ApproximateSyncPolicy;
         std::unique_ptr<message_filters::Synchronizer<ApproximateSyncPolicy>> TS_sync_;
 
         std::shared_ptr<RobotDecisionSys> myRDS;
@@ -91,12 +94,14 @@ namespace rdsys
 
         std::shared_timed_mutex myMutex_status;
         std::shared_timed_mutex myMutex_NTP_FeedBack;
+        std::shared_timed_mutex myMutex_joint_states;
         std::shared_timed_mutex myMutex_detectionArray;
 
         int8_t goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
-        nav2_msgs::action::NavigateThroughPoses_FeedbackMessage::SharedPtr current_NTP_FeedBack;
+        nav2_msgs::action::NavigateThroughPoses_FeedbackMessage::SharedPtr current_NTP_FeedBack_msg;
 
-        robot_interface::msg::DetectionArray::SharedPtr detectionArray = nullptr;
+        sensor_msgs::msg::JointState::SharedPtr joint_states_msg = nullptr;
+        robot_interface::msg::DetectionArray::SharedPtr detectionArray_msg = nullptr;
 
         std::shared_ptr<Decision> excuting_decision = nullptr;
 
@@ -126,6 +131,10 @@ namespace rdsys
                              const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
                              const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                              const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
+        /**
+         * @brief joint_states消息回调
+         */
+        void jointStateCallBack(const sensor_msgs::msg::JointState::SharedPtr msg);
         /**
          * @brief 检测目标消息回调
          */

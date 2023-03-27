@@ -50,6 +50,8 @@ namespace rdsys
         this->gameInfo_sub_.subscribe(this, "/game_info", qos.get_rmw_qos_profile());
         this->serial_sub_.subscribe(this, "/serial_msg", qos.get_rmw_qos_profile());
 
+        this->joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", qos, std::bind(&RobotDecisionNode::jointStateCallBack, this, _1));
+
         this->detectionArray_sub_ = this->create_subscription<robot_interface::msg::DetectionArray>("/armor_detector/detections", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->objHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
@@ -88,12 +90,12 @@ namespace rdsys
         if (_x == 0.0 || _y == 0.0)
         {
             std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_NTP_FeedBack);
-            if (this->current_NTP_FeedBack->feedback.current_pose.pose.position.x > 0.0 &&
-                this->current_NTP_FeedBack->feedback.current_pose.pose.position.y > 0.0 &&
-                rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack->feedback.current_pose.header.stamp.sec <= 1)
+            if (this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x > 0.0 &&
+                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y > 0.0 &&
+                rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack_msg->feedback.current_pose.header.stamp.sec <= 1)
             {
-                _x = this->current_NTP_FeedBack->feedback.current_pose.pose.position.x;
-                _y = this->current_NTP_FeedBack->feedback.current_pose.pose.position.y;
+                _x = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x;
+                _y = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y;
             }
             else
             {
@@ -108,10 +110,10 @@ namespace rdsys
         double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
         double roll, pitch, yaw;
         tf2::Quaternion nv2_quat(
-            this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.x,
-            this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.y,
-            this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.z,
-            this->current_NTP_FeedBack->feedback.current_pose.pose.orientation.w);
+            this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.x,
+            this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.y,
+            this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.z,
+            this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.w);
         tf2::Matrix3x3 m(nv2_quat);
         m.getRPY(roll, pitch, yaw);
         std_msgs::msg::Float32 aim_yaw_msg;
@@ -130,7 +132,7 @@ namespace rdsys
         std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_NTP_FeedBack);
         if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
-            if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight && this->current_NTP_FeedBack->feedback.estimated_time_remaining.sec > GOAL_TIME_THR_SEC)
+            if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight && this->current_NTP_FeedBack_msg->feedback.estimated_time_remaining.sec > GOAL_TIME_THR_SEC)
             {
                 nav_through_poses_action_client_->async_cancel_goal(this->nav_through_poses_goal_handle_);
                 RCLCPP_INFO(
@@ -237,9 +239,9 @@ namespace rdsys
         int now_out_post_HP = ObjHP_msg_->hp[this->_friendOutPostIndex];
         std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_->pos);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-        if (this->detectionArray != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray->header.stamp.sec <= 0)
+        if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 0)
         {
-            for (auto it : this->detectionArray->detections)
+            for (auto it : this->detectionArray_msg->detections)
             {
                 allPositions[this->type_id.find(it.type)->second].x = it.center.position.x;
                 allPositions[this->type_id.find(it.type)->second].y = it.center.position.y;
@@ -273,10 +275,20 @@ namespace rdsys
         }
     }
 
+    void RobotDecisionNode::jointStateCallBack(const sensor_msgs::msg::JointState::SharedPtr msg)
+    {
+        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_joint_states);
+        if (msg->name[0] == "gimbal_yaw_joint")
+        {
+            this->joint_states_msg = msg;
+        }
+        ulk.unlock();
+    }
+
     void RobotDecisionNode::detectionArrayCallBack(const robot_interface::msg::DetectionArray::SharedPtr msg)
     {
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_detectionArray);
-        this->detectionArray = msg;
+        this->detectionArray_msg = msg;
         ulk.unlock();
         RCLCPP_INFO(
             this->get_logger(),
@@ -287,7 +299,7 @@ namespace rdsys
     void RobotDecisionNode::nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg)
     {
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_NTP_FeedBack);
-        this->current_NTP_FeedBack = msg;
+        this->current_NTP_FeedBack_msg = msg;
         ulk.unlock();
         RCLCPP_INFO(
             this->get_logger(),
@@ -317,6 +329,9 @@ namespace rdsys
 
     void RobotDecisionNode::respond()
     {
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Listening Params");
         this->get_parameter("distance_thr", this->_distance_THR_Temp);
         this->get_parameter("seek_thr", this->_seek_THR_Temp);
         this->get_parameter("IfShowUI", this->_IfShowUI_Temp);
