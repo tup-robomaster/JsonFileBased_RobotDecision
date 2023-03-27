@@ -5,7 +5,6 @@
 
 namespace rdsys
 {
-#define _PI 3.1415926
     enum class DecisonState
     {
         SUCCESS,
@@ -134,7 +133,7 @@ namespace rdsys
          * @return
          * 决策
          */
-        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions,std::vector<int> &availableDecisionID);
+        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID);
 
         /**
          * @brief 根据ID获取路径点
@@ -218,7 +217,7 @@ namespace rdsys
          * @param nowWayPoint
          * 当前所在路径点
          */
-        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint);
+        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw,  cv::Point car_center, double car_orientation);
 
     private:
         /**
@@ -251,6 +250,18 @@ namespace rdsys
          * 真实坐标对应的图像坐标
          */
         cv::Point2i transformPoint(float _x, float _y, float width, float height, int img_cols, int img_rows);
+        /**
+         * @brief 绘制车辆
+         * @param img
+         * 目标绘制图像
+         * @param center
+         * 车辆位置
+         * @param car_orientation
+         * 车辆朝向
+         * @param yaw
+         * yaw轴朝向
+         */
+        void drawCar(cv::Mat &img, cv::Point2i center, double car_orientation, double yaw);
     };
 }
 #endif

@@ -368,15 +368,15 @@ namespace rdsys
         xx = x2 - x1;
         yy = y2 - y1;
         if (xx == 0.0)
-            angle_temp = _PI / 2.0;
+            angle_temp = CV_PI / 2.0;
         else
             angle_temp = atan(fabs(yy / xx));
         if ((xx < 0.0) && (yy >= 0.0))
-            angle_temp = _PI - angle_temp;
+            angle_temp = CV_PI - angle_temp;
         else if ((xx < 0.0) && (yy < 0.0))
-            angle_temp = _PI + angle_temp;
+            angle_temp = CV_PI + angle_temp;
         else if ((xx >= 0.0) && (yy < 0.0))
-            angle_temp = _PI * 2.0 - angle_temp;
+            angle_temp = CV_PI * 2.0 - angle_temp;
         return (angle_temp);
     }
 
@@ -400,7 +400,7 @@ namespace rdsys
         this->_seek_THR = thr;
     }
 
-    void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint)
+    void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point car_center, double car_orientation)
     {
         if (IfShowUI)
         {
@@ -415,7 +415,7 @@ namespace rdsys
         {
             return;
         }
-        this->decisionMap = cv::Mat::zeros(1080, 1920, CV_8UC3);
+        this->decisionMap = cv::Mat::zeros(1080, int(REAL_HEIGHT / 1080) * 1920, CV_8UC3);
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
         std::vector<int> availableWayPointID;
         for (auto &it : availableDecisionID)
@@ -427,11 +427,11 @@ namespace rdsys
             int temp_id = this->wayPointMap[i]->id;
             if (temp_id == activateWayPointID)
             {
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, 1920, 1080), temp_id, 2);
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int(REAL_HEIGHT / 1080) * 1920, 1080), temp_id, 2);
             }
             else if (temp_id == nowWayPoint)
             {
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, 1920, 1080), temp_id, 3);
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int(REAL_HEIGHT / 1080) * 1920, 1080), temp_id, 3);
             }
             else
             {
@@ -444,7 +444,7 @@ namespace rdsys
                         break;
                     }
                 }
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, 1920, 1080), temp_id, check_flag ? 1 : 0);
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int(REAL_HEIGHT / 1080) * 1920, 1080), temp_id, check_flag ? 1 : 0);
             }
         }
         cv::imshow("DecisionMapUI", this->decisionMap);
@@ -484,6 +484,33 @@ namespace rdsys
     cv::Point2i RobotDecisionSys::transformPoint(float _x, float _y, float width, float height, int img_cols, int img_rows)
     {
         return cv::Point2i(int(_x / width) * img_cols, int(_y / height) * img_rows);
+    }
+
+    void RobotDecisionSys::drawCar(cv::Mat &img, cv::Point2i center, double car_orientation, double yaw)
+    {
+        float angle = car_orientation * CV_PI / 180;
+        cv::Size wh = cv::Size(200, 100);
+        cv::Point point_L_U = cv::Point(center.x - wh.width / 2, center.y - wh.height / 2); // 左上
+        cv::Point point_R_U = cv::Point(center.x + wh.width / 2, center.y - wh.height / 2); // 右上
+        cv::Point point_R_L = cv::Point(center.x + wh.width / 2, center.y + wh.height / 2); // 右下
+        cv::Point point_L_L = cv::Point(center.x - wh.width / 2, center.y + wh.height / 2); // 左下
+        cv::Point point[4] = {point_L_U, point_R_U, point_R_L, point_L_L};
+        cv::Point after_point[4] = {cv::Point(0, 0)};
+        for (int i = 0; i < 4; ++i)
+        {
+            int x = point[i].x - center.x;
+            int y = point[i].y - center.y;
+            after_point[i].x = cvRound(x * cos(angle) + y * sin(angle) + center.x);
+            after_point[i].y = cvRound(-x * sin(angle) + y * cos(angle) + center.y);
+        }
+        for (int j = 0; j < 3; ++j)
+        {
+            cv::line(img, after_point[j], after_point[j + 1], cv::Scalar(0, 255, 0));
+            if (j == 2)
+            {
+                line(img, after_point[j + 1], after_point[0], cv::Scalar(0, 255, 0));
+            }
+        }
     }
 
     bool RobotDecisionSys::getIfShowUI()

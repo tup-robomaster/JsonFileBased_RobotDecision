@@ -24,7 +24,7 @@ namespace rdsys
 {
     using namespace std::chrono_literals;
 
-    class  RobotDecisionNode : public rclcpp::Node
+    class RobotDecisionNode : public rclcpp::Node
     {
     private:
         // RealParamValues:
@@ -98,7 +98,7 @@ namespace rdsys
         std::shared_timed_mutex myMutex_detectionArray;
 
         int8_t goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
-        nav2_msgs::action::NavigateThroughPoses_FeedbackMessage::SharedPtr current_NTP_FeedBack_msg;
+        nav2_msgs::action::NavigateThroughPoses_FeedbackMessage::SharedPtr current_NTP_FeedBack_msg = nullptr;
 
         sensor_msgs::msg::JointState::SharedPtr joint_states_msg = nullptr;
         robot_interface::msg::DetectionArray::SharedPtr detectionArray_msg = nullptr;

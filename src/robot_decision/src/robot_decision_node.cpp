@@ -190,7 +190,11 @@ namespace rdsys
             myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
         this->decision_pub_->publish(myDecision_msg);
         if (this->_IfShowUI)
-            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID);
+        {
+            std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
+            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2i(_x, _y), yaw);
+            slk_4.unlock();
+        }
         return true;
     }
 
