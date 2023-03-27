@@ -488,7 +488,6 @@ namespace rdsys
 
     void RobotDecisionSys::drawCar(cv::Mat &img, cv::Point2i center, double car_orientation, double yaw)
     {
-        float angle = car_orientation * CV_PI / 180;
         cv::Size wh = cv::Size(200, 100);
         cv::Point point_L_U = cv::Point(center.x - wh.width / 2, center.y - wh.height / 2); // 左上
         cv::Point point_R_U = cv::Point(center.x + wh.width / 2, center.y - wh.height / 2); // 右上
@@ -500,8 +499,8 @@ namespace rdsys
         {
             int x = point[i].x - center.x;
             int y = point[i].y - center.y;
-            after_point[i].x = cvRound(x * cos(angle) + y * sin(angle) + center.x);
-            after_point[i].y = cvRound(-x * sin(angle) + y * cos(angle) + center.y);
+            after_point[i].x = cvRound(x * cos(car_orientation) + y * sin(car_orientation) + center.x);
+            after_point[i].y = cvRound(-x * sin(car_orientation) + y * cos(car_orientation) + center.y);
         }
         for (int j = 0; j < 3; ++j)
         {
