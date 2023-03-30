@@ -6,6 +6,7 @@ from robot_interface.msg import ObjHP as ObjHPMsg
 from robot_interface.msg import CarPos as CarPosMsg
 from robot_interface.msg import GameInfo as GameInfoMsg
 from robot_interface.msg import Serial as SerialMsg
+from robot_interface.msg import Point2f
 
 class Lier(Node):
 
@@ -25,15 +26,20 @@ class Lier(Node):
 
     def timer_callback(self):
         self.make_fake()
-        self.publisher_CarHP.publish(self.carHP_msg)
+        self.publisher_CarHP.publish(self.ObjHP_msg)
         self.publisher_CarPosMsg.publish(self.carPos_msg)
         self.publisher_GameInfoMsg.publish(self.gameInfo_msg)
         self.publisher_SerialMsg.publish(self.serial_msg)
         self.get_logger().info("Publish Fake Msgs")
 
     def make_fake(self):
-        self.carHP_msg = ObjHPMsg()
+        self.ObjHP_msg = ObjHPMsg()
+        self.ObjHP_msg.hp[0] = 500
         self.carPos_msg = CarPosMsg()
+        temp_pos = Point2f()
+        temp_pos.x = 1.0
+        temp_pos.y = 1.0
+        self.carPos_msg.pos.append(temp_pos) 
         self.gameInfo_msg = GameInfoMsg()
         self.serial_msg = SerialMsg()
         

@@ -90,7 +90,7 @@ namespace rdsys
         if (_x == 0.0 || _y == 0.0)
         {
             std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_NTP_FeedBack);
-            if (this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x > 0.0 &&
+            if (this->current_NTP_FeedBack_msg != nullptr && this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x > 0.0 &&
                 this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y > 0.0 &&
                 rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack_msg->feedback.current_pose.header.stamp.sec <= 1)
             {
@@ -229,19 +229,42 @@ namespace rdsys
         return result;
     }
 
-    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::ObjHP const> &ObjHP_msg_,
-                                            const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
+    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::ObjHP const> &objHP_msg_,
+                                            const std::shared_ptr<robot_interface::msg::CarPos const> &objPos_msg_,
                                             const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                                             const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_)
     {
+        for (int i = 0; i < int(objHP_msg_->hp.size()); ++i)
+        {
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Receive ObjHP Msg %d: %d",
+                i, objHP_msg_->hp[i]);
+        }
+        for (int i = 0; i < int(objPos_msg_->pos.size()); ++i)
+        {
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Receive ObjPos Msg %d: x=%lf, y=%lf",
+                i, objPos_msg_->pos[i].x, objPos_msg_->pos[i].y);
+        }
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Receive GameInfo Msg : timestamp=%d",
+            gameInfo_msg_->timestamp);
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Receive Serial Msg : mode=%d, theta=%lf",
+            serial_sub_->mode, serial_sub_->theta);
+
         this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
-        int myHP = ObjHP_msg_->hp[this->_selfIndex];
-        float myPos_x_ = carPos_msg_->pos[this->_selfIndex].x;
-        float myPos_y_ = carPos_msg_->pos[this->_selfIndex].y;
+        int myHP = objHP_msg_->hp[this->_selfIndex];
+        float myPos_x_ = objPos_msg_->pos[this->_selfIndex].x;
+        float myPos_y_ = objPos_msg_->pos[this->_selfIndex].y;
         int nowTime = gameInfo_msg_->timestamp;
         int mode = serial_sub_->mode;
-        int now_out_post_HP = ObjHP_msg_->hp[this->_friendOutPostIndex];
-        std::vector<RobotPosition> allPositions = this->point2f2Position(carPos_msg_->pos);
+        int now_out_post_HP = objHP_msg_->hp[this->_friendOutPostIndex];
+        std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
         if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 0)
         {

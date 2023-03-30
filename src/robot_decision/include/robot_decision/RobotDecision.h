@@ -74,6 +74,32 @@ namespace rdsys
          * 角度值（弧度制）
          */
         double calculateAngle(double x1, double y1, double x2, double y2);
+        /**
+         * @brief 通过角度获取终止点
+         * @param x1
+         * 点1 x坐标
+         * @param y1
+         * 点1 y坐标
+         * @param theta
+         * 角度（弧度制）
+         * @param length
+         * 两点距离
+         * @return
+         * 结束点
+         */
+        cv::Point2i createEndPointByTheta(double x1, double y1, double theta, int length);
+        /**
+         * @brief 通过角度获取终止点
+         * @param start
+         * 起点
+         * @param theta
+         * 角度（弧度制）
+         * @param length
+         * 两点距离
+         * @return
+         * 结束点
+         */
+        cv::Point2i createEndPointByTheta(cv::Point start, double theta, int length);
 
     public:
         RobotDecisionSys(float &_distance_THR, float &_seek_THR);
@@ -217,7 +243,7 @@ namespace rdsys
          * @param nowWayPoint
          * 当前所在路径点
          */
-        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw,  cv::Point car_center, double car_orientation);
+        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point car_center, double car_orientation);
 
     private:
         /**

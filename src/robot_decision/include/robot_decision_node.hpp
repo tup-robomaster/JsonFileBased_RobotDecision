@@ -29,7 +29,7 @@ namespace rdsys
     private:
         // RealParamValues:
         int _selfIndex = 0;
-        int _friendOutPostIndex = 0;
+        int _friendOutPostIndex = 7;
         bool _IfShowUI = true;
         bool _IsRed = false;
 
