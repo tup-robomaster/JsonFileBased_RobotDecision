@@ -30,13 +30,13 @@ namespace rdsys
         // RealParamValues:
         int _selfIndex = 0;
         int _friendOutPostIndex = 7;
-        bool _IfShowUI = true;
+        bool _IfShowUI = false;
         bool _IsRed = false;
 
         // TempParams:
         float _distance_THR_Temp = 0.5;
         float _seek_THR_Temp = 5.0;
-        bool _IfShowUI_Temp = true;
+        bool _IfShowUI_Temp = false;
         bool _IsRed_Temp = false;
         int _selfIndex_Temp = 0;
         int _friendOutPostIndex_Temp = 0;

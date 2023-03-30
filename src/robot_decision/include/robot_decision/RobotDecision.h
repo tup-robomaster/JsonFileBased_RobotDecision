@@ -18,7 +18,7 @@ namespace rdsys
     class RobotDecisionSys
     {
     private:
-        bool IfShowUI = true;
+        bool IfShowUI = false;
         bool IfUIInited = false;
 
     public:

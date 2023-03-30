@@ -25,7 +25,7 @@ namespace rdsys
         this->declare_parameter<float>("distance_thr", 0.5);
         this->declare_parameter<float>("seek_thr", 5.0);
         this->declare_parameter<bool>("IsRed", false);
-        this->declare_parameter<bool>("IfShowUI", true);
+        this->declare_parameter<bool>("IfShowUI", false);
 
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp));
 
@@ -106,14 +106,21 @@ namespace rdsys
             }
             slk_1.unlock();
         }
-
         double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
         double roll, pitch, yaw;
-        tf2::Quaternion nv2_quat(
-            this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.x,
-            this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.y,
-            this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.z,
-            this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.w);
+        tf2::Quaternion nv2_quat;
+        if (this->current_NTP_FeedBack_msg != nullptr)
+        {
+            nv2_quat = tf2::Quaternion(
+                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.x,
+                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.y,
+                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.z,
+                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.w);
+        }
+        else
+        {
+            nv2_quat = tf2::Quaternion(0., 0., 0., 0.);
+        }
         tf2::Matrix3x3 m(nv2_quat);
         m.getRPY(roll, pitch, yaw);
         std_msgs::msg::Float32 aim_yaw_msg;
@@ -128,6 +135,10 @@ namespace rdsys
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         std::vector<int> availableDecisionID;
         std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, friendPositions, enemyPositions, availableDecisionID);
+        if (myDecision == nullptr)
+        {
+            return false;
+        }
         std::shared_lock<std::shared_timed_mutex> slk_2(this->myMutex_status);
         std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_NTP_FeedBack);
         if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
@@ -151,12 +162,15 @@ namespace rdsys
         slk_2.unlock();
         slk_3.unlock();
         std::shared_ptr<WayPoint> aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
+        std::cout << "check8" << std::endl;
         if (aimWayPoint == nullptr)
             return false;
         double theta = this->myRDS->decideAngleByEnemyPos(aimWayPoint->x, aimWayPoint->y, enemyPositions);
+        std::cout << "check9" << std::endl;
         if (theta == -1)
             theta = aimWayPoint->theta;
         this->makeNewGoal(aimWayPoint->x, aimWayPoint->y, theta);
+        std::cout << "check10" << std::endl;
         this->nav_through_poses_goal_.poses = this->acummulated_poses_;
         RCLCPP_INFO(
             this->get_logger(),
@@ -174,8 +188,10 @@ namespace rdsys
         {
             this->nav_through_poses_goal_handle_.reset();
         };
+        std::cout << "check11" << std::endl;
         auto future_goal_handle =
             nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
+        std::cout << "check12" << std::endl;
 
         this->nav_through_poses_goal_handle_ = future_goal_handle.get();
 
@@ -189,12 +205,14 @@ namespace rdsys
             "Publish Decision : [id] %d [mode] %d [x,y] %lf %lf",
             myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
         this->decision_pub_->publish(myDecision_msg);
+        std::cout << "check13" << std::endl;
         if (this->_IfShowUI)
         {
             std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
             this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2i(_x, _y), yaw);
             slk_4.unlock();
         }
+        std::cout << "check14" << std::endl;
         return true;
     }
 
@@ -294,9 +312,9 @@ namespace rdsys
                     enemyPositions.emplace_back(allPositions[i]);
             }
         }
-        if (this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, friendPositions, enemyPositions))
+        if (!this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, friendPositions, enemyPositions))
         {
-            RCLCPP_ERROR(
+            RCLCPP_WARN(
                 this->get_logger(),
                 "Decision failed!");
         }

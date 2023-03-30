@@ -218,30 +218,56 @@ namespace rdsys
         for (auto it : this->decisions)
         {
             if ((it->wayPointID != wayPointID || it->robot_mode != robot_mode) && it->wayPointID != -1 && it->robot_mode != -1)
+            {
                 continue;
-            if (it->_maxHP != -1 && _HP > it->_maxHP)
+            }
+            else if (it->_maxHP != -1 && _HP > it->_maxHP)
+            {
                 continue;
-            if (it->_minHP != -1 && _HP <= it->_maxHP)
+            }
+            else if (it->_minHP != -1 && _HP <= it->_maxHP)
+            {
                 continue;
-            if (it->end_time != -1 && nowtime > it->end_time)
+            }
+            else if (it->end_time != -1 && nowtime > it->end_time)
+            {
                 continue;
-            if (it->start_time != -1 && nowtime <= it->start_time)
+            }
+            else if (it->start_time != -1 && nowtime <= it->start_time)
+            {
                 continue;
-            if (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max)
+            }
+            else if (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max)
+            {
                 continue;
+            }
             bool fpFLAG = false;
             for (int i = 0; i < int(it->friend_position.size()); ++i)
             {
                 int size = it->friend_position[i].size();
-                if (size == 0)
-                    continue;
-                if (0 == id_pos_f.count(i + 1))
-                    continue;
-                int temp_pos;
-                temp_pos = id_pos_f[i + 1];
                 for (int j = 0; j < size; ++j)
                 {
-                    if (it->friend_position[i][j] == temp_pos || it->friend_position[i][j] == -1)
+                    if (it->friend_position[i][j] == -1)
+                    {
+                        fpFLAG = true;
+                        break;
+                    }
+                }
+                if (fpFLAG)
+                    break;
+                if (size == 0)
+                {
+                    continue;
+                }
+                else if (0 == id_pos_f.count(i))
+                {
+                    continue;
+                }
+                int temp_pos;
+                temp_pos = id_pos_f[i];
+                for (int j = 0; j < size; ++j)
+                {
+                    if (it->friend_position[i][j] == temp_pos)
                     {
                         fpFLAG = true;
                         break;
@@ -254,15 +280,29 @@ namespace rdsys
             for (int i = 0; i < int(it->enemy_position.size()); ++i)
             {
                 int size = it->enemy_position[i].size();
-                if (size == 0)
-                    continue;
-                if (0 == id_pos_e.count(i + 1))
-                    continue;
-                int temp_pos;
-                temp_pos = id_pos_e[i + 1];
                 for (int j = 0; j < size; ++j)
                 {
-                    if (it->enemy_position[i][j] == temp_pos || it->enemy_position[i][j] == -1)
+                    if (it->enemy_position[i][0] == -1)
+                    {
+                        epFLAG = true;
+                        break;
+                    }
+                }
+                if (epFLAG)
+                    break;
+                if (size == 0)
+                {
+                    continue;
+                }
+                else if (0 == id_pos_e.count(i))
+                {
+                    continue;
+                }
+                int temp_pos;
+                temp_pos = id_pos_e[i];
+                for (int j = 0; j < size; ++j)
+                {
+                    if (it->enemy_position[i][j] == temp_pos)
                         epFLAG = true;
                     break;
                 }
@@ -273,7 +313,7 @@ namespace rdsys
                 tempDecision.emplace_back(it);
         }
         int max_weight = 0;
-        std::shared_ptr<Decision> decision;
+        std::shared_ptr<Decision> decision = nullptr;
         for (auto it : tempDecision)
         {
             if (it->weight > max_weight)
@@ -284,9 +324,9 @@ namespace rdsys
             }
             availableDecisionID.emplace_back(it->id);
         }
-        if (decision->decide_mode == -1)
+        if (decision != nullptr && decision->decide_mode == -1)
             decision->decide_mode = decision->robot_mode;
-        if (decision->decide_wayPoint == -1)
+        if (decision != nullptr && decision->decide_wayPoint == -1)
             decision->decide_wayPoint = decision->wayPointID;
         return decision;
     }

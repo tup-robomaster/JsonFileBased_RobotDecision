@@ -20,7 +20,7 @@ def generate_launch_description():
         parameters=[{'distance_thr', 0.5},
                     {'seek_thr', 5.0},
                     {'IsRed', False},
-                    {'IfShowUI', True},
+                    {'IfShowUI', False},
                     {'SelfIndex', 0},
                     {'friendOutPostIndex', 0}],
         output="screen"
