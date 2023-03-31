@@ -255,7 +255,7 @@ namespace rdsys
          * @param id
          * 路径点ID
          * @param type
-         * 路径点状态（0未激活，1符合条件，2激活）
+         * 路径点状态（0未激活，1符合条件，2激活，3当前）
          */
         void drawWayPoint(cv::Mat &img, cv::Point2i center, int id, int type);
         /**

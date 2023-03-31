@@ -7,6 +7,8 @@ from robot_interface.msg import CarPos as CarPosMsg
 from robot_interface.msg import GameInfo as GameInfoMsg
 from robot_interface.msg import Serial as SerialMsg
 from robot_interface.msg import Point2f
+import random
+
 
 class Lier(Node):
 
@@ -40,13 +42,16 @@ class Lier(Node):
         temp_pos = Point2f()
         temp_pos.x = 1.0
         temp_pos.y = 1.0
-        temp_pos2 = Point2f()
-        temp_pos2.x = 2.0
-        temp_pos2.y = 2.0
-        self.carPos_msg.pos = [temp_pos,temp_pos2,temp_pos2,temp_pos2,temp_pos2,temp_pos2,temp_pos2,temp_pos2,temp_pos2,temp_pos2] 
+        self.carPos_msg.pos[0] = temp_pos
+        for i in range(0, 8):
+            temp_pos2 = Point2f()
+            temp_pos2.x = float(random.randrange(0.0, 28.0))
+            temp_pos2.y = float(random.randrange(0.0, 15.0))
+            self.carPos_msg.pos[i+1] = temp_pos2
         self.gameInfo_msg = GameInfoMsg()
         self.serial_msg = SerialMsg()
-        
+
+
 def main(args=None):
     rclpy.init(args=args)
     minimal_publisher = Lier()

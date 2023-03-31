@@ -4,7 +4,7 @@
             "id" : 0,
             "name" : "test1",
             "wayPointID" : -1,
-            "weight" : 1000,
+            "weight" : 500,
             "start_time" : -1,
             "end_time" : 420,
             "robot_mode" : 0,

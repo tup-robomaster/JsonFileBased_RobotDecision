@@ -460,7 +460,7 @@ namespace rdsys
         {
             if (!IfUIInited)
             {
-                this->decisionMap = cv::Mat::zeros(1080, int(1080 / REAL_HEIGHT) * REAL_WIDTH, CV_8UC3);
+                this->decisionMap = cv::Mat::zeros(1080, int((REAL_WIDTH / REAL_HEIGHT) * 1080), CV_8UC3);
                 cv::namedWindow("DecisionMapUI", cv::WindowFlags::WINDOW_NORMAL);
                 this->IfUIInited = true;
             }
@@ -469,7 +469,7 @@ namespace rdsys
         {
             return;
         }
-        this->decisionMap = cv::Mat::zeros(1080, int(1080 / REAL_HEIGHT) * REAL_WIDTH, CV_8UC3);
+        this->decisionMap = cv::Mat::zeros(1080, int((REAL_WIDTH / REAL_HEIGHT) * 1080), CV_8UC3);
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
         std::vector<int> availableWayPointID;
         for (auto &it : availableDecisionID)
@@ -481,11 +481,11 @@ namespace rdsys
             int temp_id = this->wayPointMap[i]->id;
             if (temp_id == activateWayPointID)
             {
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int(1080 / REAL_HEIGHT) * REAL_WIDTH, 1080), temp_id, 2);
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, 2);
             }
             else if (temp_id == nowWayPoint)
             {
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int(1080 / REAL_HEIGHT) * REAL_WIDTH, 1080), temp_id, 3);
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, 3);
             }
             else
             {
@@ -498,10 +498,11 @@ namespace rdsys
                         break;
                     }
                 }
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int(1080 / REAL_HEIGHT) * REAL_WIDTH, 1080), temp_id, check_flag ? 1 : 0);
+                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, check_flag ? 1 : 0);
             }
         }
         cv::imshow("DecisionMapUI", this->decisionMap);
+        cv::waitKey(1);
     }
 
     void RobotDecisionSys::drawWayPoint(cv::Mat &img, cv::Point2i center, int id, int type)
@@ -532,12 +533,13 @@ namespace rdsys
         }
         cv::circle(img, center, 24, color_txt, -1);
         cv::circle(img, center, 22, color, -1);
-        cv::putText(img, std::to_string(id), cv::Point2i(center.x - 5, center.y - 5), cv::FONT_HERSHEY_SIMPLEX, 5, color_txt);
+        cv::Size text_size = cv::getTextSize(std::to_string(id), cv::FONT_HERSHEY_SIMPLEX, 1, 2, 0);
+        cv::putText(img, std::to_string(id), cv::Point2i(center.x - int(text_size.width / 2), center.y + int(text_size.height / 2)), cv::FONT_HERSHEY_SIMPLEX, 1, color_txt, 2);
     }
 
     cv::Point2i RobotDecisionSys::transformPoint(float _x, float _y, float width, float height, int img_cols, int img_rows)
     {
-        return cv::Point2i(int(_x / width) * img_cols, int(_y / height) * img_rows);
+        return cv::Point2i(int((_x / width) * img_cols), int((_y / height) * img_rows));
     }
 
     void RobotDecisionSys::drawCar(cv::Mat &img, cv::Point2i center, double car_orientation, double yaw)
