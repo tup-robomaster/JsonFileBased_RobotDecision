@@ -91,22 +91,37 @@ namespace rdsys
             "Heartbeat Processing");
         if (_x == 0.0 || _y == 0.0)
         {
-            std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_NTP_FeedBack);
-            if (this->current_NTP_FeedBack_msg != nullptr && this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x > 0.0 &&
-                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y > 0.0 &&
-                rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack_msg->feedback.current_pose.header.stamp.sec <= 1)
+            try
             {
-                _x = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x;
-                _y = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y;
+                auto transformStamped = this->tf_buffer_->lookupTransform("map", "base_link", tf2::TimePoint());
+                _x = transformStamped.transform.translation.x;
+                _y = transformStamped.transform.translation.y;
             }
-            else
+            catch (tf2::TransformException &ex)
             {
-                RCLCPP_ERROR(
-                    this->get_logger(),
-                    "Cannot get current Position !");
-                return false;
+                std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_NTP_FeedBack);
+                if (this->current_NTP_FeedBack_msg != nullptr && this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x > 0.0 &&
+                    this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y > 0.0 &&
+                    rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack_msg->feedback.current_pose.header.stamp.sec <= 1)
+                {
+                    _x = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x;
+                    _y = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y;
+                    RCLCPP_ERROR(
+                        this->get_logger(),
+                        "Cannot get current Position [Level 1]! Use current Position [Level 2]! TransformException: %s",
+                        ex.what());
+                }
+                else
+                {
+                    RCLCPP_ERROR(
+                        this->get_logger(),
+                        "Cannot get current Position either [Level 1] [Level 2]! TransformException: %s",
+                        ex.what());
+                    slk_1.unlock();
+                    return false;
+                }
+                slk_1.unlock();
             }
-            slk_1.unlock();
         }
         double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
         double roll, pitch, yaw;
@@ -298,16 +313,40 @@ namespace rdsys
         int mode = serial_sub_->mode;
         int now_out_post_HP = objHP_msg_->hp[this->_friendOutPostIndex];
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
-        std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-        if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 0)
+        try
         {
-            for (auto it : this->detectionArray_msg->detections)
+            auto transformStamped = this->tf_buffer_->lookupTransform("map", "base_link", tf2::TimePoint());
+            std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
+            if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 0)
             {
-                allPositions[this->type_id.find(it.type)->second].x = it.center.position.x;
-                allPositions[this->type_id.find(it.type)->second].y = it.center.position.y;
+                for (auto it : this->detectionArray_msg->detections)
+                {
+                    allPositions[this->type_id.find(it.type)->second].x = transformStamped.transform.translation.x + it.center.position.x;
+                    allPositions[this->type_id.find(it.type)->second].y = transformStamped.transform.translation.y + it.center.position.y;
+                }
             }
+            slk.unlock();
         }
-        slk.unlock();
+        catch (tf2::TransformException &ex)
+        {
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Cannot get transformStamped ! TransformException: %s",
+                ex.what());
+            std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
+            if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 0)
+            {
+                for (auto it : this->detectionArray_msg->detections)
+                {
+                    if (allPositions[this->type_id.find(it.type)->second].x == 0 && allPositions[this->type_id.find(it.type)->second].y == 0)
+                    {
+                        allPositions[this->type_id.find(it.type)->second].x = myPos_x_ + it.center.position.x;
+                        allPositions[this->type_id.find(it.type)->second].y = myPos_y_ + it.center.position.y;
+                    }
+                }
+            }
+            slk.unlock();
+        }
         std::vector<RobotPosition> friendPositions;
         std::vector<RobotPosition> enemyPositions;
         for (int i = 0; i < int(allPositions.size()); ++i)

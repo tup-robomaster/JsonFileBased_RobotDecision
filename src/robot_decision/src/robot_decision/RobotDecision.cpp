@@ -460,11 +460,13 @@ namespace rdsys
 
     void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
     {
+        cv::Mat dstMap;
         if (IfShowUI)
         {
             if (!IfUIInited)
             {
-                this->decisionMap = cv::Mat::zeros(1080, int((REAL_WIDTH / REAL_HEIGHT) * 1080), CV_8UC3);
+                this->decisionMap = cv::imread(MAP_PATH);
+                cv::resize(this->decisionMap, this->decisionMap, cv::Size(int(REAL_WIDTH / REAL_HEIGHT * 1080.), 1080));
                 cv::namedWindow("DecisionMapUI", cv::WindowFlags::WINDOW_NORMAL);
                 this->IfUIInited = true;
             }
@@ -473,7 +475,7 @@ namespace rdsys
         {
             return;
         }
-        this->decisionMap = cv::Mat::zeros(1080, int((REAL_WIDTH / REAL_HEIGHT) * 1080), CV_8UC3);
+        dstMap = this->decisionMap.clone();
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
         std::vector<int> availableWayPointID;
         for (auto &it : availableDecisionID)
@@ -485,11 +487,11 @@ namespace rdsys
             int temp_id = this->wayPointMap[i]->id;
             if (temp_id == activateWayPointID)
             {
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, 2);
+                this->drawWayPoint(dstMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, 2);
             }
             else if (temp_id == nowWayPoint)
             {
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, 3);
+                this->drawWayPoint(dstMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, 3);
             }
             else
             {
@@ -502,16 +504,17 @@ namespace rdsys
                         break;
                     }
                 }
-                this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, check_flag ? 1 : 0);
+                this->drawWayPoint(dstMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, check_flag ? 1 : 0);
             }
         }
-        this->drawCar(this->decisionMap, this->transformPoint(car_center, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), car_orientation, yaw, aim_yaw);
-        cv::circle(this->decisionMap, this->transformPoint(car_center, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), int(this->_seek_THR / float(REAL_HEIGHT / 1080)), cv::Scalar(255, 0, 0), 1);
+        this->drawCar(dstMap, this->transformPoint(car_center, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), car_orientation, yaw, aim_yaw);
+        cv::circle(dstMap, this->transformPoint(car_center, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), int(this->_seek_THR / float(REAL_HEIGHT / 1080)), cv::Scalar(255, 0, 0), 1);
         for (auto &it : enemyPositions)
         {
-            this->drawEnemyCar(this->decisionMap, this->transformPoint(it.x, it.y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), it.robot_id);
+            this->drawEnemyCar(dstMap, this->transformPoint(it.x, it.y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), it.robot_id);
         }
-        cv::imshow("DecisionMapUI", this->decisionMap);
+        cv::imshow("DecisionMapUI", dstMap);
+        cv::resizeWindow("DecisionMapUI", cv::Size(1920, 1080));
         cv::waitKey(1);
     }
 
