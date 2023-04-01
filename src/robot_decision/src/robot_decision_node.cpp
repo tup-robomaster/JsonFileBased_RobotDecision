@@ -22,7 +22,7 @@ namespace rdsys
 
     void RobotDecisionNode::init(char *waypointsPath, char *decisionsPath)
     {
-        this->declare_parameter<float>("distance_thr", 0.5);
+        this->declare_parameter<float>("distance_thr", 1.0);
         this->declare_parameter<float>("seek_thr", 5.0);
         this->declare_parameter<bool>("IsRed", false);
         this->declare_parameter<bool>("IfShowUI", false);

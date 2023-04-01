@@ -501,6 +501,7 @@ namespace rdsys
                 this->drawWayPoint(this->decisionMap, this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_id, check_flag ? 1 : 0);
             }
         }
+        this->drawCar(this->decisionMap, this->transformPoint(car_center, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), car_orientation, yaw);
         cv::imshow("DecisionMapUI", this->decisionMap);
         cv::waitKey(1);
     }
@@ -542,9 +543,18 @@ namespace rdsys
         return cv::Point2i(int((_x / width) * img_cols), int((_y / height) * img_rows));
     }
 
+    cv::Point2i RobotDecisionSys::transformPoint(cv::Point center, float width, float height, int img_cols, int img_rows)
+    {
+        return cv::Point2i(int((center.x / width) * img_cols), int((center.y / height) * img_rows));
+    }
+
     void RobotDecisionSys::drawCar(cv::Mat &img, cv::Point2i center, double car_orientation, double yaw)
     {
-        cv::Size wh = cv::Size(200, 100);
+        if(yaw == -1)
+        {
+            yaw = car_orientation;
+        }
+        cv::Size wh = cv::Size(50, 35);
         cv::Point point_L_U = cv::Point(center.x - wh.width / 2, center.y - wh.height / 2);
         cv::Point point_R_U = cv::Point(center.x + wh.width / 2, center.y - wh.height / 2);
         cv::Point point_R_L = cv::Point(center.x + wh.width / 2, center.y + wh.height / 2);
@@ -560,14 +570,16 @@ namespace rdsys
         }
         for (int j = 0; j < 3; ++j)
         {
-            cv::line(img, after_point[j], after_point[j + 1], cv::Scalar(0, 255, 0));
+            cv::line(img, after_point[j], after_point[j + 1], cv::Scalar(0, 255, 0), 3);
             if (j == 2)
             {
-                line(img, after_point[j + 1], after_point[0], cv::Scalar(0, 255, 0));
+                cv::line(img, after_point[j + 1], after_point[0], cv::Scalar(0, 255, 0), 3);
             }
         }
-        cv::Point2i Car_End = this->createEndPointByTheta(center, car_orientation, 150);
-        cv::Point2i PAN_End = this->createEndPointByTheta(center, yaw, 200);
+        cv::Point2i Car_End = this->createEndPointByTheta(center, car_orientation, 35);
+        cv::Point2i PAN_End = this->createEndPointByTheta(center, yaw, 50);
+        cv::line(img, center, Car_End, cv::Scalar(255, 255, 0), 3);
+        cv::line(img, center, PAN_End, cv::Scalar(0, 0, 255), 3);
     }
 
     bool RobotDecisionSys::getIfShowUI()

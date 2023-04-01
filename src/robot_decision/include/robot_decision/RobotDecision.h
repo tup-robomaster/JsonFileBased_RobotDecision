@@ -40,7 +40,7 @@ namespace rdsys
         std::vector<std::vector<int>> connectionList;
         std::vector<std::shared_ptr<Decision>> decisions;
 
-        float _distance_THR = 0;
+        float _distance_THR = 0.;
         float _seek_THR = 5.0;
 
     private:
@@ -255,7 +255,7 @@ namespace rdsys
          * @param id
          * 路径点ID
          * @param type
-         * 路径点状态（0未激活，1符合条件，2激活，3当前）
+         * 路径点状态（0未激活-灰色，1符合条件-蓝色，2激活-绿色，3当前-黄色）
          */
         void drawWayPoint(cv::Mat &img, cv::Point2i center, int id, int type);
         /**
@@ -277,17 +277,33 @@ namespace rdsys
          */
         cv::Point2i transformPoint(float _x, float _y, float width, float height, int img_cols, int img_rows);
         /**
-         * @brief 绘制车辆
-         * @param img
-         * 目标绘制图像
+         * @brief 变换中心点
          * @param center
-         * 车辆位置
-         * @param car_orientation
-         * 车辆朝向
-         * @param yaw
-         * yaw轴朝向
+         * 中心点
+         * @param width
+         * 场地宽度
+         * @param height
+         * 场地高度
+         * @param img_cols
+         * 图像宽度
+         * @param img_rows
+         * 图像高度
+         * @return
+         * 真实坐标对应的图像坐标
          */
-        void drawCar(cv::Mat &img, cv::Point2i center, double car_orientation, double yaw);
+        cv::Point2i transformPoint(cv::Point center, float width, float height, int img_cols, int img_rows);
+            /**
+             * @brief 绘制车辆
+             * @param img
+             * 目标绘制图像
+             * @param center
+             * 车辆位置
+             * @param car_orientation
+             * 车辆朝向
+             * @param yaw
+             * yaw轴朝向
+             */
+            void drawCar(cv::Mat &img, cv::Point2i center, double car_orientation, double yaw);
     };
 }
 #endif

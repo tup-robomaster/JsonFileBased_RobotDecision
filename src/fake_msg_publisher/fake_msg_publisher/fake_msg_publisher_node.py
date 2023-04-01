@@ -40,13 +40,13 @@ class Lier(Node):
         self.ObjHP_msg.hp[7] = 600
         self.carPos_msg = CarPosMsg()
         temp_pos = Point2f()
-        temp_pos.x = 1.0
-        temp_pos.y = 1.0
+        temp_pos.x = float(random.uniform(0.0, 5.0))
+        temp_pos.y = float(random.uniform(0.0, 5.0))
         self.carPos_msg.pos[0] = temp_pos
         for i in range(0, 8):
             temp_pos2 = Point2f()
-            temp_pos2.x = float(random.randrange(0.0, 28.0))
-            temp_pos2.y = float(random.randrange(0.0, 15.0))
+            temp_pos2.x = float(random.uniform(0.0, 28.0))
+            temp_pos2.y = float(random.uniform(0.0, 15.0))
             self.carPos_msg.pos[i+1] = temp_pos2
         self.gameInfo_msg = GameInfoMsg()
         self.serial_msg = SerialMsg()
