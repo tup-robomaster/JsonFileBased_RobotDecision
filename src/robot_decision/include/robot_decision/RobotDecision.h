@@ -243,7 +243,7 @@ namespace rdsys
          * @param nowWayPoint
          * 当前所在路径点
          */
-        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point car_center, double car_orientation);
+        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
 
     private:
         /**
@@ -291,19 +291,27 @@ namespace rdsys
          * @return
          * 真实坐标对应的图像坐标
          */
-        cv::Point2i transformPoint(cv::Point center, float width, float height, int img_cols, int img_rows);
-            /**
-             * @brief 绘制车辆
-             * @param img
-             * 目标绘制图像
-             * @param center
-             * 车辆位置
-             * @param car_orientation
-             * 车辆朝向
-             * @param yaw
-             * yaw轴朝向
-             */
-            void drawCar(cv::Mat &img, cv::Point2i center, double car_orientation, double yaw);
+        cv::Point2i transformPoint(cv::Point2f center, float width, float height, int img_cols, int img_rows);
+        /**
+         * @brief 绘制车辆
+         * @param img
+         * 目标绘制图像
+         * @param center
+         * 车辆位置
+         * @param car_orientation
+         * 车辆朝向
+         * @param yaw
+         * yaw轴朝向
+         */
+        void drawCar(cv::Mat &img, cv::Point2i center, double &car_orientation, double &yaw, double &aim_yaw);
+        /**
+         * @brief 绘制敌方车辆
+         * @param img
+         * 目标绘制图像
+         * @param center
+         * 车辆位置
+         */
+        void drawEnemyCar(cv::Mat &img, cv::Point2i center, int &id);
     };
 }
 #endif

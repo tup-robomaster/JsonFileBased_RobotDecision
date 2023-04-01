@@ -22,7 +22,7 @@ class Lier(Node):
             GameInfoMsg, '/game_info', 10)
         self.publisher_SerialMsg = self.create_publisher(
             SerialMsg, '/serial_msg', 10)
-        timer_period = 0.1  # seconds
+        timer_period = 0.1 # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
@@ -40,10 +40,10 @@ class Lier(Node):
         self.ObjHP_msg.hp[7] = 600
         self.carPos_msg = CarPosMsg()
         temp_pos = Point2f()
-        temp_pos.x = float(random.uniform(0.0, 5.0))
-        temp_pos.y = float(random.uniform(0.0, 5.0))
+        temp_pos.x = 1.8
+        temp_pos.y = 2.1
         self.carPos_msg.pos[0] = temp_pos
-        for i in range(0, 8):
+        for i in range(0, 9):
             temp_pos2 = Point2f()
             temp_pos2.x = float(random.uniform(0.0, 28.0))
             temp_pos2.y = float(random.uniform(0.0, 15.0))

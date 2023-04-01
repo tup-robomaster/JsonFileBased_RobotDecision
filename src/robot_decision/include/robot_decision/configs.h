@@ -3,3 +3,4 @@
 #define REAL_WIDTH      (float) 28.
 #define REAL_HEIGHT     (float) 15.
 #define GOAL_TIME_THR_SEC   (int) 2
+#define CAR_SEEK_FOV        (float) 70.

@@ -22,10 +22,10 @@ namespace rdsys
 
     void RobotDecisionNode::init(char *waypointsPath, char *decisionsPath)
     {
-        this->declare_parameter<float>("distance_thr", 1.0);
+        this->declare_parameter<float>("distance_thr", 5.0);
         this->declare_parameter<float>("seek_thr", 5.0);
         this->declare_parameter<bool>("IsRed", false);
-        this->declare_parameter<bool>("IfShowUI", false);
+        this->declare_parameter<bool>("IfShowUI", true);
         this->declare_parameter<int>("SelfIndex", 0);
         this->declare_parameter<int>("friendOutPostIndex", 7);
 
@@ -75,7 +75,7 @@ namespace rdsys
             this->get_logger(),
             "Starting action_client");
         this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
-        if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(20)))
+        if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(5)))
         {
             RCLCPP_ERROR(
                 this->get_logger(),
@@ -110,28 +110,39 @@ namespace rdsys
         }
         double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
         double roll, pitch, yaw;
-        tf2::Quaternion nv2_quat;
-        if (this->current_NTP_FeedBack_msg != nullptr)
+        if (aim_yaw != -1)
         {
-            nv2_quat = tf2::Quaternion(
-                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.x,
-                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.y,
-                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.z,
-                this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation.w);
+            tf2::Quaternion nv2_quat;
+            if (this->current_NTP_FeedBack_msg != nullptr)
+            {
+                tf2::fromMsg(this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation, nv2_quat);
+            }
+            else
+            {
+                nv2_quat.setRPY(0, 0, 0);
+            }
+            tf2::Matrix3x3 m(nv2_quat);
+            m.getRPY(roll, pitch, yaw);
+            std_msgs::msg::Float32 aim_yaw_msg;
+            double delta_yaw = double(aim_yaw - yaw);
+            if (delta_yaw > CV_PI)
+            {
+                delta_yaw = -(CV_PI - (delta_yaw - CV_PI));
+            }
+            aim_yaw_msg.set__data(delta_yaw);
+            RCLCPP_INFO(
+                this->get_logger(),
+                "Publish Aim Yaw : %lf | aim_yaw : %lf current_yaw: %lf | angle: %lf",
+                delta_yaw, aim_yaw, yaw, delta_yaw * 180. / CV_PI);
+            this->aim_yaw_pub_->publish(aim_yaw_msg);
         }
         else
         {
-            nv2_quat = tf2::Quaternion(0.9, 0., 0., 0.4);
+            yaw = 0.;
+            RCLCPP_WARN(
+                this->get_logger(),
+                "None Aim Yaw");
         }
-        tf2::Matrix3x3 m(nv2_quat);
-        m.getRPY(roll, pitch, yaw);
-        std_msgs::msg::Float32 aim_yaw_msg;
-        aim_yaw_msg.set__data(float(aim_yaw - yaw));
-        RCLCPP_INFO(
-            this->get_logger(),
-            "Publish Aim Yaw : %lf | aim_yaw : %lf current_yaw: %lf",
-            float(aim_yaw - yaw), aim_yaw, yaw);
-        this->aim_yaw_pub_->publish(aim_yaw_msg);
 
         this->acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
@@ -214,7 +225,7 @@ namespace rdsys
         if (this->_IfShowUI)
         {
             std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
-            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2i(_x, _y), yaw);
+            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions);
             slk_4.unlock();
         }
         return true;
@@ -299,8 +310,12 @@ namespace rdsys
         slk.unlock();
         std::vector<RobotPosition> friendPositions;
         std::vector<RobotPosition> enemyPositions;
-        for (int i = 0; i < 9; ++i)
+        for (int i = 0; i < int(allPositions.size()); ++i)
         {
+            if (i == this->_selfIndex)
+            {
+                continue;
+            }
             if (i < 5)
             {
                 if (this->_IsRed)
@@ -378,9 +393,6 @@ namespace rdsys
 
     void RobotDecisionNode::respond()
     {
-        RCLCPP_INFO(
-            this->get_logger(),
-            "Listening Params");
         this->get_parameter("distance_thr", this->_distance_THR_Temp);
         this->get_parameter("seek_thr", this->_seek_THR_Temp);
         this->get_parameter("IfShowUI", this->_IfShowUI_Temp);

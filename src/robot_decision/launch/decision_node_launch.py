@@ -17,7 +17,7 @@ def generate_launch_description():
         name="robot_decision",
         package="robot_decision",
         executable="robot_decision_node",
-        parameters=[{'distance_thr', 0.5},
+        parameters=[{'distance_thr', 5.0},
                     {'seek_thr', 5.0},
                     {'IsRed', False},
                     {'IfShowUI', False},
