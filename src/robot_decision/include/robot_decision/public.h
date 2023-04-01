@@ -8,6 +8,7 @@
 #include <memory>
 #include <shared_mutex>
 #include <mutex>
+#include <algorithm>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/publisher.hpp>

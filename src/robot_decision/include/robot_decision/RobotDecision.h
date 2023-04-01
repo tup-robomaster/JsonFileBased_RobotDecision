@@ -159,7 +159,7 @@ namespace rdsys
          * @return
          * 决策
          */
-        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID);
+        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e);
 
         /**
          * @brief 根据ID获取路径点
@@ -243,7 +243,7 @@ namespace rdsys
          * @param nowWayPoint
          * 当前所在路径点
          */
-        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions);
+        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e);
 
     private:
         /**
@@ -310,8 +310,10 @@ namespace rdsys
          * 目标绘制图像
          * @param center
          * 车辆位置
+         * @param type
+         * 车辆所属(0：友方，1：敌方)
          */
-        void drawEnemyCar(cv::Mat &img, cv::Point2i center, int &id);
+        void drawOthCar(cv::Mat &img, cv::Point2i center, int &id,int type);
     };
 }
 #endif

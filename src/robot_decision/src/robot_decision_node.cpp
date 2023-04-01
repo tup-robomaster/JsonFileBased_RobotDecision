@@ -22,7 +22,7 @@ namespace rdsys
 
     void RobotDecisionNode::init(char *waypointsPath, char *decisionsPath)
     {
-        this->declare_parameter<float>("distance_thr", 5.0);
+        this->declare_parameter<float>("distance_thr", 1.0);
         this->declare_parameter<float>("seek_thr", 5.0);
         this->declare_parameter<bool>("IsRed", false);
         this->declare_parameter<bool>("IfShowUI", true);
@@ -115,7 +115,7 @@ namespace rdsys
                 {
                     RCLCPP_ERROR(
                         this->get_logger(),
-                        "Cannot get current Position either [Level 1] [Level 2]! TransformException: %s",
+                        "Cannot get current Position either [Level 1] & [Level 2]! TransformException: %s",
                         ex.what());
                     slk_1.unlock();
                     return false;
@@ -162,7 +162,8 @@ namespace rdsys
         this->acummulated_poses_.clear();
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         std::vector<int> availableDecisionID;
-        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, friendPositions, enemyPositions, availableDecisionID);
+        std::map<int, int> id_pos_f, id_pos_e;
+        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, friendPositions, enemyPositions, availableDecisionID, id_pos_f, id_pos_e);
         if (myDecision == nullptr)
         {
             return false;
@@ -194,10 +195,9 @@ namespace rdsys
         {
             return false;
         }
-        double theta = this->myRDS->decideAngleByEnemyPos(aimWayPoint->x, aimWayPoint->y, enemyPositions);
-        if (theta == -1)
-            theta = aimWayPoint->theta;
-        this->makeNewGoal(aimWayPoint->x, aimWayPoint->y, theta);
+        if (aim_yaw == -1)
+            aim_yaw = aimWayPoint->theta;
+        this->makeNewGoal(aimWayPoint->x, aimWayPoint->y, aim_yaw);
         this->nav_through_poses_goal_.poses = this->acummulated_poses_;
         RCLCPP_INFO(
             this->get_logger(),
@@ -240,7 +240,7 @@ namespace rdsys
         if (this->_IfShowUI)
         {
             std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
-            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions);
+            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e);
             slk_4.unlock();
         }
         return true;
