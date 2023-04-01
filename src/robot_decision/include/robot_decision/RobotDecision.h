@@ -151,11 +151,15 @@ namespace rdsys
          * @param now
          * 当前比赛剩余时间
          * @param friendPositions
-         * 友方机器人位置
+         * 友方机器人位置（真实坐标）
          * @param enemtPositions
-         * 敌方机器人位置
+         * 敌方机器人位置（真实坐标）
          * @param availableDecisionID
          * 输入输出符合条件的决策ID
+         * @param id_pos_f
+         * 友方位置（路径点）
+         * @param id_pos_e
+         * 敌方位置（路径点）
          * @return
          * 决策
          */
@@ -195,11 +199,11 @@ namespace rdsys
         /**
          * @brief 决策yaw轴角度，通用坐标系
          * @param _x
-         * 当前机器人x轴坐标
+         * 当前机器人x轴坐标（真实坐标）
          * @param _y
-         * 当前机器人y轴坐标
+         * 当前机器人y轴坐标（真实坐标）
          * @param enemyPositions
-         * 敌方机器人位置
+         * 敌方机器人位置（真实坐标）
          * @return
          * yaw轴角度
          */
@@ -242,6 +246,22 @@ namespace rdsys
          * 符合条件的决策ID
          * @param nowWayPoint
          * 当前所在路径点
+         * @param yaw
+         * 当前云台yaw轴角度（弧度制）
+         * @param car_center
+         * 当前车辆坐标（真实坐标）
+         * @param car_orientation
+         * 当前车辆朝向角度（弧度制）
+         * @param aim_yaw
+         * 目标云台yaw轴角度（弧度制）
+         * @param friendPositions
+         * 友方机器人位置（真实坐标）
+         * @param enemtPositions
+         * 敌方机器人位置（真实坐标）
+         * @param id_pos_f
+         * 友方位置（路径点）
+         * @param id_pos_e
+         * 敌方位置（路径点）
          */
         void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e);
 
@@ -251,7 +271,7 @@ namespace rdsys
          * @param img
          * 目标绘制图像
          * @param center
-         * 路径点坐标
+         * 路径点坐标（图像坐标）
          * @param id
          * 路径点ID
          * @param type
@@ -261,9 +281,9 @@ namespace rdsys
         /**
          * @brief 变换中心点
          * @param _x
-         * 中心点x轴坐标
+         * 中心点x轴坐标（真实坐标）
          * @param _y
-         * 中心点y轴坐标
+         * 中心点y轴坐标（真实坐标）
          * @param width
          * 场地宽度
          * @param height
@@ -279,7 +299,7 @@ namespace rdsys
         /**
          * @brief 变换中心点
          * @param center
-         * 中心点
+         * 中心点（真实坐标）
          * @param width
          * 场地宽度
          * @param height
@@ -297,7 +317,7 @@ namespace rdsys
          * @param img
          * 目标绘制图像
          * @param center
-         * 车辆位置
+         * 车辆位置（图像坐标）
          * @param car_orientation
          * 车辆朝向
          * @param yaw
@@ -309,11 +329,11 @@ namespace rdsys
          * @param img
          * 目标绘制图像
          * @param center
-         * 车辆位置
+         * 车辆位置（图像坐标）
          * @param type
          * 车辆所属(0：友方，1：敌方)
          */
-        void drawOthCar(cv::Mat &img, cv::Point2i center, int &id,int type);
+        void drawOthCar(cv::Mat &img, cv::Point2i center, int &id, int type);
     };
 }
 #endif
