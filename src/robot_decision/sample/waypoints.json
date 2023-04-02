@@ -27,7 +27,8 @@
             "angle": 0.0,
             "connect": [
                 0,
-                2
+                2,
+                4
             ],
             "enemyWeights": [
                 -1,
@@ -65,6 +66,24 @@
             "angle": 0.0,
             "connect": [
                 2
+            ],
+            "enemyWeights": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ]
+        },
+        {
+            "id": 4,
+            "name": "test4",
+            "type": 0,
+            "x": 4.0,
+            "y": 7.0,
+            "angle": 0.0,
+            "connect": [
+                1
             ],
             "enemyWeights": [
                 -1,
