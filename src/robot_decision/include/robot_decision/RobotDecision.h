@@ -37,11 +37,13 @@ namespace rdsys
 
     private:
         std::vector<std::shared_ptr<WayPoint>> wayPointMap;
-        std::vector<std::vector<int>> connectionList;
         std::vector<std::shared_ptr<Decision>> decisions;
 
         float _distance_THR = 0.;
         float _seek_THR = 5.0;
+    
+    private:
+        std::map<int, std::vector<int>> connection_map;
 
     private:
         /**
@@ -50,16 +52,6 @@ namespace rdsys
          * 当前机器人坐标信息
          */
         int calculatePosition(RobotPosition &pos);
-        /**
-         * @brief 计算路径路线
-         * @param startWapPointID
-         * 起点路径点ID
-         * @param endWapPointID
-         * 终点路径点ID
-         * @return
-         * 路径点集合
-         */
-        std::vector<int> calculatePath(int startWapPointID, int endWapPointID);
         /**
          * @brief 计算角度
          * @param x1
@@ -164,7 +156,16 @@ namespace rdsys
          * 决策
          */
         std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e);
-
+        /**
+         * @brief 计算路径路线
+         * @param startWapPointID
+         * 起点路径点ID
+         * @param endWapPointID
+         * 终点路径点ID
+         * @return
+         * 路径点集合
+         */
+        std::vector<std::shared_ptr<WayPoint>> calculatePath(int startWapPointID, int endWapPointID);
         /**
          * @brief 根据ID获取路径点
          * @param id
@@ -262,8 +263,10 @@ namespace rdsys
          * 友方位置（路径点）
          * @param id_pos_e
          * 敌方位置（路径点）
+         * @param aimWayPoints
+         * 决策路径点的集合
          */
-        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e);
+        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e, std::vector<std::shared_ptr<WayPoint>> &aimWayPoints);
 
     private:
         /**

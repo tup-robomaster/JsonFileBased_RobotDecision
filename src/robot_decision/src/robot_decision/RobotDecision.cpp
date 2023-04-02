@@ -23,55 +23,45 @@ namespace rdsys
         return id;
     }
 
-    std::vector<int> RobotDecisionSys::calculatePath(int startWapPointID, int endWapPointID)
+    std::vector<std::shared_ptr<WayPoint>> RobotDecisionSys::calculatePath(int startWapPointID, int endWapPointID)
     {
-        std::vector<std::vector<int>> paths;
-        std::vector<int> result;
+        std::vector<std::shared_ptr<WayPoint>> result;
+        std::vector<int> container = {startWapPointID};
+        std::map<int, bool> waypoint_flag;
+        waypoint_flag.insert(std::make_pair(startWapPointID, true));
         bool flag = true;
-        for (int i = 0; i < int(connectionList.size()) && flag; ++i)
+        while (flag)
         {
-            if (paths.size() == 0)
+            int current_waypoint = container.back();
+            auto iter = connection_map.find(current_waypoint);
+            bool flag2 = false;
+            for (auto &it : iter->second)
             {
-                for (int &it : this->connectionList[startWapPointID])
+                auto iter2 = waypoint_flag.find(it);
+                if (iter2 == waypoint_flag.end())
                 {
-                    paths.emplace_back(std::vector<int>(1, it));
-                }
-            }
-            else
-            {
-                for (int j = 0; j < int(paths.size()) && flag; ++j)
-                {
-                    int count = 0;
-                    for (int &it : this->connectionList[paths[i][paths.size() - 1]])
+                    waypoint_flag.insert(std::make_pair(it, true));
+                    container.emplace_back(it);
+                    flag2 = true;
+                    if (it == endWapPointID)
                     {
-                        if (this->connectionList[paths[i][paths.size() - 1]].size() > 1 && it == this->connectionList[paths[i][paths.size() - 1]][this->connectionList[paths[i][paths.size() - 1]].size() - 1])
-                        {
-                            continue;
-                        }
-                        if (count == 0)
-                        {
-                            paths[i].emplace_back(it);
-                            if (it == endWapPointID)
-                            {
-                                result.swap(paths[i]);
-                                flag = false;
-                            }
-                        }
-                        else
-                        {
-                            std::vector<int> temp(paths[i]);
-                            temp.emplace_back(it);
-                            paths.push_back(temp);
-                            if (it == endWapPointID)
-                            {
-                                result.swap(temp);
-                                flag = false;
-                            }
-                        }
-                        ++count;
+                        flag = false;
                     }
                 }
+                if (flag2)
+                    break;
             }
+            if (!flag2)
+            {
+                container.pop_back();
+            }
+            if (waypoint_flag.size() == wayPointMap.size())
+                break;
+        }
+        for (auto &it : container)
+        {
+            if (it != container.front())
+                result.emplace_back(this->getWayPointByID(it));
         }
         return result;
     }
@@ -118,7 +108,6 @@ namespace rdsys
         for (int i = 0; i < int(arrayValue.size()); ++i)
         {
             WayPoint *wayPoint = new WayPoint();
-            std::vector<int> connect;
             wayPoint->id = arrayValue[i]["id"].asInt();
             wayPoint->type = arrayValue[i]["type"].asInt();
             wayPoint->x = arrayValue[i]["x"].asFloat();
@@ -127,7 +116,7 @@ namespace rdsys
             Json::Value connectedPoints = arrayValue[i]["connect"];
             for (int j = 0; j < int(connectedPoints.size()); ++j)
             {
-                connect.emplace_back(connectedPoints[j].asInt());
+                wayPoint->connection.emplace_back(connectedPoints[j].asInt());
             }
             Json::Value enemyWeightsArray = arrayValue[i]["enemyWeights"];
             for (int j = 0; j < int(enemyWeightsArray.size()); ++j)
@@ -135,7 +124,7 @@ namespace rdsys
                 wayPoint->enemyWeights[j] = enemyWeightsArray[j].asInt();
             }
             this->wayPointMap.emplace_back(wayPoint);
-            this->connectionList.emplace_back(connect);
+            this->connection_map.insert(std::make_pair(wayPoint->id, wayPoint->connection));
         }
         jsonFile.close();
         return true;
@@ -458,7 +447,7 @@ namespace rdsys
         this->_seek_THR = thr;
     }
 
-    void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e)
+    void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e, std::vector<std::shared_ptr<WayPoint>> &aimWayPoints)
     {
         cv::Mat dstMap;
         if (IfShowUI)
@@ -497,6 +486,7 @@ namespace rdsys
             {
                 cv::rectangle(dstMap, cv::Point(dst_way_point_center.x - 15, dst_way_point_center.y - 28), cv::Point(dst_way_point_center.x + 15, dst_way_point_center.y + 28), cv::Scalar(0, 0, 255), -1);
             }
+
             if (temp_id == activateWayPointID)
             {
                 this->drawWayPoint(dstMap, dst_way_point_center, temp_id, 2);
@@ -517,6 +507,18 @@ namespace rdsys
                     }
                 }
                 this->drawWayPoint(dstMap, dst_way_point_center, temp_id, check_flag ? 1 : 0);
+            }
+        }
+        for (int i = 0; i < int(aimWayPoints.size()); ++i)
+        {
+            cv::circle(dstMap, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), 3, cv::Scalar(0, 0, 255), -1);
+            if (i == 0)
+            {
+                cv::line(dstMap, dst_car_center, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
+            }
+            else
+            {
+                cv::line(dstMap, this->transformPoint(aimWayPoints[i - 1]->x, aimWayPoints[i - 1]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
             }
         }
         this->drawCar(dstMap, dst_car_center, car_orientation, yaw, aim_yaw);

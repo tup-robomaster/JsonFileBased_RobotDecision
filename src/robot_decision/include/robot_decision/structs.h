@@ -33,6 +33,7 @@ namespace rdsys
         float y;
         double theta;
         std::map<int, int> enemyWeights;
+        std::vector<int> connection;
     } WayPoint;
 
     /**

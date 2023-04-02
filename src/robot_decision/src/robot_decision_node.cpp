@@ -190,14 +190,24 @@ namespace rdsys
         this->excuting_decision = myDecision;
         slk_2.unlock();
         slk_3.unlock();
-        std::shared_ptr<WayPoint> aimWayPoint = this->myRDS->getWayPointByID(myDecision->decide_wayPoint);
-        if (aimWayPoint == nullptr)
+        std::vector<std::shared_ptr<WayPoint>> aimWayPoints;
+        if (!myDecision->if_succession)
+        {
+            aimWayPoints.emplace_back(this->myRDS->getWayPointByID(myDecision->decide_wayPoint));
+        }
+        else
+        {
+            aimWayPoints = this->myRDS->calculatePath(myWayPointID, myDecision->decide_wayPoint);
+        }
+
+        if (aimWayPoints.empty())
         {
             return false;
         }
-        if (aim_yaw == -1)
-            aim_yaw = aimWayPoint->theta;
-        this->makeNewGoal(aimWayPoint->x, aimWayPoint->y, aim_yaw);
+        for (auto &it : aimWayPoints)
+        {
+            this->makeNewGoal(it->x, it->y, aim_yaw == -1 ? it->theta : aim_yaw);
+        }
         this->nav_through_poses_goal_.poses = this->acummulated_poses_;
         RCLCPP_INFO(
             this->get_logger(),
@@ -230,8 +240,8 @@ namespace rdsys
         robot_interface::msg::Decision myDecision_msg;
         myDecision_msg.set__decision_id(myDecision->id);
         myDecision_msg.set__mode(myDecision->decide_mode);
-        myDecision_msg.set__x(aimWayPoint->x);
-        myDecision_msg.set__y(aimWayPoint->y);
+        myDecision_msg.set__x(aimWayPoints.back()->x);
+        myDecision_msg.set__y(aimWayPoints.back()->y);
         RCLCPP_INFO(
             this->get_logger(),
             "Publish Decision : [id] %d [mode] %d [x,y] %lf %lf",
@@ -240,7 +250,7 @@ namespace rdsys
         if (this->_IfShowUI)
         {
             std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
-            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e);
+            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
             slk_4.unlock();
         }
         return true;
@@ -282,6 +292,7 @@ namespace rdsys
                                             const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
                                             const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_)
     {
+        auto start_t = std::chrono::system_clock::now().time_since_epoch();
         for (int i = 0; i < int(objHP_msg_->hp.size()); ++i)
         {
             RCLCPP_INFO(
@@ -376,6 +387,11 @@ namespace rdsys
                 this->get_logger(),
                 "Decision failed!");
         }
+        auto end_t = std::chrono::system_clock::now().time_since_epoch();
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Take Time: %ld nsec FPS: %d",
+            end_t.count() - start_t.count(), int(std::chrono::nanoseconds(1000000000).count() / (end_t - start_t).count()));
     }
 
     void RobotDecisionNode::jointStateCallBack(const sensor_msgs::msg::JointState::SharedPtr msg)
