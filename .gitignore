@@ -3,3 +3,4 @@ build/
 install/
 log/
 src/fake_msg_publisher/fake_msg_publisher/__pycache__/
+src/fake_msg_publisher/fake_msg_publisher/__pycache__/fake_msg_publisher_node.cpython-38.pyc
