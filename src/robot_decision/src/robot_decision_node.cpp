@@ -22,12 +22,12 @@ namespace rdsys
 
     void RobotDecisionNode::init(char *waypointsPath, char *decisionsPath)
     {
-        this->declare_parameter<float>("distance_thr", 1.0);
-        this->declare_parameter<float>("seek_thr", 5.0);
-        this->declare_parameter<bool>("IsRed", false);
-        this->declare_parameter<bool>("IfShowUI", true);
-        this->declare_parameter<int>("SelfIndex", 0);
-        this->declare_parameter<int>("friendOutPostIndex", 7);
+        this->declare_parameter<float>("distance_thr", INIT_DISTANCE_THR);
+        this->declare_parameter<float>("seek_thr", INIT_SEEK_THR);
+        this->declare_parameter<bool>("IsRed", INIT_ISRED);
+        this->declare_parameter<bool>("IfShowUI", INIT_IFSHOWUI);
+        this->declare_parameter<int>("SelfIndex", INIT_SELFINDEX);
+        this->declare_parameter<int>("friendOutPostIndex", INIT_FRIENDOUTPOSTINDEX);
 
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp));
 
@@ -175,6 +175,7 @@ namespace rdsys
             if (this->excuting_decision != nullptr && this->current_NTP_FeedBack_msg != nullptr && myDecision->weight > this->excuting_decision->weight && this->current_NTP_FeedBack_msg->feedback.estimated_time_remaining.sec > GOAL_TIME_THR_SEC)
             {
                 nav_through_poses_action_client_->async_cancel_goals_before(rclcpp::Clock().now());
+                this->nav_through_poses_goal_handle_.reset();
                 RCLCPP_INFO(
                     this->get_logger(),
                     "Cancel Previous Goal");
@@ -251,10 +252,10 @@ namespace rdsys
         {
             this->nav_through_poses_goal_handle_.reset();
         };
-        auto future_goal_handle =
-            nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
+
         if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(10)))
         {
+            auto future_goal_handle = nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
             this->nav_through_poses_goal_handle_ = future_goal_handle.get();
         }
         else

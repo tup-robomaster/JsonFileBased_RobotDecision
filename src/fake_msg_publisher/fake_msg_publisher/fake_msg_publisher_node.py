@@ -22,7 +22,7 @@ class Lier(Node):
             GameInfoMsg, '/game_info', 10)
         self.publisher_SerialMsg = self.create_publisher(
             SerialMsg, '/serial_msg', 10)
-        timer_period = 0.5 # seconds
+        timer_period = 0.1 # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
