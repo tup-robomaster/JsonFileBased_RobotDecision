@@ -22,9 +22,20 @@ class Lier(Node):
             GameInfoMsg, '/game_info', 10)
         self.publisher_SerialMsg = self.create_publisher(
             SerialMsg, '/serial_msg', 10)
-        timer_period = 0.1 # seconds
+        timer_period = 0.01 # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.i = 0
+        self.carPos_msg = CarPosMsg()
+        self.w = 12.
+        self.h = 8.
+        temp_pos = Point2f()
+        temp_pos.x = 1.0
+        temp_pos.y = 1.0
+        self.carPos_msg.pos[0] = temp_pos
+        for i in range(0, 9):
+            temp_pos2 = Point2f()
+            temp_pos2.x = 6.
+            temp_pos2.y = 4.
+            self.carPos_msg.pos[i+1] = temp_pos2
 
     def timer_callback(self):
         self.make_fake()
@@ -38,15 +49,20 @@ class Lier(Node):
         self.ObjHP_msg = ObjHPMsg()
         self.ObjHP_msg.hp[0] = 500
         self.ObjHP_msg.hp[7] = 600
-        self.carPos_msg = CarPosMsg()
-        temp_pos = Point2f()
-        temp_pos.x = random.uniform(0.5, 2.5)
-        temp_pos.y = random.uniform(0.5, 2.5)
-        self.carPos_msg.pos[0] = temp_pos
         for i in range(0, 9):
             temp_pos2 = Point2f()
-            temp_pos2.x = random.uniform(0.5, 11.5)
-            temp_pos2.y = random.uniform(0.5, 7.5)
+            aim_x = random.uniform(self.carPos_msg.pos[i+1].x - 0.1, self.carPos_msg.pos[i+1].x + 0.1)
+            aim_y = random.uniform(self.carPos_msg.pos[i+1].y - 0.1, self.carPos_msg.pos[i+1].y + 0.1)
+            if aim_x < 0.:
+                aim_x = 0.
+            if aim_x > self.w:
+                aim_x = self.w
+            if aim_y < 0.:
+                aim_y = 0.
+            if aim_y > self.h:
+                aim_y = self.h
+            temp_pos2.x = aim_x
+            temp_pos2.y = aim_y
             self.carPos_msg.pos[i+1] = temp_pos2
         self.gameInfo_msg = GameInfoMsg()
         self.serial_msg = SerialMsg()
