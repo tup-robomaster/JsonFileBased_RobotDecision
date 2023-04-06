@@ -11,3 +11,4 @@
 #define INIT_IFSHOWUI (bool)true
 #define INIT_SELFINDEX (int)0
 #define INIT_FRIENDOUTPOSTINDEX (int)7
+#define STEP_DISTANCE (float)0.1

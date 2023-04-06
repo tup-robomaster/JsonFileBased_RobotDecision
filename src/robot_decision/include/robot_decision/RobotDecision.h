@@ -86,6 +86,18 @@ namespace rdsys
          * 结束点
          */
         cv::Point2i createEndPointByTheta(cv::Point start, double theta, int length);
+        /**
+         * @brief 通过角度与起终点判断线上是否有障碍
+         * @param start
+         * 起点
+         * @param theta
+         * 角度（弧度制）
+         * @param distance
+         * 终点距离
+         * @return
+         * 是否有阻碍
+         */
+        bool checkBlock(cv::Point start, double theta, int distance);
 
     public:
         RobotDecisionSys(float &_distance_THR, float &_seek_THR);
@@ -231,6 +243,7 @@ namespace rdsys
 
     private:
         cv::Mat decisionMap;
+        cv::Mat decisionMap_Gray;
 
     public:
         /**

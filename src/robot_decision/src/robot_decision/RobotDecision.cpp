@@ -82,10 +82,27 @@ namespace rdsys
         return cv::Point2i((int)round(start.x + length * cos(theta)), (int)round(start.y + length * sin(theta)));
     }
 
+    bool RobotDecisionSys::checkBlock(cv::Point start, double theta, int distance)
+    {
+        int temp_step = int(STEP_DISTANCE * (1080. / REAL_HEIGHT));
+        for (float distance_step = temp_step; distance_step < distance; distance_step += temp_step)
+        {
+            cv::Point2i check_point = this->createEndPointByTheta(start, theta, distance_step);
+            if ((int)this->decisionMap_Gray.at<uchar>(check_point.y, check_point.x) < 10)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     RobotDecisionSys::RobotDecisionSys(float &_distance_THR, float &_seek_THR)
     {
         this->_distance_THR = _distance_THR;
         this->_seek_THR = _seek_THR;
+        this->decisionMap = cv::imread(MAP_PATH);
+        cv::resize(this->decisionMap, this->decisionMap, cv::Size(int(REAL_WIDTH / REAL_HEIGHT * 1080.), 1080));
+        cv::cvtColor(this->decisionMap, this->decisionMap_Gray, cv::COLOR_BGR2GRAY, 1);
     }
 
     RobotDecisionSys::~RobotDecisionSys()
@@ -397,13 +414,18 @@ namespace rdsys
             if (enemyPositions[i].x == 0 || enemyPositions[i].y == 0)
                 continue;
             float temp_distance = sqrtf(powf(double(enemyPositions[i].x - _x), 2) + powf(double(enemyPositions[i].y - _y), 2));
+            if (temp_distance > this->_seek_THR)
+                continue;
+            double temp_angle = this->calculateAngle(_x, _y, enemyPositions[i].x, enemyPositions[i].y);
+            if (this->checkBlock(this->transformPoint(_x, _y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_angle, int(temp_distance * (1080. / REAL_HEIGHT))))
+                continue;
             if (temp_distance < min_distance)
             {
                 min_distance = temp_distance;
                 index = i;
             }
         }
-        return (index == -1 || min_distance > this->_seek_THR) ? -1 : this->calculateAngle(_x, _y, enemyPositions[index].x, enemyPositions[index].y);
+        return index == -1 ? -1 : this->calculateAngle(_x, _y, enemyPositions[index].x, enemyPositions[index].y);
     }
 
     double RobotDecisionSys::calculateAngle(double x1, double y1, double x2, double y2)
@@ -454,8 +476,6 @@ namespace rdsys
         {
             if (!IfUIInited)
             {
-                this->decisionMap = cv::imread(MAP_PATH);
-                cv::resize(this->decisionMap, this->decisionMap, cv::Size(int(REAL_WIDTH / REAL_HEIGHT * 1080.), 1080));
                 cv::namedWindow("DecisionMapUI", cv::WindowFlags::WINDOW_NORMAL);
                 this->IfUIInited = true;
             }
