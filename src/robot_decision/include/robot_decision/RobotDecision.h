@@ -35,7 +35,7 @@ namespace rdsys
 
         float _distance_THR = 0.;
         float _seek_THR = 5.0;
-    
+
     private:
         std::map<int, std::vector<int>> connection_map;
 

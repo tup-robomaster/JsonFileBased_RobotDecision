@@ -288,7 +288,7 @@ namespace rdsys
         auto pose = geometry_msgs::msg::PoseStamped();
 
         pose.header.stamp = rclcpp::Clock().now();
-        pose.header.frame_id = "Robot_Goal";
+        pose.header.frame_id = "map";
         pose.pose.position.x = x;
         pose.pose.position.y = y;
         pose.pose.position.z = 0.0;
