@@ -1,11 +1,11 @@
 #include "./robot_decision/RobotDecision.h"
 
-#include "robot_interface/msg/obj_hp.hpp"
-#include "robot_interface/msg/car_pos.hpp"
-#include "robot_interface/msg/game_info.hpp"
-#include "robot_interface/msg/serial.hpp"
-#include "robot_interface/msg/detection_array.hpp"
-#include "robot_interface/msg/decision.hpp"
+#include "global_interface/msg/obj_hp.hpp"
+#include "global_interface/msg/car_pos.hpp"
+#include "global_interface/msg/game_info.hpp"
+#include "global_interface/msg/serial.hpp"
+#include "global_interface/msg/detection_array.hpp"
+#include "global_interface/msg/decision.hpp"
 
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose.hpp"
@@ -56,19 +56,19 @@ namespace rdsys
                                                     std::map<std::string, int>::value_type("R5", 9)};
 
     private:
-        message_filters::Subscriber<robot_interface::msg::ObjHP> objHP_sub_;
-        message_filters::Subscriber<robot_interface::msg::CarPos> carPos_sub_;
-        message_filters::Subscriber<robot_interface::msg::GameInfo> gameInfo_sub_;
-        message_filters::Subscriber<robot_interface::msg::Serial> serial_sub_;
+        message_filters::Subscriber<global_interface::msg::ObjHP> objHP_sub_;
+        message_filters::Subscriber<global_interface::msg::CarPos> carPos_sub_;
+        message_filters::Subscriber<global_interface::msg::GameInfo> gameInfo_sub_;
+        message_filters::Subscriber<global_interface::msg::Serial> serial_sub_;
 
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
 
-        rclcpp::Subscription<robot_interface::msg::DetectionArray>::SharedPtr detectionArray_sub_;
+        rclcpp::Subscription<global_interface::msg::DetectionArray>::SharedPtr detectionArray_sub_;
 
-        typedef message_filters::sync_policies::ApproximateTime<robot_interface::msg::ObjHP,
-                                                                robot_interface::msg::CarPos,
-                                                                robot_interface::msg::GameInfo,
-                                                                robot_interface::msg::Serial>
+        typedef message_filters::sync_policies::ApproximateTime<global_interface::msg::ObjHP,
+                                                                global_interface::msg::CarPos,
+                                                                global_interface::msg::GameInfo,
+                                                                global_interface::msg::Serial>
             ApproximateSyncPolicy;
         std::unique_ptr<message_filters::Synchronizer<ApproximateSyncPolicy>> TS_sync_;
 
@@ -92,7 +92,7 @@ namespace rdsys
 
         rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr
             aim_yaw_pub_;
-        rclcpp::Publisher<robot_interface::msg::Decision>::SharedPtr
+        rclcpp::Publisher<global_interface::msg::Decision>::SharedPtr
             decision_pub_;
 
         std::shared_timed_mutex myMutex_status;
@@ -104,7 +104,7 @@ namespace rdsys
         nav2_msgs::action::NavigateThroughPoses_FeedbackMessage::SharedPtr current_NTP_FeedBack_msg = nullptr;
 
         sensor_msgs::msg::JointState::SharedPtr joint_states_msg = nullptr;
-        robot_interface::msg::DetectionArray::SharedPtr detectionArray_msg = nullptr;
+        global_interface::msg::DetectionArray::SharedPtr detectionArray_msg = nullptr;
 
         std::shared_ptr<Decision> excuting_decision = nullptr;
 
@@ -129,14 +129,14 @@ namespace rdsys
          * @return
          * RobotPosition集合
          */
-        std::vector<RobotPosition> point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos);
+        std::vector<RobotPosition> point2f2Position(std::array<global_interface::msg::Point2f, 10UL> pos);
         /**
          * @brief 消息回调，由message_filters处理
          */
-        void messageCallBack(const std::shared_ptr<robot_interface::msg::ObjHP const> &carHP_msg_,
-                             const std::shared_ptr<robot_interface::msg::CarPos const> &carPos_msg_,
-                             const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
-                             const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_);
+        void messageCallBack(const std::shared_ptr<global_interface::msg::ObjHP const> &carHP_msg_,
+                             const std::shared_ptr<global_interface::msg::CarPos const> &carPos_msg_,
+                             const std::shared_ptr<global_interface::msg::GameInfo const> &gameInfo_msg_,
+                             const std::shared_ptr<global_interface::msg::Serial const> &serial_sub_);
         /**
          * @brief joint_states消息回调
          */
@@ -144,7 +144,7 @@ namespace rdsys
         /**
          * @brief 检测目标消息回调
          */
-        void detectionArrayCallBack(const robot_interface::msg::DetectionArray::SharedPtr msg);
+        void detectionArrayCallBack(const global_interface::msg::DetectionArray::SharedPtr msg);
         /**
          * @brief nav2反馈回调
          */

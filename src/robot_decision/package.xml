@@ -17,7 +17,7 @@
   <depend>std_msgs</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
-  <depend>robot_interface</depend>
+  <depend>global_interface</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>message_filters</depend>
   <depend>robot_state_publisher</depend>

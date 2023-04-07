@@ -54,7 +54,7 @@ namespace rdsys
 
         this->joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", qos, std::bind(&RobotDecisionNode::jointStateCallBack, this, _1));
 
-        this->detectionArray_sub_ = this->create_subscription<robot_interface::msg::DetectionArray>("/armor_detector/detections", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
+        this->detectionArray_sub_ = this->create_subscription<global_interface::msg::DetectionArray>("perception_detector/perception_array", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->objHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
         this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
@@ -69,7 +69,7 @@ namespace rdsys
             std::bind(&RobotDecisionNode::nav2GoalStatusCallBack, this, _1));
 
         this->aim_yaw_pub_ = this->create_publisher<std_msgs::msg::Float32>("robot_decision/aim_yaw", qos);
-        this->decision_pub_ = this->create_publisher<robot_interface::msg::Decision>("robot_decision/decision", qos);
+        this->decision_pub_ = this->create_publisher<global_interface::msg::Decision>("robot_decision/decision", qos);
 
         RCLCPP_INFO(
             this->get_logger(),
@@ -185,7 +185,7 @@ namespace rdsys
                 RCLCPP_INFO(
                     this->get_logger(),
                     "Function Normal Continue");
-                robot_interface::msg::Decision myDecision_msg;
+                global_interface::msg::Decision myDecision_msg;
                 myDecision_msg.set__decision_id(myDecision->id);
                 myDecision_msg.set__mode(myDecision->decide_mode);
                 std::shared_ptr<WayPoint> aimWayPoint = this->myRDS->getWayPointByID(this->excuting_decision->decide_wayPoint);
@@ -264,7 +264,7 @@ namespace rdsys
                 this->get_logger(),
                 "Action server still not available !");
         }
-        robot_interface::msg::Decision myDecision_msg;
+        global_interface::msg::Decision myDecision_msg;
         myDecision_msg.set__decision_id(myDecision->id);
         myDecision_msg.set__mode(myDecision->decide_mode);
         myDecision_msg.set__x(aimWayPoints.back()->x);
@@ -297,7 +297,7 @@ namespace rdsys
         this->acummulated_poses_.emplace_back(pose);
     }
 
-    std::vector<RobotPosition> RobotDecisionNode::point2f2Position(std::array<robot_interface::msg::Point2f, 10UL> pos)
+    std::vector<RobotPosition> RobotDecisionNode::point2f2Position(std::array<global_interface::msg::Point2f, 10UL> pos)
     {
         if (pos.size() != 10)
         {
@@ -314,10 +314,10 @@ namespace rdsys
         return result;
     }
 
-    void RobotDecisionNode::messageCallBack(const std::shared_ptr<robot_interface::msg::ObjHP const> &objHP_msg_,
-                                            const std::shared_ptr<robot_interface::msg::CarPos const> &objPos_msg_,
-                                            const std::shared_ptr<robot_interface::msg::GameInfo const> &gameInfo_msg_,
-                                            const std::shared_ptr<robot_interface::msg::Serial const> &serial_sub_)
+    void RobotDecisionNode::messageCallBack(const std::shared_ptr<global_interface::msg::ObjHP const> &objHP_msg_,
+                                            const std::shared_ptr<global_interface::msg::CarPos const> &objPos_msg_,
+                                            const std::shared_ptr<global_interface::msg::GameInfo const> &gameInfo_msg_,
+                                            const std::shared_ptr<global_interface::msg::Serial const> &serial_sub_)
     {
         auto start_t = std::chrono::system_clock::now().time_since_epoch();
         for (int i = 0; i < int(objHP_msg_->hp.size()); ++i)
@@ -355,7 +355,7 @@ namespace rdsys
         {
             auto transformStamped = this->tf_buffer_->lookupTransform("map", "base_link", tf2::TimePoint());
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-            if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 0)
+            if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 5)
             {
                 for (auto it : this->detectionArray_msg->detections)
                 {
@@ -372,7 +372,7 @@ namespace rdsys
                 "Cannot get transformStamped ! TransformException: %s",
                 ex.what());
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-            if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 0)
+            if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 1)
             {
                 for (auto it : this->detectionArray_msg->detections)
                 {
@@ -415,7 +415,7 @@ namespace rdsys
                 "Decision failed!");
         }
         auto end_t = std::chrono::system_clock::now().time_since_epoch();
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
             this->get_logger(),
             "Take Time: %ld nsec FPS: %d",
             end_t.count() - start_t.count(), int(std::chrono::nanoseconds(1000000000).count() / (end_t - start_t).count()));
@@ -429,14 +429,18 @@ namespace rdsys
             this->joint_states_msg = msg;
         }
         ulk.unlock();
+        RCLCPP_DEBUG(
+            this->get_logger(),
+            "jointState Recived: %s || theta = %lf , pitch = %lf",
+            msg->name, msg->position[0], msg->position[1]);
     }
 
-    void RobotDecisionNode::detectionArrayCallBack(const robot_interface::msg::DetectionArray::SharedPtr msg)
+    void RobotDecisionNode::detectionArrayCallBack(const global_interface::msg::DetectionArray::SharedPtr msg)
     {
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_detectionArray);
         this->detectionArray_msg = msg;
         ulk.unlock();
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
             this->get_logger(),
             "Detection Array Recived: %d || %d",
             msg->header.stamp.sec, msg->header.stamp.nanosec);
@@ -447,7 +451,7 @@ namespace rdsys
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_NTP_FeedBack);
         this->current_NTP_FeedBack_msg = msg;
         ulk.unlock();
-        RCLCPP_INFO(
+        RCLCPP_DEBUG(
             this->get_logger(),
             "Receive Nav2FeedBack: Distance Remainimg: %f Current Pose: x=%lf , y=%lf , z=%lf Time Remaining: %d",
             msg->feedback.distance_remaining, msg->feedback.current_pose.pose.position.x, msg->feedback.current_pose.pose.position.y, msg->feedback.current_pose.pose.position.z, msg->feedback.estimated_time_remaining.sec);

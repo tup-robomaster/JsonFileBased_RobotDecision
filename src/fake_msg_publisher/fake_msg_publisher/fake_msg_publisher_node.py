@@ -2,11 +2,11 @@
 from ast import arg
 import rclpy
 from rclpy.node import Node
-from robot_interface.msg import ObjHP as ObjHPMsg
-from robot_interface.msg import CarPos as CarPosMsg
-from robot_interface.msg import GameInfo as GameInfoMsg
-from robot_interface.msg import Serial as SerialMsg
-from robot_interface.msg import Point2f
+from global_interface.msg import ObjHP as ObjHPMsg
+from global_interface.msg import CarPos as CarPosMsg
+from global_interface.msg import GameInfo as GameInfoMsg
+from global_interface.msg import Serial as SerialMsg
+from global_interface.msg import Point2f
 import random
 
 
@@ -22,14 +22,14 @@ class Lier(Node):
             GameInfoMsg, '/game_info', 10)
         self.publisher_SerialMsg = self.create_publisher(
             SerialMsg, '/serial_msg', 10)
-        timer_period = 0.01 # seconds
+        timer_period = 0.1 # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.carPos_msg = CarPosMsg()
         self.w = 12.
         self.h = 8.
         temp_pos = Point2f()
-        temp_pos.x = 1.0
-        temp_pos.y = 1.0
+        temp_pos.x = 1.
+        temp_pos.y = 1.
         self.carPos_msg.pos[0] = temp_pos
         for i in range(0, 9):
             temp_pos2 = Point2f()
@@ -51,8 +51,10 @@ class Lier(Node):
         self.ObjHP_msg.hp[7] = 600
         for i in range(0, 9):
             temp_pos2 = Point2f()
-            aim_x = random.uniform(self.carPos_msg.pos[i+1].x - 0.1, self.carPos_msg.pos[i+1].x + 0.1)
-            aim_y = random.uniform(self.carPos_msg.pos[i+1].y - 0.1, self.carPos_msg.pos[i+1].y + 0.1)
+            # aim_x = random.uniform(self.carPos_msg.pos[i+1].x - 0.1, self.carPos_msg.pos[i+1].x + 0.1)
+            # aim_y = random.uniform(self.carPos_msg.pos[i+1].y - 0.1, self.carPos_msg.pos[i+1].y + 0.1)
+            aim_x = 0.
+            aim_y = 0.
             if aim_x < 0.:
                 aim_x = 0.
             if aim_x > self.w:

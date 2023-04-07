@@ -20,7 +20,7 @@ find_package(nav_msgs REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
-find_package(robot_interface REQUIRED)
+find_package(global_interface REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(robot_state_publisher REQUIRED)
@@ -51,7 +51,7 @@ set(dependencies
   nav_msgs
   std_msgs
   geometry_msgs
-  robot_interface
+  global_interface
   rclcpp_lifecycle 
   message_filters 
   robot_state_publisher 
