@@ -42,7 +42,7 @@ namespace rdsys
                 "Decode decisions failed");
 
         rclcpp::QoS qos(0);
-        qos.keep_last(10);
+        qos.keep_last(20);
         qos.best_effort();
         qos.durability();
         qos.durability_volatile();
@@ -84,20 +84,19 @@ namespace rdsys
         }
     }
 
-    bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions)
+    bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, geometry_msgs::msg::TransformStamped::SharedPtr transformStamped)
     {
         RCLCPP_INFO(
             this->get_logger(),
             "Heartbeat Processing");
-        if (_x == 0.0 || _y == 0.0)
+        if (_x == 0.0 || _y == 0.0 || std::isnan(_x) || std::isnan(_y))
         {
-            try
+            if (transformStamped != nullptr)
             {
-                auto transformStamped = this->tf_buffer_->lookupTransform("map", "base_link", tf2::TimePoint());
-                _x = transformStamped.transform.translation.x;
-                _y = transformStamped.transform.translation.y;
+                _x = transformStamped->transform.translation.x;
+                _y = transformStamped->transform.translation.y;
             }
-            catch (tf2::TransformException &ex)
+            else
             {
                 std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_NTP_FeedBack);
                 if (this->current_NTP_FeedBack_msg != nullptr && this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x > 0.0 &&
@@ -108,15 +107,13 @@ namespace rdsys
                     _y = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y;
                     RCLCPP_ERROR(
                         this->get_logger(),
-                        "Cannot get current Position [Level 1]! Use current Position [Level 2]! TransformException: %s",
-                        ex.what());
+                        "Cannot get current Position [Level 1]! Use current Position [Level 2]!");
                 }
                 else
                 {
                     RCLCPP_ERROR(
                         this->get_logger(),
-                        "Cannot get current Position either [Level 1] & [Level 2]! TransformException: %s",
-                        ex.what());
+                        "Cannot get current Position either [Level 1] & [Level 2]!");
                     slk_1.unlock();
                     return false;
                 }
@@ -131,6 +128,10 @@ namespace rdsys
             if (this->current_NTP_FeedBack_msg != nullptr)
             {
                 tf2::fromMsg(this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation, nv2_quat);
+            }
+            else if (transformStamped != nullptr)
+            {
+                tf2::fromMsg(transformStamped->transform.rotation, nv2_quat);
             }
             else
             {
@@ -320,25 +321,54 @@ namespace rdsys
                                             const std::shared_ptr<global_interface::msg::Serial const> &serial_sub_)
     {
         auto start_t = std::chrono::system_clock::now().time_since_epoch();
+        geometry_msgs::msg::TransformStamped::SharedPtr transformStamped = nullptr;
         for (int i = 0; i < int(objHP_msg_->hp.size()); ++i)
         {
-            RCLCPP_INFO(
+            if (std::isnan(objHP_msg_->hp[i]))
+            {
+                RCLCPP_ERROR(
+                    this->get_logger(),
+                    "Receive ObjHP Msg Error");
+                return;
+            }
+            RCLCPP_DEBUG(
                 this->get_logger(),
                 "Receive ObjHP Msg %d: %d",
                 i, objHP_msg_->hp[i]);
         }
         for (int i = 0; i < int(objPos_msg_->pos.size()); ++i)
         {
-            RCLCPP_INFO(
+            if (std::isnan(objPos_msg_->pos[i].x) || std::isnan(objPos_msg_->pos[i].y))
+            {
+                RCLCPP_ERROR(
+                    this->get_logger(),
+                    "Receive ObjPos Msg Error");
+                return;
+            }
+            RCLCPP_DEBUG(
                 this->get_logger(),
                 "Receive ObjPos Msg %d: x=%lf, y=%lf",
                 i, objPos_msg_->pos[i].x, objPos_msg_->pos[i].y);
         }
-        RCLCPP_INFO(
+        if (std::isnan(gameInfo_msg_->timestamp))
+        {
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Receive GameInfo Msg Error");
+            return;
+        }
+        RCLCPP_DEBUG(
             this->get_logger(),
             "Receive GameInfo Msg : timestamp=%d",
             gameInfo_msg_->timestamp);
-        RCLCPP_INFO(
+        if (std::isnan(serial_sub_->mode) || std::isnan(serial_sub_->theta))
+        {
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Receive Serial Msg Error");
+            return;
+        }
+        RCLCPP_DEBUG(
             this->get_logger(),
             "Receive Serial Msg : mode=%d, theta=%lf",
             serial_sub_->mode, serial_sub_->theta);
@@ -353,14 +383,20 @@ namespace rdsys
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         try
         {
-            auto transformStamped = this->tf_buffer_->lookupTransform("map", "base_link", tf2::TimePoint());
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
+            transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map", "base_link", tf2::TimePointZero));
             if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 5)
             {
                 for (auto it : this->detectionArray_msg->detections)
                 {
-                    allPositions[this->type_id.find(it.type)->second].x = transformStamped.transform.translation.x + it.center.position.x;
-                    allPositions[this->type_id.find(it.type)->second].y = transformStamped.transform.translation.y + it.center.position.y;
+                    double roll, pitch, yaw;
+                    tf2::Quaternion nv2_quat;
+                    tf2::fromMsg(transformStamped->transform.rotation, nv2_quat);
+                    tf2::Matrix3x3 m(nv2_quat);
+                    m.getRPY(roll, pitch, yaw);
+                    cv::Point2f center = cv::Point2f(round(transformStamped->transform.translation.x + sqrtf(powf(it.center.position.x, 2) + powf(it.center.position.y, 2)) * cos(yaw)), round(transformStamped->transform.translation.y + sqrtf(powf(it.center.position.x, 2) + powf(it.center.position.y, 2)) * sin(yaw)));
+                    allPositions[this->type_id.find(it.type)->second].x = center.x;
+                    allPositions[this->type_id.find(it.type)->second].y = center.y;
                 }
             }
             slk.unlock();
@@ -369,21 +405,8 @@ namespace rdsys
         {
             RCLCPP_ERROR(
                 this->get_logger(),
-                "Cannot get transformStamped ! TransformException: %s",
+                "Cannot get transform ! TransformException: %s",
                 ex.what());
-            std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-            if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 1)
-            {
-                for (auto it : this->detectionArray_msg->detections)
-                {
-                    if (allPositions[this->type_id.find(it.type)->second].x == 0 && allPositions[this->type_id.find(it.type)->second].y == 0)
-                    {
-                        allPositions[this->type_id.find(it.type)->second].x = myPos_x_ + it.center.position.x;
-                        allPositions[this->type_id.find(it.type)->second].y = myPos_y_ + it.center.position.y;
-                    }
-                }
-            }
-            slk.unlock();
         }
         std::vector<RobotPosition> friendPositions;
         std::vector<RobotPosition> enemyPositions;
@@ -408,7 +431,7 @@ namespace rdsys
                     enemyPositions.emplace_back(allPositions[i]);
             }
         }
-        if (!this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, friendPositions, enemyPositions))
+        if (!this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, friendPositions, enemyPositions, transformStamped))
         {
             RCLCPP_WARN(
                 this->get_logger(),
@@ -424,15 +447,15 @@ namespace rdsys
     void RobotDecisionNode::jointStateCallBack(const sensor_msgs::msg::JointState::SharedPtr msg)
     {
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_joint_states);
-        if (msg->name[0] == "gimbal_yaw_joint")
+        if (msg->name[0] == "gimbal_yaw_joint" && !std::isnan(msg->position[0]))
         {
             this->joint_states_msg = msg;
         }
         ulk.unlock();
         RCLCPP_DEBUG(
             this->get_logger(),
-            "jointState Recived: %s || theta = %lf , pitch = %lf",
-            msg->name, msg->position[0], msg->position[1]);
+            "jointState Recived: yaw = %lf , pitch = %lf",
+            msg->position[0], msg->position[1]);
     }
 
     void RobotDecisionNode::detectionArrayCallBack(const global_interface::msg::DetectionArray::SharedPtr msg)
