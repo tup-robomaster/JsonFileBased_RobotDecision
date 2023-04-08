@@ -56,13 +56,7 @@ namespace rdsys
         std::map<int, std::vector<int>> connection_map;
         std::shared_ptr<GameHandler> myGameHandler = nullptr;
 
-    private:
-        /**
-         * @brief 计算机器人当前所在路径点
-         * @param pos
-         * 当前机器人坐标信息
-         */
-        int calculatePosition(RobotPosition &pos);
+    public:
         /**
          * @brief 计算角度
          * @param x1
@@ -77,6 +71,14 @@ namespace rdsys
          * 角度值（弧度制）
          */
         double calculateAngle(double x1, double y1, double x2, double y2);
+
+    private:
+        /**
+         * @brief 计算机器人当前所在路径点
+         * @param pos
+         * 当前机器人坐标信息
+         */
+        int calculatePosition(RobotPosition &pos);
         /**
          * @brief 通过角度获取终止点
          * @param x1

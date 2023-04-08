@@ -32,7 +32,7 @@ namespace rdsys
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp));
 
         this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
-        
+
         if (!this->myRDS->decodeWayPoints(waypointsPath))
             RCLCPP_ERROR(
                 this->get_logger(),
@@ -383,7 +383,7 @@ namespace rdsys
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         try
         {
-            transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map", "base_link", tf2::TimePointZero));
+            transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map", "gimbal_yaw_frame", tf2::TimePointZero));
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
             if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 5)
             {
@@ -394,6 +394,7 @@ namespace rdsys
                     tf2::fromMsg(transformStamped->transform.rotation, nv2_quat);
                     tf2::Matrix3x3 m(nv2_quat);
                     m.getRPY(roll, pitch, yaw);
+                    yaw = yaw + this->myRDS->calculateAngle(myPos_x_, myPos_y_, transformStamped->transform.translation.x, transformStamped->transform.translation.y);
                     cv::Point2f center = cv::Point2f(round(transformStamped->transform.translation.x + sqrtf(powf(transformStamped->transform.translation.x - it.center.position.x, 2) + powf(transformStamped->transform.translation.y - it.center.position.y, 2)) * cos(yaw)), round(transformStamped->transform.translation.y + sqrtf(powf(transformStamped->transform.translation.x - it.center.position.x, 2) + powf(transformStamped->transform.translation.y - it.center.position.y, 2)) * sin(yaw)));
                     allPositions[this->type_id.find(it.type)->second].x = center.x;
                     allPositions[this->type_id.find(it.type)->second].y = center.y;
