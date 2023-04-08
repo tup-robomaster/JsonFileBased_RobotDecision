@@ -32,6 +32,7 @@ namespace rdsys
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp));
 
         this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
+        
         if (!this->myRDS->decodeWayPoints(waypointsPath))
             RCLCPP_ERROR(
                 this->get_logger(),
@@ -53,7 +54,6 @@ namespace rdsys
         this->serial_sub_.subscribe(this, "/serial_msg", qos.get_rmw_qos_profile());
 
         this->joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", qos, std::bind(&RobotDecisionNode::jointStateCallBack, this, _1));
-
         this->detectionArray_sub_ = this->create_subscription<global_interface::msg::DetectionArray>("perception_detector/perception_array", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->objHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
@@ -377,14 +377,14 @@ namespace rdsys
         int myHP = objHP_msg_->hp[this->_selfIndex];
         float myPos_x_ = objPos_msg_->pos[this->_selfIndex].x;
         float myPos_y_ = objPos_msg_->pos[this->_selfIndex].y;
-        int nowTime = gameInfo_msg_->timestamp;
+        int nowTime = GAME_TIME - gameInfo_msg_->timestamp;
         int mode = serial_sub_->mode;
         int now_out_post_HP = objHP_msg_->hp[this->_friendOutPostIndex];
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         try
         {
-            std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
             transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map", "base_link", tf2::TimePointZero));
+            std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
             if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 5)
             {
                 for (auto it : this->detectionArray_msg->detections)
@@ -394,7 +394,7 @@ namespace rdsys
                     tf2::fromMsg(transformStamped->transform.rotation, nv2_quat);
                     tf2::Matrix3x3 m(nv2_quat);
                     m.getRPY(roll, pitch, yaw);
-                    cv::Point2f center = cv::Point2f(round(transformStamped->transform.translation.x + sqrtf(powf(it.center.position.x, 2) + powf(it.center.position.y, 2)) * cos(yaw)), round(transformStamped->transform.translation.y + sqrtf(powf(it.center.position.x, 2) + powf(it.center.position.y, 2)) * sin(yaw)));
+                    cv::Point2f center = cv::Point2f(round(transformStamped->transform.translation.x + sqrtf(powf(transformStamped->transform.translation.x - it.center.position.x, 2) + powf(transformStamped->transform.translation.y - it.center.position.y, 2)) * cos(yaw)), round(transformStamped->transform.translation.y + sqrtf(powf(transformStamped->transform.translation.x - it.center.position.x, 2) + powf(transformStamped->transform.translation.y - it.center.position.y, 2)) * sin(yaw)));
                     allPositions[this->type_id.find(it.type)->second].x = center.x;
                     allPositions[this->type_id.find(it.type)->second].y = center.y;
                 }

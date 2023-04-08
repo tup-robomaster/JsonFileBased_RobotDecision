@@ -12,3 +12,4 @@
 #define INIT_SELFINDEX (int)0
 #define INIT_FRIENDOUTPOSTINDEX (int)7
 #define STEP_DISTANCE (float)0.1
+#define GAME_TIME (int)420

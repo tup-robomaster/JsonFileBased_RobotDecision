@@ -6,6 +6,22 @@
 namespace rdsys
 {
     /**
+     * @brief 裁判系统信息处理类
+     * 处理存储比赛信息
+     */
+    class GameHandler
+    {
+    private:
+        std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds> lastUpdateTime;
+        int gameTime = -1;
+
+    public:
+        GameHandler();
+        ~GameHandler();
+
+        void update(int &gameTime);
+    };
+    /**
      * @brief 决策系统类
      * 提供机器人决策相关处理接口
      */
@@ -38,6 +54,7 @@ namespace rdsys
 
     private:
         std::map<int, std::vector<int>> connection_map;
+        std::shared_ptr<GameHandler> myGameHandler = nullptr;
 
     private:
         /**
