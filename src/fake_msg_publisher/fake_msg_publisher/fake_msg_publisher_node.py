@@ -51,10 +51,10 @@ class Lier(Node):
         self.ObjHP_msg.hp[7] = 600
         for i in range(0, 9):
             temp_pos2 = Point2f()
-            # aim_x = random.uniform(self.carPos_msg.pos[i+1].x - 0.1, self.carPos_msg.pos[i+1].x + 0.1)
-            # aim_y = random.uniform(self.carPos_msg.pos[i+1].y - 0.1, self.carPos_msg.pos[i+1].y + 0.1)
-            aim_x = 0.
-            aim_y = 0.
+            aim_x = random.uniform(self.carPos_msg.pos[i+1].x - 0.1, self.carPos_msg.pos[i+1].x + 0.1)
+            aim_y = random.uniform(self.carPos_msg.pos[i+1].y - 0.1, self.carPos_msg.pos[i+1].y + 0.1)
+            # aim_x = 0.
+            # aim_y = 0.
             if aim_x < 0.:
                 aim_x = 0.
             if aim_x > self.w:

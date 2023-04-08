@@ -209,7 +209,7 @@ namespace rdsys
                         aimWayPoints = this->myRDS->calculatePath(myWayPointID, this->excuting_decision->decide_wayPoint);
                     }
                     std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
-                    this->myRDS->UpdateDecisionMap(this->excuting_decision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
+                    this->myRDS->UpdateDecisionMap(this->excuting_decision->id, availableDecisionID, myWayPointID, yaw, cv::Point2f(_x, _y), this->joint_states_msg != nullptr ? yaw - this->joint_states_msg->position[0] : -1, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
                     slk_4.unlock();
                 }
                 return true;
