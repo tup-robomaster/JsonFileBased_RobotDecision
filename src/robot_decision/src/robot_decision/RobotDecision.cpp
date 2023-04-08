@@ -3,6 +3,20 @@
 
 namespace rdsys
 {
+    GameHandler::GameHandler()
+    {
+    }
+
+    GameHandler::~GameHandler()
+    {
+    }
+
+    void GameHandler::update(int &gameTime)
+    {
+        this->lastUpdateTime = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::system_clock::now());
+        this->gameTime = gameTime;
+    }
+
     int RobotDecisionSys::calculatePosition(RobotPosition &pos)
     {
         double distance = FLT_MAX;
@@ -100,6 +114,7 @@ namespace rdsys
     {
         this->_distance_THR = _distance_THR;
         this->_seek_THR = _seek_THR;
+        this->myGameHandler = std::make_shared<GameHandler>(GameHandler());
         this->decisionMap = cv::imread(MAP_PATH);
         cv::resize(this->decisionMap, this->decisionMap, cv::Size(int(REAL_WIDTH / REAL_HEIGHT * 1080.), 1080));
         cv::cvtColor(this->decisionMap, this->decisionMap_Gray, cv::COLOR_BGR2GRAY, 1);
@@ -216,6 +231,7 @@ namespace rdsys
 
     std::shared_ptr<Decision> RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e)
     {
+        this->myGameHandler->update(nowtime);
         std::vector<std::shared_ptr<Decision>> tempDecision;
         for (auto &it : friendPositions)
         {
@@ -227,6 +243,7 @@ namespace rdsys
         }
         for (auto it : this->decisions)
         {
+
             if ((it->wayPointID != wayPointID || it->robot_mode != robot_mode) && it->wayPointID != -1 && it->robot_mode != -1)
             {
                 continue;
