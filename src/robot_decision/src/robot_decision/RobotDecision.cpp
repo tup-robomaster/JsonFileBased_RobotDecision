@@ -83,6 +83,10 @@ namespace rdsys
     cv::Point2i RobotDecisionSys::createEndPointByTheta(double x1, double y1, double theta, int length)
     {
         theta = -theta;
+        if (theta < 0.)
+        {
+            theta = 2. * CV_PI - abs(theta);
+        }
         return cv::Point2i((int)round(x1 + length * cos(theta)), (int)round(y1 + length * sin(theta)));
     }
 
