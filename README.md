@@ -126,3 +126,20 @@ ros2 run fake_msg_publisher fake_msg_publisher_node
             ├── robot_decision			//决策系统源码
             │   └── RobotDecision.cpp
             └── robot_decision_node.cpp	//决策节点源码
+
+### 决策主要流程图
+
+```mermaid
+graph LR
+    A[订阅者消息回调] --> B{消息是否合法?};
+    B -- NO ---> C[终止本次处理];
+    B -- YES ---> D[处理车辆位置信息];
+    D --> E{是否存在感知目标?};
+    E -- YES ---> F[使用感知信息更新车辆位置];
+    F --> G[提取自身位置并分离敌我车辆位置];
+    E -- NO --->G;
+    G --> H{是否存在TF2坐标系转换关系};
+    H -- YES ---> I[使用TF2坐标系转换更新自身位置];
+    I --> J{自身位置是否合法?};
+    H -- NO ---> K{是否存在};
+```
