@@ -101,31 +101,31 @@ ros2 run fake_msg_publisher fake_msg_publisher_node
     │   │   └── Serial.msg			//下位机通讯消息
     │   └── package.xml			//功能包依赖xml文件
     └── robot_decision				//决策功能包
-        ├── CMakeLists.txt				//功能包CMakeLists.txt
-        ├── include					//头文件目录
-        │   ├── Json					//Json处理库头文件
-        │   │   ├── json-forwards.h
-        │   │   └── json.h
-        │   ├── robot_decision			//决策系统头文件目录
-        │   │   ├── configs.h				//决策系统固定参数设定文件
-        │   │   ├── public.h				//公共头文件
-        │   │   ├── RobotDecision.h		//决策系统头文件
-        │   │   └── structs.h				//结构体定义
-        │   └── robot_decision_node.hpp	//决策节点头文件
-        ├── launch					//launch目录
-        │   └── decision_node_launch.py	//带参数节点启动launch文件
-        ├── package.xml				//功能包依赖xml文件
-        ├── resources					//资源目录
-        │   └── RMUL.png				//RMUL赛场障碍图
-        ├── sample					//Json样例目录
-        │   ├── decisions.json			//决策Json样例
-        │   └── waypoints.json			//路径点Json样例
-        └── src						//源码目录
-            ├── Json					//Json处理库源码
-            │   └── jsoncpp.cpp
-            ├── robot_decision			//决策系统源码
-            │   └── RobotDecision.cpp
-            └── robot_decision_node.cpp	//决策节点源码
+    ├── CMakeLists.txt				//功能包CMakeLists.txt
+    ├── include					//头文件目录
+    │   ├── Json					//Json处理库头文件
+    │   │   ├── json-forwards.h
+    │   │   └── json.h
+    │   ├── robot_decision			//决策系统头文件目录
+    │   │   ├── configs.h				//决策系统固定参数设定文件
+    │   │   ├── public.h				//公共头文件
+    │   │   ├── RobotDecision.h		//决策系统头文件
+    │   │   └── structs.h				//结构体定义
+    │   └── robot_decision_node.hpp	//决策节点头文件
+    ├── launch					//launch目录
+    │   └── decision_node_launch.py	//带参数节点启动launch文件
+    ├── package.xml				//功能包依赖xml文件
+    ├── resources					//资源目录
+    │   └── RMUL.png				//RMUL赛场障碍图
+    ├── sample					//Json样例目录
+    │   ├── decisions.json			//决策Json样例
+    │   └── waypoints.json			//路径点Json样例
+    └── src						//源码目录
+    ├── Json					//Json处理库源码
+    │   └── jsoncpp.cpp
+    ├── robot_decision			//决策系统源码
+    │   └── RobotDecision.cpp  
+            └── robot_decision_node.cpp	//决策节点源码  
 
 # 决策主要流程图
 
