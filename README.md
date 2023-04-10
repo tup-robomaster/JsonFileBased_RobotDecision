@@ -32,7 +32,7 @@ ros2 run robot_decision robot_decision_node
 | robot_decision/aim_yaw  | std_msgs::msg::Float32          | 车辆目标朝向偏角 |
 | robot_decision/decision | global_interface::msg::Decision | 车辆当前决策信息 |
 
-### Action:
+### 动作:
 
 | Name                   | Action                                  | 描述                 |
 | ---------------------- | --------------------------------------- | -------------------- |
@@ -127,7 +127,7 @@ ros2 run fake_msg_publisher fake_msg_publisher_node
             │   └── RobotDecision.cpp
             └── robot_decision_node.cpp	//决策节点源码
 
-### 决策主要流程图
+# 决策主要流程图
 
 ```mermaid
 graph LR
@@ -156,3 +156,17 @@ graph LR
     T --> U[执行\发布决策];
     U --> V[更新GUI];
 ```
+
+程序采用时间相近协议同步接收 /obj_hp 、/car_pos 、/game_info 、/serial_msg 话题的消息，异步接收 /joint_states 、 perception_detector/perception_array 、navigate_through_poses/_action/feedback 、 navigate_through_poses/_action/status的消息，每次回调固定处理车辆朝向和目标决策。
+
+决策受车辆当前位置、车辆当前模式、当前比赛时间、己方前哨站当前血量、己方车辆位置、敌方车辆位置共同决定，在多个决策符合条件的情况下，取权重最高的决策。
+
+机器人移动路径点由决策给出，分为直达和连续两种情况。直达情况下，直接给出最终路径点，连续情况下，由图深度优先搜索算法计算一系列连续路径点，可适当缓解Nav2导航问题。
+
+车辆朝向由敌方车辆位置决定，通过计算索敌圈内最近敌人方位，得出视野外敌方角度，被障碍遮挡但仍被检测到的敌方位置通过间段采样的方法滤除。
+
+# GUI
+
+![1681128909059](image/README/1681128909059.png)
+
+GUI可直观显示车辆当前状态、路径点、决策状态、敌我位置与索敌情况。路径点分为当前、符合条件但未被选择、符合条件且被选择和不符合条件四种状态。路径点上的敌我接近情况也被显示。（PS：图上敌我位置由虚假消息发布者随机给出）
