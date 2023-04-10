@@ -160,7 +160,7 @@ graph LR
 
 程序采用时间相近协议同步接收 /obj_hp 、/car_pos 、/game_info 、/serial_msg 话题的消息，异步接收 /joint_states 、 perception_detector/perception_array 、navigate_through_poses/_action/feedback 、 navigate_through_poses/_action/status的消息，每次回调固定处理车辆朝向和目标决策。
 
-决策受车辆当前位置、车辆当前模式、当前比赛时间、己方前哨站当前血量、己方车辆位置、敌方车辆位置共同决定，在多个决策符合条件的情况下，取权重最高的决策。
+决策由车辆当前位置、车辆当前模式、当前比赛时间、己方前哨站当前血量、己方车辆位置、敌方车辆位置共同决定，在有多个决策符合条件的情况下，取权重最高的决策。
 
 机器人移动路径点由决策给出，分为直达和连续两种情况。直达情况下，直接给出最终路径点，连续情况下，由图深度优先搜索算法计算一系列连续路径点，可适当缓解Nav2导航问题。
 
