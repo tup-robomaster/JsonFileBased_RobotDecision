@@ -139,6 +139,7 @@ namespace rdsys
             }
             tf2::Matrix3x3 m(nv2_quat);
             m.getRPY(roll, pitch, yaw);
+            yaw = -yaw;
             std_msgs::msg::Float32 aim_yaw_msg;
             double delta_yaw = double(aim_yaw - yaw);
             if (delta_yaw > CV_PI)
@@ -390,15 +391,12 @@ namespace rdsys
             {
                 for (auto it : this->detectionArray_msg->detections)
                 {
-                    double roll, pitch, yaw;
-                    tf2::Quaternion nv2_quat;
-                    tf2::fromMsg(transformStamped->transform.rotation, nv2_quat);
-                    tf2::Matrix3x3 m(nv2_quat);
-                    m.getRPY(roll, pitch, yaw);
-                    yaw = yaw + this->myRDS->calculateAngle(myPos_x_, myPos_y_, transformStamped->transform.translation.x, transformStamped->transform.translation.y);
-                    cv::Point2f center = cv::Point2f(round(transformStamped->transform.translation.x + sqrtf(powf(transformStamped->transform.translation.x - it.center.position.x, 2) + powf(transformStamped->transform.translation.y - it.center.position.y, 2)) * cos(yaw)), round(transformStamped->transform.translation.y + sqrtf(powf(transformStamped->transform.translation.x - it.center.position.x, 2) + powf(transformStamped->transform.translation.y - it.center.position.y, 2)) * sin(yaw)));
-                    allPositions[this->type_id.find(it.type)->second].x = center.x;
-                    allPositions[this->type_id.find(it.type)->second].y = center.y;
+                    tf2::Transform tf2_transform;
+                    tf2::Vector3 p(it.center.position.x, it.center.position.y, it.center.position.z);
+                    tf2::convert(transformStamped->transform, tf2_transform);
+                    p = tf2_transform * p;
+                    allPositions[this->type_id.find(it.type)->second].x = p.getX();
+                    allPositions[this->type_id.find(it.type)->second].y = p.getY();
                 }
             }
             slk.unlock();
