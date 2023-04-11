@@ -93,8 +93,8 @@ namespace rdsys
         {
             if (transformStamped != nullptr)
             {
-                _x = transformStamped->transform.translation.x;
-                _y = transformStamped->transform.translation.y;
+                _x = -transformStamped->transform.translation.x;
+                _y = -transformStamped->transform.translation.y;
             }
             else
             {
@@ -290,7 +290,7 @@ namespace rdsys
         auto pose = geometry_msgs::msg::PoseStamped();
 
         pose.header.stamp = rclcpp::Clock().now();
-        pose.header.frame_id = "map";
+        pose.header.frame_id = "map_decision";
         pose.pose.position.x = x;
         pose.pose.position.y = y;
         pose.pose.position.z = 0.0;
@@ -384,7 +384,7 @@ namespace rdsys
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         try
         {
-            transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map", "gimbal_yaw_frame", tf2::TimePointZero));
+            transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map_decision", "gimbal_yaw_frame", tf2::TimePointZero));
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
             if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= 5)
             {
