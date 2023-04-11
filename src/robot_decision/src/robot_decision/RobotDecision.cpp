@@ -248,7 +248,11 @@ namespace rdsys
         for (auto it : this->decisions)
         {
 
-            if ((it->wayPointID != wayPointID || it->robot_mode != robot_mode) && it->wayPointID != -1 && it->robot_mode != -1)
+            if (it->wayPointID != -1 && it->wayPointID != wayPointID)
+            {
+                continue;
+            }
+            else if (it->robot_mode != -1 && it->robot_mode != robot_mode)
             {
                 continue;
             }

@@ -6,6 +6,7 @@
 #include "global_interface/msg/serial.hpp"
 #include "global_interface/msg/detection_array.hpp"
 #include "global_interface/msg/decision.hpp"
+#include "global_interface/msg/autoaim.hpp"
 
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose.hpp"
@@ -62,7 +63,7 @@ namespace rdsys
         message_filters::Subscriber<global_interface::msg::Serial> serial_sub_;
 
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
-
+        rclcpp::Subscription<global_interface::msg::Autoaim>::SharedPtr autoaim_sub_;
         rclcpp::Subscription<global_interface::msg::DetectionArray>::SharedPtr detectionArray_sub_;
 
         typedef message_filters::sync_policies::ApproximateTime<global_interface::msg::ObjHP,
@@ -90,8 +91,6 @@ namespace rdsys
         rclcpp::Subscription<nav2_msgs::action::NavigateThroughPoses::Impl::GoalStatusMessage>::SharedPtr
             nav_through_poses_goal_status_sub_;
 
-        rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr
-            aim_yaw_pub_;
         rclcpp::Publisher<global_interface::msg::Decision>::SharedPtr
             decision_pub_;
 
@@ -99,11 +98,13 @@ namespace rdsys
         std::shared_timed_mutex myMutex_NTP_FeedBack;
         std::shared_timed_mutex myMutex_joint_states;
         std::shared_timed_mutex myMutex_detectionArray;
+        std::shared_timed_mutex myMutex_autoaim;
 
         int8_t goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
         nav2_msgs::action::NavigateThroughPoses_FeedbackMessage::SharedPtr current_NTP_FeedBack_msg = nullptr;
 
         sensor_msgs::msg::JointState::SharedPtr joint_states_msg = nullptr;
+        global_interface::msg::Autoaim::SharedPtr autoaim_msg = nullptr;
         global_interface::msg::DetectionArray::SharedPtr detectionArray_msg = nullptr;
 
         std::shared_ptr<Decision> excuting_decision = nullptr;
@@ -141,6 +142,10 @@ namespace rdsys
          * @brief joint_states消息回调
          */
         void jointStateCallBack(const sensor_msgs::msg::JointState::SharedPtr msg);
+        /**
+         * @brief armor_info消息回调
+         */
+        void autoaimCallBack(const global_interface::msg::Autoaim::SharedPtr msg);
         /**
          * @brief 检测目标消息回调
          */

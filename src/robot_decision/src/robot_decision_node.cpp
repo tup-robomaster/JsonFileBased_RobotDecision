@@ -54,6 +54,7 @@ namespace rdsys
         this->serial_sub_.subscribe(this, "/serial_msg", qos.get_rmw_qos_profile());
 
         this->joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", qos, std::bind(&RobotDecisionNode::jointStateCallBack, this, _1));
+        this->autoaim_sub_ = this->create_subscription<global_interface::msg::Autoaim>("/armor_info", qos, std::bind(&RobotDecisionNode::autoaimCallBack, this, _1));
         this->detectionArray_sub_ = this->create_subscription<global_interface::msg::DetectionArray>("perception_detector/perception_array", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->objHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
@@ -68,7 +69,6 @@ namespace rdsys
             qos,
             std::bind(&RobotDecisionNode::nav2GoalStatusCallBack, this, _1));
 
-        this->aim_yaw_pub_ = this->create_publisher<std_msgs::msg::Float32>("robot_decision/aim_yaw", qos);
         this->decision_pub_ = this->create_publisher<global_interface::msg::Decision>("robot_decision/decision", qos);
 
         RCLCPP_INFO(
@@ -122,6 +122,7 @@ namespace rdsys
         }
         double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
         double roll, pitch, yaw;
+        double delta_yaw;
         if (aim_yaw != -1)
         {
             tf2::Quaternion nv2_quat;
@@ -140,21 +141,15 @@ namespace rdsys
             tf2::Matrix3x3 m(nv2_quat);
             m.getRPY(roll, pitch, yaw);
             yaw = -yaw;
-            std_msgs::msg::Float32 aim_yaw_msg;
-            double delta_yaw = double(aim_yaw - yaw);
+            delta_yaw = double(aim_yaw - yaw);
             if (delta_yaw > CV_PI)
             {
                 delta_yaw = -(CV_PI - (delta_yaw - CV_PI));
             }
-            aim_yaw_msg.set__data(delta_yaw);
-            RCLCPP_INFO(
-                this->get_logger(),
-                "Publish Aim Yaw : %lf | aim_yaw : %lf current_yaw: %lf | angle: %lf",
-                delta_yaw, aim_yaw, yaw, delta_yaw * 180. / CV_PI);
-            this->aim_yaw_pub_->publish(aim_yaw_msg);
         }
         else
         {
+            delta_yaw = 0;
             yaw = 0.;
             RCLCPP_WARN(
                 this->get_logger(),
@@ -188,15 +183,20 @@ namespace rdsys
                     this->get_logger(),
                     "Function Normal Continue");
                 global_interface::msg::Decision myDecision_msg;
-                myDecision_msg.set__decision_id(myDecision->id);
-                myDecision_msg.set__mode(myDecision->decide_mode);
+                myDecision_msg.set__decision_id(this->excuting_decision->id);
+                myDecision_msg.set__mode(this->excuting_decision->decide_mode);
                 std::shared_ptr<WayPoint> aimWayPoint = this->myRDS->getWayPointByID(this->excuting_decision->decide_wayPoint);
                 myDecision_msg.set__x(aimWayPoint->x);
                 myDecision_msg.set__y(aimWayPoint->y);
+                myDecision_msg.set__theta(delta_yaw);
                 RCLCPP_INFO(
                     this->get_logger(),
                     "Publish Previous Decision : [id] %d [mode] %d [x,y] %lf %lf",
                     myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
+                RCLCPP_INFO(
+                    this->get_logger(),
+                    "Publish Aim Yaw : %lf | aim_yaw : %lf current_yaw: %lf | angle: %lf",
+                    delta_yaw, aim_yaw, yaw, delta_yaw * 180. / CV_PI);
                 this->decision_pub_->publish(myDecision_msg);
                 if (this->_IfShowUI)
                 {
@@ -272,10 +272,15 @@ namespace rdsys
         myDecision_msg.set__mode(myDecision->decide_mode);
         myDecision_msg.set__x(aimWayPoints.back()->x);
         myDecision_msg.set__y(aimWayPoints.back()->y);
+        myDecision_msg.set__theta(delta_yaw);
         RCLCPP_INFO(
             this->get_logger(),
             "Publish Decision : [id] %d [mode] %d [x,y] %lf %lf",
             myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Publish Aim Yaw : %lf | aim_yaw : %lf current_yaw: %lf | angle: %lf",
+            delta_yaw, aim_yaw, yaw, delta_yaw * 180. / CV_PI);
         this->decision_pub_->publish(myDecision_msg);
         if (this->_IfShowUI)
         {
@@ -442,6 +447,16 @@ namespace rdsys
             this->get_logger(),
             "Take Time: %ld nsec FPS: %d",
             end_t.count() - start_t.count(), int(std::chrono::nanoseconds(1000000000).count() / (end_t - start_t).count()));
+    }
+
+    void RobotDecisionNode::autoaimCallBack(const global_interface::msg::Autoaim::SharedPtr msg)
+    {
+        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_autoaim);
+        this->autoaim_msg = msg;
+        ulk.unlock();
+        RCLCPP_DEBUG(
+            this->get_logger(),
+            "autoaim Recived");
     }
 
     void RobotDecisionNode::jointStateCallBack(const sensor_msgs::msg::JointState::SharedPtr msg)
