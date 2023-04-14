@@ -93,54 +93,33 @@ namespace rdsys
         {
             if (transformStamped != nullptr)
             {
-                _x = -transformStamped->transform.translation.x;
-                _y = -transformStamped->transform.translation.y;
+                _x = transformStamped->transform.translation.x;
+                _y = transformStamped->transform.translation.y;
             }
             else
             {
-                std::shared_lock<std::shared_timed_mutex> slk_1(this->myMutex_NTP_FeedBack);
-                if (this->current_NTP_FeedBack_msg != nullptr && this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x > 0.0 &&
-                    this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y > 0.0 &&
-                    rclcpp::Clock().now().seconds() - this->current_NTP_FeedBack_msg->feedback.current_pose.header.stamp.sec <= 1)
-                {
-                    _x = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.x;
-                    _y = this->current_NTP_FeedBack_msg->feedback.current_pose.pose.position.y;
-                    RCLCPP_ERROR(
-                        this->get_logger(),
-                        "Cannot get current Position [Level 1]! Use current Position [Level 2]!");
-                }
-                else
-                {
-                    RCLCPP_ERROR(
-                        this->get_logger(),
-                        "Cannot get current Position either [Level 1] & [Level 2]!");
-                    slk_1.unlock();
-                    return false;
-                }
-                slk_1.unlock();
+                RCLCPP_ERROR(
+                    this->get_logger(),
+                    "Cannot get current Position!");
+                return false;
             }
         }
         double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
         double roll, pitch, yaw;
+        tf2::Quaternion nv2_quat;
+        if (transformStamped != nullptr)
+        {
+            tf2::fromMsg(transformStamped->transform.rotation, nv2_quat);
+        }
+        else
+        {
+            nv2_quat.setRPY(0, 0, 0);
+        }
+        tf2::Matrix3x3 m(nv2_quat);
+        m.getRPY(roll, pitch, yaw);
         double delta_yaw;
         if (aim_yaw != -1)
         {
-            tf2::Quaternion nv2_quat;
-            if (this->current_NTP_FeedBack_msg != nullptr)
-            {
-                tf2::fromMsg(this->current_NTP_FeedBack_msg->feedback.current_pose.pose.orientation, nv2_quat);
-            }
-            else if (transformStamped != nullptr)
-            {
-                tf2::fromMsg(transformStamped->transform.rotation, nv2_quat);
-            }
-            else
-            {
-                nv2_quat.setRPY(0, 0, 0);
-            }
-            tf2::Matrix3x3 m(nv2_quat);
-            m.getRPY(roll, pitch, yaw);
-            yaw = -yaw;
             delta_yaw = double(aim_yaw - yaw);
             if (delta_yaw > CV_PI)
             {
@@ -149,8 +128,7 @@ namespace rdsys
         }
         else
         {
-            delta_yaw = 0;
-            yaw = 0.;
+            delta_yaw = 0.;
             RCLCPP_WARN(
                 this->get_logger(),
                 "None Aim Yaw");
@@ -166,28 +144,34 @@ namespace rdsys
             return false;
         }
         std::shared_lock<std::shared_timed_mutex> slk_2(this->myMutex_status);
-        std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_NTP_FeedBack);
         if (this->goal_status == action_msgs::msg::GoalStatus::STATUS_ACCEPTED || this->goal_status == action_msgs::msg::GoalStatus::STATUS_EXECUTING)
         {
-            if (this->excuting_decision != nullptr && this->current_NTP_FeedBack_msg != nullptr && myDecision->weight > this->excuting_decision->weight && this->current_NTP_FeedBack_msg->feedback.estimated_time_remaining.sec > GOAL_TIME_THR_SEC)
+            if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight)
             {
-                nav_through_poses_action_client_->async_cancel_goals_before(rclcpp::Clock().now());
-                this->nav_through_poses_goal_handle_.reset();
+                nav_through_poses_action_client_->async_cancel_all_goals();
+                // this->nav_through_poses_goal_handle_.reset();
                 RCLCPP_INFO(
                     this->get_logger(),
-                    "Cancel Previous Goal");
+                    "Cancel Previous Goals");
             }
             else
             {
                 RCLCPP_INFO(
                     this->get_logger(),
                     "Function Normal Continue");
+                if (this->excuting_decision == nullptr)
+                {
+                    RCLCPP_ERROR(
+                        this->get_logger(),
+                        "Failed to get Previous Decision. Try to clean up!");
+                    nav_through_poses_action_client_->async_cancel_all_goals();
+                }
                 auto myDecision_msg = this->makeDecisionMsg(this->excuting_decision, delta_yaw);
                 this->decision_pub_->publish(myDecision_msg);
                 if (this->_IfShowUI)
                 {
                     std::vector<std::shared_ptr<WayPoint>> aimWayPoints;
-                    if (!this->excuting_decision->if_succession)
+                    if (!this->excuting_decision->if_succession || myWayPointID == this->excuting_decision->decide_wayPoint)
                     {
                         aimWayPoints.emplace_back(this->myRDS->getWayPointByID(this->excuting_decision->decide_wayPoint));
                     }
@@ -204,7 +188,6 @@ namespace rdsys
         }
         this->excuting_decision = myDecision;
         slk_2.unlock();
-        slk_3.unlock();
         std::vector<std::shared_ptr<WayPoint>> aimWayPoints;
         if (!myDecision->if_succession)
         {
@@ -268,8 +251,8 @@ namespace rdsys
     {
         auto pose = geometry_msgs::msg::PoseStamped();
 
-        pose.header.stamp = rclcpp::Clock().now();
-        pose.header.frame_id = "map_decision";
+        pose.header.stamp = this->get_clock()->now();
+        pose.header.frame_id = "base_link";
         pose.pose.position.x = x;
         pose.pose.position.y = y;
         pose.pose.position.z = 0.0;
@@ -363,7 +346,7 @@ namespace rdsys
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         try
         {
-            transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map_decision", "gimbal_yaw_frame", tf2::TimePointZero));
+            transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map_decision", "base_link", tf2::TimePointZero));
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
             if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= TIME_THR)
             {
@@ -551,7 +534,7 @@ namespace rdsys
     global_interface::msg::Decision RobotDecisionNode::makeDecisionMsg(std::shared_ptr<Decision> &decision, double &theta)
     {
         global_interface::msg::Decision myDecision_msg;
-        myDecision_msg.header.frame_id = "map_decision";
+        myDecision_msg.header.frame_id = "base_link";
         myDecision_msg.header.stamp = this->get_clock()->now();
         myDecision_msg.set__decision_id(decision->id);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);

@@ -525,6 +525,10 @@ namespace rdsys
         {
             return;
         }
+        if (car_orientation == -1)
+        {
+            car_orientation = yaw;
+        }
         cv::Point dst_car_center = this->transformPoint(car_center, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080);
         dstMap = this->decisionMap.clone();
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
