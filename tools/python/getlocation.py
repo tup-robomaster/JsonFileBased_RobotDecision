@@ -7,7 +7,6 @@ real_height = 8.
 img = cv2.imread(
     "/home/ninefish/nine-fish/JsonFileBased_RobotDecision/tools/resource/RMUL.png")
 
-
 def on_EVENT_LBUTTONDOWN(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         xy = "%f,%f" % (float(

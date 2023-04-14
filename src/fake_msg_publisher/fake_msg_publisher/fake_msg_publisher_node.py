@@ -28,8 +28,8 @@ class Lier(Node):
         self.w = 12.
         self.h = 8.
         temp_pos = Point2f()
-        temp_pos.x = 1.
-        temp_pos.y = 1.
+        temp_pos.x = 4.6
+        temp_pos.y = 6.4
         self.carPos_msg.pos[0] = temp_pos
         for i in range(0, 9):
             temp_pos2 = Point2f()
