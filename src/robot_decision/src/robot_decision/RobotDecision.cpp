@@ -181,9 +181,14 @@ namespace rdsys
         for (int i = 0; i < int(arrayValue.size()); ++i)
         {
             Decision *decision = new Decision();
+
             decision->id = arrayValue[i]["id"].asInt();
             decision->name = arrayValue[i]["name"].asCString();
-            decision->wayPointID = arrayValue[i]["wayPointID"].asInt();
+            Json::Value wayPointIDArray = arrayValue[i]["wayPointID"];
+            for (int j = 0; j < int(wayPointIDArray.size()); ++j)
+            {
+                decision->wayPointID.emplace_back(wayPointIDArray[j].asInt());
+            }
             decision->weight = arrayValue[i]["weight"].asInt();
             decision->start_time = arrayValue[i]["start_time"].asInt();
             decision->end_time = arrayValue[i]["end_time"].asInt();
@@ -248,9 +253,20 @@ namespace rdsys
         for (auto it : this->decisions)
         {
 
-            if (it->wayPointID != -1 && it->wayPointID != wayPointID)
+            if (it->wayPointID[0] != -1)
             {
-                continue;
+                bool check = false;
+                for (auto &jt : it->wayPointID)
+                {
+                    if (jt == wayPointID)
+                    {
+                        check = true;
+                    }
+                    if (check)
+                        break;
+                }
+                if (!check)
+                    continue;
             }
             else if (it->robot_mode != -1 && it->robot_mode != robot_mode)
             {
@@ -362,7 +378,7 @@ namespace rdsys
         if (decision != nullptr && decision->decide_mode == -1)
             decision->decide_mode = decision->robot_mode;
         if (decision != nullptr && decision->decide_wayPoint == -1)
-            decision->decide_wayPoint = decision->wayPointID;
+            decision->decide_wayPoint = wayPointID;
         return decision;
     }
 

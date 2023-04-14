@@ -44,7 +44,7 @@ namespace rdsys
         bool if_auto = true;
         int id;
         const char *name;
-        int wayPointID;
+        std::vector<int> wayPointID;
         int weight;
         // condition
         int robot_mode;
@@ -60,6 +60,13 @@ namespace rdsys
         int decide_wayPoint;
         bool if_succession;
     } Decision;
+
+    enum Mode
+    {
+        AUTOAIM = 2,
+        CRUISE = 1,
+        ADVANCEDCRUISE = 0
+    };
 }
 
 #endif

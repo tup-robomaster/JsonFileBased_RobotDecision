@@ -553,9 +553,9 @@ namespace rdsys
         global_interface::msg::Decision myDecision_msg;
         myDecision_msg.set__decision_id(decision->id);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
-        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < TIME_THR)
+        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < TIME_THR && decision->decide_mode < 2)
         {
-            myDecision_msg.set__mode(MODE_AUTOAIM);
+            myDecision_msg.set__mode(Mode::AUTOAIM);
         }
         else
         {
@@ -568,7 +568,7 @@ namespace rdsys
         myDecision_msg.set__theta(theta);
         RCLCPP_INFO(
             this->get_logger(),
-            "Publish Previous Decision : [id] %d [mode] %d [x,y] %lf %lf",
+            "Publish Decision : [id] %d [mode] %d [x,y] %lf %lf",
             myDecision_msg.decision_id, myDecision_msg.mode, myDecision_msg.x, myDecision_msg.y);
         RCLCPP_INFO(
             this->get_logger(),
