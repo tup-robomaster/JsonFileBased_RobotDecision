@@ -551,6 +551,8 @@ namespace rdsys
     global_interface::msg::Decision RobotDecisionNode::makeDecisionMsg(std::shared_ptr<Decision> &decision, double &theta)
     {
         global_interface::msg::Decision myDecision_msg;
+        myDecision_msg.header.frame_id = "map_decision";
+        myDecision_msg.header.stamp = this->get_clock()->now();
         myDecision_msg.set__decision_id(decision->id);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
         if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < TIME_THR && decision->decide_mode < 2)
