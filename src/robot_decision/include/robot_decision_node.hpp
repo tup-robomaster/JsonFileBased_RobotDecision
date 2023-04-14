@@ -112,6 +112,8 @@ namespace rdsys
         std::unique_ptr<tf2_ros::Buffer> tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
         std::shared_ptr<tf2_ros::TransformListener> transform_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
+        std::shared_ptr<geometry_msgs::msg::TransformStamped> _transformStamped = nullptr;
+
     private:
         /**
          * @brief 向目标缓冲区添加目标点

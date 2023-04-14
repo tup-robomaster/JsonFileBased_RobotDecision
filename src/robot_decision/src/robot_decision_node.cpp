@@ -86,6 +86,7 @@ namespace rdsys
 
     bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, geometry_msgs::msg::TransformStamped::SharedPtr transformStamped)
     {
+        this->myRDS->calculatePath(0, 0);
         RCLCPP_INFO(
             this->get_logger(),
             "Heartbeat Processing");
@@ -95,6 +96,11 @@ namespace rdsys
             {
                 _x = transformStamped->transform.translation.x;
                 _y = transformStamped->transform.translation.y;
+            }
+            else if (this->_transformStamped != nullptr && this->get_clock()->now().seconds() - this->_transformStamped->header.stamp.sec < TIME_THR)
+            {
+                _x = this->_transformStamped->transform.translation.x;
+                _y = this->_transformStamped->transform.translation.y;
             }
             else
             {
@@ -150,6 +156,7 @@ namespace rdsys
             {
                 nav_through_poses_action_client_->async_cancel_all_goals();
                 // this->nav_through_poses_goal_handle_.reset();
+                this->excuting_decision =  nullptr;
                 RCLCPP_INFO(
                     this->get_logger(),
                     "Cancel Previous Goals");
@@ -180,7 +187,7 @@ namespace rdsys
                         aimWayPoints = this->myRDS->calculatePath(myWayPointID, this->excuting_decision->decide_wayPoint);
                     }
                     std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
-                    this->myRDS->UpdateDecisionMap(this->excuting_decision->id, availableDecisionID, myWayPointID, yaw, cv::Point2f(_x, _y), this->joint_states_msg != nullptr ? yaw - this->joint_states_msg->position[0] : -1, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
+                    this->myRDS->UpdateDecisionMap(this->excuting_decision->id, availableDecisionID, myWayPointID, yaw, cv::Point2f(_x, _y), (this->joint_states_msg != nullptr && !isnan(this->joint_states_msg->position[0])) ? yaw - this->joint_states_msg->position[0] : -1, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
                     slk_4.unlock();
                 }
                 return true;
@@ -347,8 +354,9 @@ namespace rdsys
         try
         {
             transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map_decision", "base_link", tf2::TimePointZero));
+           this-> _transformStamped = transformStamped;
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-            if (this->detectionArray_msg != nullptr && rclcpp::Clock().now().seconds() - this->detectionArray_msg->header.stamp.sec <= TIME_THR)
+            if (this->detectionArray_msg != nullptr && this->get_clock()->now().seconds() - this->detectionArray_msg->header.stamp.sec <= TIME_THR)
             {
                 for (auto it : this->detectionArray_msg->detections)
                 {
@@ -447,8 +455,8 @@ namespace rdsys
         ulk.unlock();
         RCLCPP_DEBUG(
             this->get_logger(),
-            "Receive Nav2FeedBack: Distance Remainimg: %f Current Pose: x=%lf , y=%lf , z=%lf Time Remaining: %d",
-            msg->feedback.distance_remaining, msg->feedback.current_pose.pose.position.x, msg->feedback.current_pose.pose.position.y, msg->feedback.current_pose.pose.position.z, msg->feedback.estimated_time_remaining.sec);
+            "Receive Nav2FeedBack: Distance Remainimg: %f Current Pose: x=%lf , y=%lf , z=%lf Time Remaining: %d in frame %s",
+            msg->feedback.distance_remaining, msg->feedback.current_pose.pose.position.x, msg->feedback.current_pose.pose.position.y, msg->feedback.current_pose.pose.position.z, msg->feedback.estimated_time_remaining.sec, msg->feedback.current_pose.header.frame_id.c_str());
     }
 
     void RobotDecisionNode::nav2GoalStatusCallBack(const action_msgs::msg::GoalStatusArray::SharedPtr msg)
