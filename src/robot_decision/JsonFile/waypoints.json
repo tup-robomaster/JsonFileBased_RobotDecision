@@ -2,7 +2,44 @@
     "data": [
         {
             "id": 0,
-            "name": "hone_one",
+            "name": "zero",
+            "type": 0,
+            "x": 1.0,
+            "y": 1.0,
+            "angle": 0.0,
+            "connect": [
+                1
+            ],
+            "enemyWeights": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ]
+        },
+        {
+            "id": 1,
+            "name": "one",
+            "type": 0,
+            "x": 1.0,
+            "y": 1.0,
+            "angle": 0.0,
+            "connect": [
+                0,
+                2
+            ],
+            "enemyWeights": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ]
+        },
+        {
+            "id": 2,
+            "name": "two",
             "type": 0,
             "x": 1.0,
             "y": 1.0,
