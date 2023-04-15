@@ -107,7 +107,7 @@ install(
 )
 
 install(
-  DIRECTORY launch 
+  DIRECTORY launch JsonFile resources
   DESTINATION share/${PROJECT_NAME}
 )
 

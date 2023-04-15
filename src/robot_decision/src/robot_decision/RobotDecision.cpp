@@ -1,5 +1,4 @@
 #include "../../include/robot_decision/RobotDecision.h"
-#include "../../include/Json/json.h"
 
 namespace rdsys
 {
@@ -102,7 +101,7 @@ namespace rdsys
 
     bool RobotDecisionSys::checkBlock(cv::Point start, double theta, int distance)
     {
-        int temp_step = int(STEP_DISTANCE * (1080. / REAL_HEIGHT));
+        int temp_step = int(this->_STEP_DISTANCE * (1080. / this->_REAL_HEIGHT));
         for (float distance_step = temp_step; distance_step < distance; distance_step += temp_step)
         {
             cv::Point2i check_point = this->createEndPointByTheta(start, theta, distance_step);
@@ -114,13 +113,19 @@ namespace rdsys
         return false;
     }
 
-    RobotDecisionSys::RobotDecisionSys(float &_distance_THR, float &_seek_THR)
+    RobotDecisionSys::RobotDecisionSys(float &_distance_THR, float &_seek_THR, float &_REAL_WIDTH, float &_REAL_HEIGHT, std::string &_MAP_PATH, float &_STEP_DISTANCE, float &_CAR_SEEK_FOV)
     {
         this->_distance_THR = _distance_THR;
         this->_seek_THR = _seek_THR;
+        this->_REAL_WIDTH = _REAL_WIDTH;
+        this->_REAL_HEIGHT = _REAL_HEIGHT;
+        this->_MAP_PATH = _MAP_PATH;
+        this->_STEP_DISTANCE = _STEP_DISTANCE;
+        this->_CAR_SEEK_FOV = _CAR_SEEK_FOV;
+
         this->myGameHandler = std::make_shared<GameHandler>(GameHandler());
-        this->decisionMap = cv::imread(MAP_PATH);
-        cv::resize(this->decisionMap, this->decisionMap, cv::Size(int(REAL_WIDTH / REAL_HEIGHT * 1080.), 1080));
+        this->decisionMap = cv::imread(this->_MAP_PATH);
+        cv::resize(this->decisionMap, this->decisionMap, cv::Size(int(this->_REAL_WIDTH / this->_REAL_HEIGHT * 1080.), 1080));
         cv::cvtColor(this->decisionMap, this->decisionMap_Gray, cv::COLOR_BGR2GRAY, 1);
     }
 
@@ -128,7 +133,7 @@ namespace rdsys
     {
     }
 
-    bool RobotDecisionSys::decodeWayPoints(char *filePath)
+    bool RobotDecisionSys::decodeWayPoints(std::string &filePath)
     {
         Json::Reader jsonReader;
         Json::Value jsonValue;
@@ -166,7 +171,7 @@ namespace rdsys
         return true;
     }
 
-    bool RobotDecisionSys::decodeDecisions(char *filePath)
+    bool RobotDecisionSys::decodeDecisions(std::string &filePath)
     {
         Json::Reader jsonReader;
         Json::Value jsonValue;
@@ -458,7 +463,7 @@ namespace rdsys
             if (temp_distance > this->_seek_THR)
                 continue;
             double temp_angle = this->calculateAngle(_x, _y, enemyPositions[i].x, enemyPositions[i].y);
-            if (this->checkBlock(this->transformPoint(_x, _y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), temp_angle, int(temp_distance * (1080. / REAL_HEIGHT))))
+            if (this->checkBlock(this->transformPoint(_x, _y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), temp_angle, int(temp_distance * (1080. / this->_REAL_HEIGHT))))
                 continue;
             if (temp_distance < min_distance)
             {
@@ -529,7 +534,7 @@ namespace rdsys
         {
             car_orientation = yaw;
         }
-        cv::Point dst_car_center = this->transformPoint(car_center, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080);
+        cv::Point dst_car_center = this->transformPoint(car_center, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080);
         dstMap = this->decisionMap.clone();
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
         std::vector<int> availableWayPointID;
@@ -540,7 +545,7 @@ namespace rdsys
         for (int i = 0; i < int(this->wayPointMap.size()); ++i)
         {
             int temp_id = this->wayPointMap[i]->id;
-            cv::Point dst_way_point_center = this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080);
+            cv::Point dst_way_point_center = this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080);
             if (std::find_if(id_pos_f.begin(), id_pos_f.end(), [temp_id](const auto &item)
                              { return item.second == temp_id; }) != id_pos_f.end())
             {
@@ -576,25 +581,25 @@ namespace rdsys
         }
         for (int i = 0; i < int(aimWayPoints.size()); ++i)
         {
-            cv::circle(dstMap, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), 3, cv::Scalar(0, 0, 255), -1);
+            cv::circle(dstMap, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), 3, cv::Scalar(0, 0, 255), -1);
             if (i == 0)
             {
-                cv::line(dstMap, dst_car_center, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
+                cv::line(dstMap, dst_car_center, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
             }
             else
             {
-                cv::line(dstMap, this->transformPoint(aimWayPoints[i - 1]->x, aimWayPoints[i - 1]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
+                cv::line(dstMap, this->transformPoint(aimWayPoints[i - 1]->x, aimWayPoints[i - 1]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
             }
         }
         this->drawCar(dstMap, dst_car_center, car_orientation, yaw, aim_yaw);
-        cv::circle(dstMap, dst_car_center, int(this->_seek_THR / float(REAL_HEIGHT / 1080)), cv::Scalar(255, 0, 0), 1);
+        cv::circle(dstMap, dst_car_center, int(this->_seek_THR / float(this->_REAL_HEIGHT / 1080)), cv::Scalar(255, 0, 0), 1);
         for (auto &it : friendPositions)
         {
-            this->drawOthCar(dstMap, this->transformPoint(it.x, it.y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), it.robot_id, 0);
+            this->drawOthCar(dstMap, this->transformPoint(it.x, it.y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), it.robot_id, 0);
         }
         for (auto &it : enemyPositions)
         {
-            this->drawOthCar(dstMap, this->transformPoint(it.x, it.y, REAL_WIDTH, REAL_HEIGHT, int((REAL_WIDTH / REAL_HEIGHT) * 1080), 1080), it.robot_id, 1);
+            this->drawOthCar(dstMap, this->transformPoint(it.x, it.y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), it.robot_id, 1);
         }
         cv::imshow("DecisionMapUI", dstMap);
         cv::resizeWindow("DecisionMapUI", cv::Size(1280, 720));
@@ -671,7 +676,7 @@ namespace rdsys
                 cv::line(img, after_point[j + 1], after_point[0], cv::Scalar(0, 255, 0), 3);
             }
         }
-        int seek_radius = int(this->_seek_THR / float(REAL_HEIGHT / 1080));
+        int seek_radius = int(this->_seek_THR / float(this->_REAL_HEIGHT / 1080));
         cv::Point2i Car_End = this->createEndPointByTheta(center, car_orientation, 35);
         cv::Point2i PAN_End = this->createEndPointByTheta(center, yaw, int(seek_radius / 3));
         if (aim_yaw < 0. && aim_yaw != -1.)
@@ -679,8 +684,8 @@ namespace rdsys
             aim_yaw = 2 * CV_PI - abs(aim_yaw);
         }
         cv::Point2i AIM_YAW_End = this->createEndPointByTheta(center, aim_yaw, seek_radius);
-        cv::Point2i Seek_End_s = this->createEndPointByTheta(center, yaw + (CAR_SEEK_FOV / 2.) * CV_PI / 180., seek_radius);
-        cv::Point2i Seek_End_e = this->createEndPointByTheta(center, yaw - (CAR_SEEK_FOV / 2.) * CV_PI / 180., seek_radius);
+        cv::Point2i Seek_End_s = this->createEndPointByTheta(center, yaw + (this->_CAR_SEEK_FOV / 2.) * CV_PI / 180., seek_radius);
+        cv::Point2i Seek_End_e = this->createEndPointByTheta(center, yaw - (this->_CAR_SEEK_FOV / 2.) * CV_PI / 180., seek_radius);
         cv::line(img, center, Car_End, cv::Scalar(255, 255, 0), 3);
         cv::line(img, center, Seek_End_s, cv::Scalar(0, 255, 255), 2);
         cv::line(img, center, Seek_End_e, cv::Scalar(0, 255, 255), 2);

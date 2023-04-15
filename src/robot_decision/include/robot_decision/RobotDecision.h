@@ -28,6 +28,13 @@ namespace rdsys
     class RobotDecisionSys
     {
     private:
+        std::string _MAP_PATH;
+        float _REAL_WIDTH;
+        float _REAL_HEIGHT;
+        float _STEP_DISTANCE;
+        float _CAR_SEEK_FOV;
+
+    private:
         bool IfShowUI = false;
         bool IfUIInited = false;
 
@@ -119,7 +126,7 @@ namespace rdsys
         bool checkBlock(cv::Point start, double theta, int distance);
 
     public:
-        RobotDecisionSys(float &_distance_THR, float &_seek_THR);
+        RobotDecisionSys(float &_distance_THR, float &_seek_THR, float &_REAL_WIDTH, float &_REAL_HEIGHT, std::string &_MAP_PATH, float &_STEP_DISTANCE, float &_CAR_SEEK_FOV);
         ~RobotDecisionSys();
 
         /**
@@ -129,7 +136,7 @@ namespace rdsys
          * @return
          * 是否成功
          */
-        bool decodeWayPoints(char *filePath);
+        bool decodeWayPoints(std::string &filePath);
         /**
          * @brief 解码决策Json文件
          * @param filePath
@@ -137,7 +144,7 @@ namespace rdsys
          * @return
          * 是否成功
          */
-        bool decodeDecisions(char *filePath);
+        bool decodeDecisions(std::string &filePath);
 
         /**
          * @brief 检查机器人当前所在路径点

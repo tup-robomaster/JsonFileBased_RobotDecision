@@ -13,31 +13,71 @@ namespace rdsys
         RCLCPP_INFO(
             this->get_logger(),
             "starting...");
-        this->init(WayPointsPATH, DecisionsPATH);
+        if(!this->decodeConfig())
+        {
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Failed to get Config!"
+            );
+            abort();
+        }
+        this->init();
     }
 
     RobotDecisionNode::~RobotDecisionNode()
     {
     }
 
-    void RobotDecisionNode::init(char *waypointsPath, char *decisionsPath)
+    bool RobotDecisionNode::decodeConfig()
     {
-        this->declare_parameter<float>("distance_thr", INIT_DISTANCE_THR);
-        this->declare_parameter<float>("seek_thr", INIT_SEEK_THR);
-        this->declare_parameter<bool>("IsRed", INIT_ISRED);
-        this->declare_parameter<bool>("IfShowUI", INIT_IFSHOWUI);
-        this->declare_parameter<int>("SelfIndex", INIT_SELFINDEX);
-        this->declare_parameter<int>("friendOutPostIndex", INIT_FRIENDOUTPOSTINDEX);
+        std::string package_share_directory = ament_index_cpp::get_package_share_directory("robot_decision");
+        Json::Reader jsonReader;
+        Json::Value jsonValue;
+        std::ifstream jsonFile(package_share_directory + "/" + "JsonFile/config.json");
+        if (!jsonReader.parse(jsonFile, jsonValue, true))
+        {
+            std::cout << "read error" << std::endl;
+            jsonFile.close();
+            return false;
+        }
+        Json::Value arrayValue = jsonValue["config"];
+        this->_WayPointsPath = package_share_directory + "/JsonFile/" + arrayValue["WayPointsPATH"].asCString();
+        this->_DecisionsPath = package_share_directory + "/JsonFile/" + arrayValue["DecisionsPATH"].asCString();
+        this->_INIT_DISTANCE_THR = arrayValue["INIT_DISTANCE_THR"].asFloat();
+        this->_INIT_SEEK_THR = arrayValue["INIT_SEEK_THR"].asFloat();
+        this->_INIT_ISRED = arrayValue["INIT_ISRED"].asBool();
+        this->_INIT_IFSHOWUI = arrayValue["INIT_IFSHOWUI"].asBool();
+        this->_INIT_SELFINDEX = arrayValue["INIT_SELFINDEX"].asInt();
+        this->_INIT_FRIENDOUTPOSTINDEX = arrayValue["INIT_FRIENDOUTPOSTINDEX"].asInt();
+        this->_GAME_TIME = arrayValue["GAME_TIME"].asInt();
+        this->_TIME_THR = arrayValue["TIME_THR"].asInt();
 
-        this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp));
+        this->_MAP_PATH = package_share_directory + "/resources/" + arrayValue["MAP_PATH"].asCString();
+        this->_REAL_WIDTH = arrayValue["REAL_WIDTH"].asFloat();
+        this->_REAL_HEIGHT = arrayValue["REAL_HEIGHT"].asFloat();
+        this->_STEP_DISTANCE = arrayValue["STEP_DISTANCE"].asFloat();
+        this->_CAR_SEEK_FOV = arrayValue["CAR_SEEK_FOV"].asFloat();
+        return true;
+    }
+
+    void RobotDecisionNode::init()
+    {
+        this->declare_parameter<float>("distance_thr", this->_INIT_DISTANCE_THR);
+        this->declare_parameter<float>("seek_thr", this->_INIT_SEEK_THR);
+        this->declare_parameter<bool>("IsRed", this->_INIT_ISRED);
+        this->declare_parameter<bool>("IfShowUI", this->_INIT_IFSHOWUI);
+        this->declare_parameter<int>("SelfIndex", this->_INIT_SELFINDEX);
+        this->declare_parameter<int>("friendOutPostIndex", this->_INIT_FRIENDOUTPOSTINDEX);
+
+        this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp, this->_REAL_WIDTH, this->_REAL_HEIGHT, this->_MAP_PATH, this->_STEP_DISTANCE, this->_CAR_SEEK_FOV));
 
         this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
 
-        if (!this->myRDS->decodeWayPoints(waypointsPath))
+        if (!this->myRDS->decodeWayPoints(this->_WayPointsPath))
             RCLCPP_ERROR(
                 this->get_logger(),
                 "Decode waypoints failed");
-        if (!this->myRDS->decodeDecisions(decisionsPath))
+        if (!this->myRDS->decodeDecisions(this->_DecisionsPath))
             RCLCPP_ERROR(
                 this->get_logger(),
                 "Decode decisions failed");
@@ -97,7 +137,7 @@ namespace rdsys
                 _x = transformStamped->transform.translation.x;
                 _y = transformStamped->transform.translation.y;
             }
-            else if (this->_transformStamped != nullptr && this->get_clock()->now().seconds() - this->_transformStamped->header.stamp.sec < TIME_THR)
+            else if (this->_transformStamped != nullptr && this->get_clock()->now().seconds() - this->_transformStamped->header.stamp.sec < this->_TIME_THR)
             {
                 _x = this->_transformStamped->transform.translation.x;
                 _y = this->_transformStamped->transform.translation.y;
@@ -156,7 +196,7 @@ namespace rdsys
             {
                 nav_through_poses_action_client_->async_cancel_all_goals();
                 // this->nav_through_poses_goal_handle_.reset();
-                this->excuting_decision =  nullptr;
+                this->excuting_decision = nullptr;
                 RCLCPP_INFO(
                     this->get_logger(),
                     "Cancel Previous Goals");
@@ -347,16 +387,16 @@ namespace rdsys
         int myHP = objHP_msg_->hp[this->_selfIndex];
         float myPos_x_ = objPos_msg_->pos[this->_selfIndex].x;
         float myPos_y_ = objPos_msg_->pos[this->_selfIndex].y;
-        int nowTime = GAME_TIME - gameInfo_msg_->timestamp;
+        int nowTime = this->_GAME_TIME - gameInfo_msg_->timestamp;
         int mode = serial_msg_->mode;
         int now_out_post_HP = objHP_msg_->hp[this->_friendOutPostIndex];
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         try
         {
             transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map_decision", "base_link", tf2::TimePointZero));
-           this-> _transformStamped = transformStamped;
+            this->_transformStamped = transformStamped;
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-            if (this->detectionArray_msg != nullptr && this->get_clock()->now().seconds() - this->detectionArray_msg->header.stamp.sec <= TIME_THR)
+            if (this->detectionArray_msg != nullptr && this->get_clock()->now().seconds() - this->detectionArray_msg->header.stamp.sec <= this->_TIME_THR)
             {
                 for (auto it : this->detectionArray_msg->detections)
                 {
@@ -546,7 +586,7 @@ namespace rdsys
         myDecision_msg.header.stamp = this->get_clock()->now();
         myDecision_msg.set__decision_id(decision->id);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
-        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < TIME_THR && decision->decide_mode < 2)
+        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < this->_TIME_THR && decision->decide_mode < 2)
         {
             myDecision_msg.set__mode(Mode::AUTOAIM);
         }

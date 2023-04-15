@@ -13,6 +13,7 @@
 #include "std_msgs/msg/float32.hpp"
 #include "nav2_util/geometry_utils.hpp"
 #include "nav2_behavior_tree/plugins/action/navigate_through_poses_action.hpp"
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
 #include <message_filters/subscriber.h>
 #include <geometry_msgs/msg/transform_stamped.hpp>
@@ -30,6 +31,24 @@ namespace rdsys
 
     class RobotDecisionNode : public rclcpp::Node
     {
+    private:
+        std::string _WayPointsPath;
+        std::string _DecisionsPath;
+        float  _INIT_DISTANCE_THR;
+        float _INIT_SEEK_THR;
+        bool _INIT_ISRED;
+        bool _INIT_IFSHOWUI;
+        int _INIT_SELFINDEX;
+        int _INIT_FRIENDOUTPOSTINDEX;
+        int _GAME_TIME;
+        int _TIME_THR;
+
+        std::string _MAP_PATH;
+        float _REAL_WIDTH;
+        float _REAL_HEIGHT;
+        float _STEP_DISTANCE;
+        float _CAR_SEEK_FOV;
+
     private:
         // RealParamValues:
         int _selfIndex = 0;
@@ -197,6 +216,13 @@ namespace rdsys
          */
         global_interface::msg::Decision makeDecisionMsg(std::shared_ptr<Decision> &decision, double &theta);
 
+        /**
+         * @brief 载入配置信息
+         * @return
+         * 是否成功
+         */
+        bool decodeConfig();
+
     public:
         RobotDecisionNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
         ~RobotDecisionNode();
@@ -209,6 +235,6 @@ namespace rdsys
          * @param decisionsPath
          * 决策Json文件路径
          */
-        void init(char *waypointsPath, char *decisionsPath);
+        void init();
     };
 }
