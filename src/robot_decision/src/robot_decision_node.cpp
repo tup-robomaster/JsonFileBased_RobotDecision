@@ -13,12 +13,11 @@ namespace rdsys
         RCLCPP_INFO(
             this->get_logger(),
             "starting...");
-        if(!this->decodeConfig())
+        if (!this->decodeConfig())
         {
             RCLCPP_ERROR(
                 this->get_logger(),
-                "Failed to get Config!"
-            );
+                "Failed to get Config!");
             abort();
         }
         this->init();
@@ -126,7 +125,6 @@ namespace rdsys
 
     bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, geometry_msgs::msg::TransformStamped::SharedPtr transformStamped)
     {
-        this->myRDS->calculatePath(0, 0);
         RCLCPP_INFO(
             this->get_logger(),
             "Heartbeat Processing");
@@ -196,7 +194,6 @@ namespace rdsys
             {
                 nav_through_poses_action_client_->async_cancel_all_goals();
                 // this->nav_through_poses_goal_handle_.reset();
-                this->excuting_decision = nullptr;
                 RCLCPP_INFO(
                     this->get_logger(),
                     "Cancel Previous Goals");
@@ -212,6 +209,7 @@ namespace rdsys
                         this->get_logger(),
                         "Failed to get Previous Decision. Try to clean up!");
                     nav_through_poses_action_client_->async_cancel_all_goals();
+                    return false;
                 }
                 auto myDecision_msg = this->makeDecisionMsg(this->excuting_decision, delta_yaw);
                 this->decision_pub_->publish(myDecision_msg);
@@ -579,7 +577,7 @@ namespace rdsys
         }
     }
 
-    global_interface::msg::Decision RobotDecisionNode::makeDecisionMsg(std::shared_ptr<Decision> &decision, double &theta)
+    global_interface::msg::Decision RobotDecisionNode::makeDecisionMsg(std::shared_ptr<Decision> decision, double &theta)
     {
         global_interface::msg::Decision myDecision_msg;
         myDecision_msg.header.frame_id = "base_link";

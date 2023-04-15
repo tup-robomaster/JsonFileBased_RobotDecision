@@ -214,7 +214,7 @@ namespace rdsys
          * @return
          * 决策消息
          */
-        global_interface::msg::Decision makeDecisionMsg(std::shared_ptr<Decision> &decision, double &theta);
+        global_interface::msg::Decision makeDecisionMsg(std::shared_ptr<Decision> decision, double &theta);
 
         /**
          * @brief 载入配置信息
