@@ -40,11 +40,12 @@ namespace rdsys
             return false;
         }
         Json::Value arrayValue = jsonValue["config"];
+        this->_Debug = arrayValue["Debug"].asBool();
         this->_WayPointsPath = package_share_directory + "/JsonFile/" + arrayValue["WayPointsPATH"].asCString();
         this->_DecisionsPath = package_share_directory + "/JsonFile/" + arrayValue["DecisionsPATH"].asCString();
         this->_INIT_DISTANCE_THR = arrayValue["INIT_DISTANCE_THR"].asFloat();
         this->_INIT_SEEK_THR = arrayValue["INIT_SEEK_THR"].asFloat();
-        this->_INIT_ISRED = arrayValue["INIT_ISRED"].asBool();
+        this->_INIT_IsBlue = arrayValue["INIT_IsBlue"].asBool();
         this->_INIT_IFSHOWUI = arrayValue["INIT_IFSHOWUI"].asBool();
         this->_INIT_SELFINDEX = arrayValue["INIT_SELFINDEX"].asInt();
         this->_INIT_FRIENDOUTPOSTINDEX = arrayValue["INIT_FRIENDOUTPOSTINDEX"].asInt();
@@ -63,7 +64,7 @@ namespace rdsys
     {
         this->declare_parameter<float>("distance_thr", this->_INIT_DISTANCE_THR);
         this->declare_parameter<float>("seek_thr", this->_INIT_SEEK_THR);
-        this->declare_parameter<bool>("IsRed", this->_INIT_ISRED);
+        this->declare_parameter<bool>("IsRed", this->_INIT_IsBlue);
         this->declare_parameter<bool>("IfShowUI", this->_INIT_IFSHOWUI);
         this->declare_parameter<int>("SelfIndex", this->_INIT_SELFINDEX);
         this->declare_parameter<int>("friendOutPostIndex", this->_INIT_FRIENDOUTPOSTINDEX);
@@ -358,7 +359,7 @@ namespace rdsys
                 "Receive ObjPos Msg %d: x=%lf, y=%lf",
                 i, objPos_msg_->pos[i].x, objPos_msg_->pos[i].y);
         }
-        if (std::isnan(gameInfo_msg_->timestamp))
+        if (std::isnan(gameInfo_msg_->timestamp) || std::isnan(gameInfo_msg_->game_stage))
         {
             RCLCPP_ERROR(
                 this->get_logger(),
@@ -380,11 +381,23 @@ namespace rdsys
             this->get_logger(),
             "Receive Serial Msg : mode=%d, theta=%lf",
             serial_msg_->mode, serial_msg_->theta);
-
+        int currentSelfIndex = this->_selfIndex;
+        if (this->_IsBlue)
+        {
+            this->_selfIndex_hp = this->_selfIndex + 8;
+            currentSelfIndex = this->_selfIndex + 5;
+        }
+        if (gameInfo_msg_->game_stage != GameStage::IN_BATTLE && !this->_Debug)
+        {
+            RCLCPP_WARN_ONCE(
+                this->get_logger(),
+                "Wait for game start ...");
+            return;
+        }
         this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
-        int myHP = objHP_msg_->hp[this->_selfIndex];
-        float myPos_x_ = objPos_msg_->pos[this->_selfIndex].x;
-        float myPos_y_ = objPos_msg_->pos[this->_selfIndex].y;
+        int myHP = objHP_msg_->hp[this->_selfIndex_hp];
+        float myPos_x_ = objPos_msg_->pos[currentSelfIndex].x;
+        float myPos_y_ = objPos_msg_->pos[currentSelfIndex].y;
         int nowTime = this->_GAME_TIME - gameInfo_msg_->timestamp;
         int mode = serial_msg_->mode;
         int now_out_post_HP = objHP_msg_->hp[this->_friendOutPostIndex];
@@ -419,23 +432,23 @@ namespace rdsys
         std::vector<RobotPosition> enemyPositions;
         for (int i = 0; i < int(allPositions.size()); ++i)
         {
-            if (i == this->_selfIndex)
+            if (i == currentSelfIndex)
             {
                 continue;
             }
             if (i < 5)
             {
-                if (this->_IsRed)
-                    enemyPositions.emplace_back(allPositions[i]);
-                else
+                if (this->_IsBlue)
                     friendPositions.emplace_back(allPositions[i]);
+                else
+                    enemyPositions.emplace_back(allPositions[i]);
             }
             else
             {
-                if (this->_IsRed)
-                    friendPositions.emplace_back(allPositions[i]);
-                else
+                if (this->_IsBlue)
                     enemyPositions.emplace_back(allPositions[i]);
+                else
+                    friendPositions.emplace_back(allPositions[i]);
             }
         }
         if (!this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, friendPositions, enemyPositions, transformStamped))
@@ -522,7 +535,7 @@ namespace rdsys
         this->get_parameter("distance_thr", this->_distance_THR_Temp);
         this->get_parameter("seek_thr", this->_seek_THR_Temp);
         this->get_parameter("IfShowUI", this->_IfShowUI_Temp);
-        this->get_parameter("IsRed", this->_IsRed_Temp);
+        this->get_parameter("IsRed", this->_IsBlue_Temp);
         this->get_parameter("SelfIndex", this->_selfIndex_Temp);
         this->get_parameter("friendOutPostIndex", this->_friendOutPostIndex_Temp);
 
@@ -551,13 +564,13 @@ namespace rdsys
             this->myRDS->setIfShowUI(this->_IfShowUI_Temp);
             this->_IfShowUI = this->_IfShowUI_Temp;
         }
-        if (this->_IsRed != this->_IsRed_Temp)
+        if (this->_IsBlue != this->_IsBlue_Temp)
         {
             RCLCPP_INFO(
                 this->get_logger(),
-                "set _IsRed to %d",
-                this->_IsRed_Temp);
-            this->_IsRed = this->_IsRed_Temp;
+                "set _IsBlue to %d",
+                this->_IsBlue_Temp);
+            this->_IsBlue = this->_IsBlue_Temp;
         }
         if (this->_selfIndex != this->_selfIndex_Temp)
         {

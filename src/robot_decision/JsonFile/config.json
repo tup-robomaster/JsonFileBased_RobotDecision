@@ -1,5 +1,6 @@
 {
     "config" : {
+        "Debug" : false,
         "WayPointsPATH" : "waypoints.json",
         "DecisionsPATH" : "decisions.json",
         "MAP_PATH" : "RMUL.png",
@@ -10,10 +11,10 @@
         "CAR_SEEK_FOV" : 70.0,
         "INIT_DISTANCE_THR" : 1.0,
         "INIT_SEEK_THR" : 5.0,
-        "INIT_ISRED" : false,
+        "INIT_ISBLUE" : false,
         "INIT_IFSHOWUI" : true,
-        "INIT_SELFINDEX" : 0,
-        "INIT_FRIENDOUTPOSTINDEX" : 7,
+        "INIT_SELFINDEX" : 5,
+        "INIT_FRIENDOUTPOSTINDEX" : 6,
         "STEP_DISTANCE" : 0.1,
         "GAME_TIME" : 420
     }

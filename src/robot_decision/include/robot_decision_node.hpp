@@ -31,12 +31,15 @@ namespace rdsys
 
     class RobotDecisionNode : public rclcpp::Node
     {
+    public:
+        bool _Debug = false;
+
     private:
         std::string _WayPointsPath;
         std::string _DecisionsPath;
         float  _INIT_DISTANCE_THR;
         float _INIT_SEEK_THR;
-        bool _INIT_ISRED;
+        bool _INIT_IsBlue;
         bool _INIT_IFSHOWUI;
         int _INIT_SELFINDEX;
         int _INIT_FRIENDOUTPOSTINDEX;
@@ -51,16 +54,17 @@ namespace rdsys
 
     private:
         // RealParamValues:
-        int _selfIndex = 0;
-        int _friendOutPostIndex = 7;
+        int _selfIndex = 5;
+        int _selfIndex_hp = 5;
+        int _friendOutPostIndex = 6;
         bool _IfShowUI = false;
-        bool _IsRed = false;
+        bool _IsBlue = false;
 
         // TempParams:
         float _distance_THR_Temp = 0.5;
         float _seek_THR_Temp = 5.0;
         bool _IfShowUI_Temp = false;
-        bool _IsRed_Temp = false;
+        bool _IsBlue_Temp = false;
         int _selfIndex_Temp = 0;
         int _friendOutPostIndex_Temp = 0;
 

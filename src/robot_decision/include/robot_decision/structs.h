@@ -67,6 +67,16 @@ namespace rdsys
         CRUISE = 1,
         ADVANCEDCRUISE = 0
     };
+
+    enum GameStage
+    {
+        COMPETITON_NOT_STARTED = 0,
+        PREPARATION_STAGE = 1,
+        SELF_INSPECTION_STAGE = 2,
+        FIVE_S_COUNTDOWN = 3,
+        IN_BATTLE = 4,
+        END = 5
+    };
 }
 
 #endif
