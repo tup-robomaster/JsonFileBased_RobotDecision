@@ -68,16 +68,18 @@ namespace rdsys
         int _selfIndex_Temp = 0;
         int _friendOutPostIndex_Temp = 0;
 
-        const std::map<std::string, int> type_id = {std::map<std::string, int>::value_type("B1", 0),
-                                                    std::map<std::string, int>::value_type("B2", 1),
-                                                    std::map<std::string, int>::value_type("B3", 2),
-                                                    std::map<std::string, int>::value_type("B4", 3),
-                                                    std::map<std::string, int>::value_type("B5", 4),
-                                                    std::map<std::string, int>::value_type("R1", 5),
-                                                    std::map<std::string, int>::value_type("R2", 6),
-                                                    std::map<std::string, int>::value_type("R3", 7),
-                                                    std::map<std::string, int>::value_type("R4", 8),
-                                                    std::map<std::string, int>::value_type("R5", 9)};
+        const std::map<std::string, int> type_id = {std::map<std::string, int>::value_type("R1", 0),
+                                                    std::map<std::string, int>::value_type("R2", 1),
+                                                    std::map<std::string, int>::value_type("R3", 2),
+                                                    std::map<std::string, int>::value_type("R4", 3),
+                                                    std::map<std::string, int>::value_type("R5", 4),
+                                                    std::map<std::string, int>::value_type("R7", 5),
+                                                    std::map<std::string, int>::value_type("B1", 6),
+                                                    std::map<std::string, int>::value_type("B2", 7),
+                                                    std::map<std::string, int>::value_type("B3", 8),
+                                                    std::map<std::string, int>::value_type("B4", 9),
+                                                    std::map<std::string, int>::value_type("B5", 10),
+                                                    std::map<std::string, int>::value_type("B7", 11)};
 
     private:
         message_filters::Subscriber<global_interface::msg::ObjHP> objHP_sub_;
@@ -103,8 +105,6 @@ namespace rdsys
         std::vector<geometry_msgs::msg::PoseStamped> acummulated_poses_;
         std::chrono::milliseconds server_timeout_;
 
-        using NavThroughPosesGoalHandle = rclcpp_action::ClientGoalHandle<nav2_msgs::action::NavigateThroughPoses>;
-        NavThroughPosesGoalHandle::SharedPtr nav_through_poses_goal_handle_;
         nav2_msgs::action::NavigateThroughPoses::Goal nav_through_poses_goal_;
 
         std::shared_ptr<rclcpp::WallTimer<std::_Bind<void (rdsys::RobotDecisionNode::*(rdsys::RobotDecisionNode *))()>, (void *)nullptr>> timer_;
@@ -155,7 +155,7 @@ namespace rdsys
          * @return
          * RobotPosition集合
          */
-        std::vector<RobotPosition> point2f2Position(std::array<global_interface::msg::Point2f, 10UL> pos);
+        std::vector<RobotPosition> point2f2Position(std::array<global_interface::msg::Point2f, 12UL> pos);
         /**
          * @brief 消息回调，由message_filters处理
          */

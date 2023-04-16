@@ -194,7 +194,6 @@ namespace rdsys
             if (this->excuting_decision != nullptr && myDecision->weight > this->excuting_decision->weight)
             {
                 nav_through_poses_action_client_->async_cancel_all_goals();
-                // this->nav_through_poses_goal_handle_.reset();
                 RCLCPP_INFO(
                     this->get_logger(),
                     "Cancel Previous Goals");
@@ -265,16 +264,10 @@ namespace rdsys
         }
         auto send_goal_options =
             rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
-        send_goal_options.result_callback = [this](auto)
-        {
-            this->nav_through_poses_goal_handle_.reset();
-        };
 
         if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(10)))
         {
             auto future_goal_handle = nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
-            // this->nav_through_poses_goal_handle_ = future_goal_handle.get();
-            // 问题：future获取时阻塞
         }
         else
         {
@@ -307,9 +300,9 @@ namespace rdsys
         this->acummulated_poses_.emplace_back(pose);
     }
 
-    std::vector<RobotPosition> RobotDecisionNode::point2f2Position(std::array<global_interface::msg::Point2f, 10UL> pos)
+    std::vector<RobotPosition> RobotDecisionNode::point2f2Position(std::array<global_interface::msg::Point2f, 12UL> pos)
     {
-        if (pos.size() != 10)
+        if (pos.size() != 12)
         {
             RCLCPP_ERROR(
                 this->get_logger(),
@@ -385,7 +378,7 @@ namespace rdsys
         if (this->_IsBlue)
         {
             this->_selfIndex_hp = this->_selfIndex + 8;
-            currentSelfIndex = this->_selfIndex + 5;
+            currentSelfIndex = this->_selfIndex + 6;
         }
         if (gameInfo_msg_->game_stage != GameStage::IN_BATTLE && !this->_Debug)
         {
@@ -436,19 +429,19 @@ namespace rdsys
             {
                 continue;
             }
-            if (i < 5)
+            if (i < 6)
             {
                 if (this->_IsBlue)
-                    friendPositions.emplace_back(allPositions[i]);
-                else
                     enemyPositions.emplace_back(allPositions[i]);
+                else
+                    friendPositions.emplace_back(allPositions[i]);
             }
             else
             {
                 if (this->_IsBlue)
-                    enemyPositions.emplace_back(allPositions[i]);
-                else
                     friendPositions.emplace_back(allPositions[i]);
+                else
+                    enemyPositions.emplace_back(allPositions[i]);
             }
         }
         if (!this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, friendPositions, enemyPositions, transformStamped))

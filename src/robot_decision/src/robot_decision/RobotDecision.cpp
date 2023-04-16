@@ -249,11 +249,11 @@ namespace rdsys
         std::vector<std::shared_ptr<Decision>> tempDecision;
         for (auto &it : friendPositions)
         {
-            id_pos_f[it.robot_id] = this->calculatePosition(it);
+            id_pos_f.insert(std::make_pair(it.robot_id, this->calculatePosition(it)));
         }
         for (auto &it : enemyPositions)
         {
-            id_pos_e[it.robot_id] = this->calculatePosition(it);
+            id_pos_e.insert(std::make_pair(it.robot_id, this->calculatePosition(it)));
         }
         for (auto it : this->decisions)
         {
@@ -297,73 +297,33 @@ namespace rdsys
             {
                 continue;
             }
-            bool fpFLAG = false;
+            bool fpFLAG = true;
             for (int i = 0; i < int(it->friend_position.size()); ++i)
             {
-                int size = it->friend_position[i].size();
-                for (int j = 0; j < size; ++j)
-                {
-                    if (it->friend_position[i][j] == -1)
-                    {
-                        fpFLAG = true;
-                        break;
-                    }
-                }
-                if (fpFLAG)
-                    break;
-                if (size == 0)
+                int temp_pos = id_pos_f.find(i)->second;
+                if (it->friend_position[i][0] == -1)
                 {
                     continue;
                 }
-                else if (0 == id_pos_f.count(i))
+                if (std::find(it->friend_position[i].begin(), it->friend_position[i].end(), temp_pos) == it->friend_position[i].end())
                 {
-                    continue;
-                }
-                int temp_pos;
-                temp_pos = id_pos_f[i];
-                for (int j = 0; j < size; ++j)
-                {
-                    if (it->friend_position[i][j] == temp_pos)
-                    {
-                        fpFLAG = true;
-                        break;
-                    }
-                }
-                if (fpFLAG)
+                    fpFLAG = false;
                     break;
+                }
             }
-            bool epFLAG = false;
+            bool epFLAG = true;
             for (int i = 0; i < int(it->enemy_position.size()); ++i)
             {
-                int size = it->enemy_position[i].size();
-                for (int j = 0; j < size; ++j)
-                {
-                    if (it->enemy_position[i][0] == -1)
-                    {
-                        epFLAG = true;
-                        break;
-                    }
-                }
-                if (epFLAG)
-                    break;
-                if (size == 0)
+                int temp_pos = id_pos_e.find(i)->second;
+                if (it->enemy_position[i][0] == -1)
                 {
                     continue;
                 }
-                else if (0 == id_pos_e.count(i))
+                if (std::find(it->enemy_position[i].begin(), it->enemy_position[i].end(), temp_pos) == it->enemy_position[i].end())
                 {
-                    continue;
-                }
-                int temp_pos;
-                temp_pos = id_pos_e[i];
-                for (int j = 0; j < size; ++j)
-                {
-                    if (it->enemy_position[i][j] == temp_pos)
-                        epFLAG = true;
+                    fpFLAG = false;
                     break;
                 }
-                if (epFLAG)
-                    break;
             }
             if (epFLAG && fpFLAG)
                 tempDecision.emplace_back(it);

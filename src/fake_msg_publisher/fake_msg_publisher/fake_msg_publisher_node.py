@@ -27,7 +27,7 @@ class Lier(Node):
         self.carPos_msg = CarPosMsg()
         self.w = 12.
         self.h = 8.
-        for i in range(-1, 9):
+        for i in range(-1, 11):
             temp_pos2 = Point2f()
             temp_pos2.x = 6.
             temp_pos2.y = 4.
@@ -47,9 +47,9 @@ class Lier(Node):
 
     def make_fake(self):
         self.ObjHP_msg = ObjHPMsg()
-        self.ObjHP_msg.hp[0] = 500
+        self.ObjHP_msg.hp[5] = 500
         self.ObjHP_msg.hp[7] = 600
-        for i in range(-1, 9):
+        for i in range(-1, 11):
             temp_pos2 = Point2f()
             aim_x = random.uniform(self.carPos_msg.pos[i].x - 0.1, self.carPos_msg.pos[i].x + 0.1)
             aim_y = random.uniform(self.carPos_msg.pos[i].y - 0.1, self.carPos_msg.pos[i].y + 0.1)
