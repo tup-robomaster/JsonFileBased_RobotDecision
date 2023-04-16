@@ -12,7 +12,8 @@
             "maxHP" : -1,
             "decide_mode" : 0,
             "decide_wayPoint" : 0,
-            "out_post_HP_max": 0,
+            "out_post_HP_max": -1,
+            "base_HP_max": -1,
             "if_succession" : false,
             "enemyPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]],
             "friendPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]]
@@ -29,7 +30,8 @@
             "maxHP" : -1,
             "decide_mode" : 0,
             "decide_wayPoint" : 1,
-            "out_post_HP_max": 0,
+            "out_post_HP_max": -1,
+            "base_HP_max": -1,
             "if_succession" : false,
             "enemyPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]],
             "friendPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]]
@@ -46,7 +48,8 @@
             "maxHP" : -1,
             "decide_mode" : 1,
             "decide_wayPoint" : 2,
-            "out_post_HP_max": 0,
+            "out_post_HP_max": -1,
+            "base_HP_max": -1,
             "if_succession" : false,
             "enemyPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]],
             "friendPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]]
@@ -63,7 +66,8 @@
             "maxHP" : -1,
             "decide_mode" : 1,
             "decide_wayPoint" : 0,
-            "out_post_HP_max": 0,
+            "out_post_HP_max": -1,
+            "base_HP_max": -1,
             "if_succession" : true,
             "enemyPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]],
             "friendPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]]

@@ -43,6 +43,7 @@ namespace rdsys
         bool _INIT_IFSHOWUI;
         int _INIT_SELFINDEX;
         int _INIT_FRIENDOUTPOSTINDEX;
+        int _INIT_FRIENDBASEINDEX;
         int _GAME_TIME;
         int _TIME_THR;
 
@@ -55,8 +56,8 @@ namespace rdsys
     private:
         // RealParamValues:
         int _selfIndex = 5;
-        int _selfIndex_hp = 5;
         int _friendOutPostIndex = 6;
+        int _friendBaseIndex = 7;
         bool _IfShowUI = false;
         bool _IsBlue = false;
 
@@ -65,8 +66,6 @@ namespace rdsys
         float _seek_THR_Temp = 5.0;
         bool _IfShowUI_Temp = false;
         bool _IsBlue_Temp = false;
-        int _selfIndex_Temp = 0;
-        int _friendOutPostIndex_Temp = 0;
 
         const std::map<std::string, int> type_id = {std::map<std::string, int>::value_type("R1", 0),
                                                     std::map<std::string, int>::value_type("R2", 1),
@@ -208,7 +207,7 @@ namespace rdsys
          * @return
          * 处理是否成功
          */
-        bool process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, geometry_msgs::msg::TransformStamped::SharedPtr transformStamped);
+        bool process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, int &now_base_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, geometry_msgs::msg::TransformStamped::SharedPtr transformStamped);
         /**
          * @brief 根据决策创建消息
          * @param decision

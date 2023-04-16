@@ -78,6 +78,16 @@ namespace rdsys
          * 角度值（弧度制）
          */
         double calculateAngle(double x1, double y1, double x2, double y2);
+        /**
+         * @brief 计算角度
+         * @param p1
+         * 点1
+         * @param p2
+         * 点2
+         * @return
+         * 角度值（弧度制）
+         */
+        double calculateAngle(cv::Point2d p1, cv::Point2d p2);
 
     private:
         /**
@@ -172,8 +182,12 @@ namespace rdsys
          * 当前机器人模式
          * @param _HP
          * 当前机器人血量
-         * @param now
+         * @param nowtime
          * 当前比赛剩余时间
+         * @param now_out_post_HP
+         * 当前前哨站血量
+         * @param now_base_HP
+         * 当前基地血量
          * @param friendPositions
          * 友方机器人位置（真实坐标）
          * @param enemtPositions
@@ -187,7 +201,7 @@ namespace rdsys
          * @return
          * 决策
          */
-        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e);
+        std::shared_ptr<Decision> decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, int now_base_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e);
         /**
          * @brief 计算路径路线
          * @param startWapPointID

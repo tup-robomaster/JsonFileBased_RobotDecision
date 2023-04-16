@@ -15,6 +15,7 @@
         "INIT_IFSHOWUI" : true,
         "INIT_SELFINDEX" : 5,
         "INIT_FRIENDOUTPOSTINDEX" : 6,
+        "INIT_FRIENDBASEINDEX" : 7,
         "STEP_DISTANCE" : 0.1,
         "GAME_TIME" : 420
     }

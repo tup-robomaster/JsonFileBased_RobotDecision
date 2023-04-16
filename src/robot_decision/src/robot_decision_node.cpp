@@ -49,6 +49,7 @@ namespace rdsys
         this->_INIT_IFSHOWUI = arrayValue["INIT_IFSHOWUI"].asBool();
         this->_INIT_SELFINDEX = arrayValue["INIT_SELFINDEX"].asInt();
         this->_INIT_FRIENDOUTPOSTINDEX = arrayValue["INIT_FRIENDOUTPOSTINDEX"].asInt();
+        this->_INIT_FRIENDBASEINDEX = arrayValue["INIT_FRIENDBASEINDEX"].asInt();
         this->_GAME_TIME = arrayValue["GAME_TIME"].asInt();
         this->_TIME_THR = arrayValue["TIME_THR"].asInt();
 
@@ -66,8 +67,10 @@ namespace rdsys
         this->declare_parameter<float>("seek_thr", this->_INIT_SEEK_THR);
         this->declare_parameter<bool>("IsRed", this->_INIT_IsBlue);
         this->declare_parameter<bool>("IfShowUI", this->_INIT_IFSHOWUI);
-        this->declare_parameter<int>("SelfIndex", this->_INIT_SELFINDEX);
-        this->declare_parameter<int>("friendOutPostIndex", this->_INIT_FRIENDOUTPOSTINDEX);
+
+        this->_selfIndex = this->_INIT_SELFINDEX;
+        this->_friendOutPostIndex = this->_INIT_FRIENDOUTPOSTINDEX;
+        this->_friendBaseIndex = this->_INIT_FRIENDBASEINDEX;
 
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp, this->_REAL_WIDTH, this->_REAL_HEIGHT, this->_MAP_PATH, this->_STEP_DISTANCE, this->_CAR_SEEK_FOV));
 
@@ -83,7 +86,7 @@ namespace rdsys
                 "Decode decisions failed");
 
         rclcpp::QoS qos(0);
-        qos.keep_last(20);
+        qos.keep_last(1);
         qos.best_effort();
         qos.durability();
         qos.durability_volatile();
@@ -124,7 +127,7 @@ namespace rdsys
         }
     }
 
-    bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, geometry_msgs::msg::TransformStamped::SharedPtr transformStamped)
+    bool RobotDecisionNode::process_once(int &_HP, int &mode, float &_x, float &_y, int &time, int &now_out_post_HP, int &now_base_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, geometry_msgs::msg::TransformStamped::SharedPtr transformStamped)
     {
         RCLCPP_INFO(
             this->get_logger(),
@@ -183,7 +186,7 @@ namespace rdsys
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         std::vector<int> availableDecisionID;
         std::map<int, int> id_pos_f, id_pos_e;
-        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, friendPositions, enemyPositions, availableDecisionID, id_pos_f, id_pos_e);
+        std::shared_ptr<Decision> myDecision = this->myRDS->decide(myWayPointID, mode, _HP, time, now_out_post_HP, now_base_HP, friendPositions, enemyPositions, availableDecisionID, id_pos_f, id_pos_e);
         if (myDecision == nullptr)
         {
             return false;
@@ -375,9 +378,14 @@ namespace rdsys
             "Receive Serial Msg : mode=%d, theta=%lf",
             serial_msg_->mode, serial_msg_->theta);
         int currentSelfIndex = this->_selfIndex;
+        int currentFriendOutpostIndex_hp = this->_friendOutPostIndex;
+        int currentBaseIndex_hp = this->_friendBaseIndex;
+        int currentSelfIndex_hp = this->_selfIndex;
         if (this->_IsBlue)
         {
-            this->_selfIndex_hp = this->_selfIndex + 8;
+            currentSelfIndex_hp = this->_selfIndex + 8;
+            currentFriendOutpostIndex_hp = this->_friendOutPostIndex + 8;
+            currentBaseIndex_hp = this->_friendBaseIndex + 8;
             currentSelfIndex = this->_selfIndex + 6;
         }
         if (gameInfo_msg_->game_stage != GameStage::IN_BATTLE && !this->_Debug)
@@ -388,12 +396,13 @@ namespace rdsys
             return;
         }
         this->nav_through_poses_goal_ = nav2_msgs::action::NavigateThroughPoses::Goal();
-        int myHP = objHP_msg_->hp[this->_selfIndex_hp];
+        int myHP = objHP_msg_->hp[currentSelfIndex_hp];
         float myPos_x_ = objPos_msg_->pos[currentSelfIndex].x;
         float myPos_y_ = objPos_msg_->pos[currentSelfIndex].y;
         int nowTime = this->_GAME_TIME - gameInfo_msg_->timestamp;
         int mode = serial_msg_->mode;
-        int now_out_post_HP = objHP_msg_->hp[this->_friendOutPostIndex];
+        int now_out_post_HP = objHP_msg_->hp[currentFriendOutpostIndex_hp];
+        int now_base_hp = objHP_msg_->hp[currentBaseIndex_hp];
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         try
         {
@@ -444,7 +453,7 @@ namespace rdsys
                     enemyPositions.emplace_back(allPositions[i]);
             }
         }
-        if (!this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, friendPositions, enemyPositions, transformStamped))
+        if (!this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, now_base_hp, friendPositions, enemyPositions, transformStamped))
         {
             RCLCPP_WARN(
                 this->get_logger(),
@@ -529,8 +538,6 @@ namespace rdsys
         this->get_parameter("seek_thr", this->_seek_THR_Temp);
         this->get_parameter("IfShowUI", this->_IfShowUI_Temp);
         this->get_parameter("IsRed", this->_IsBlue_Temp);
-        this->get_parameter("SelfIndex", this->_selfIndex_Temp);
-        this->get_parameter("friendOutPostIndex", this->_friendOutPostIndex_Temp);
 
         if (this->myRDS->getDistanceTHR() != this->_distance_THR_Temp)
         {
@@ -564,22 +571,6 @@ namespace rdsys
                 "set _IsBlue to %d",
                 this->_IsBlue_Temp);
             this->_IsBlue = this->_IsBlue_Temp;
-        }
-        if (this->_selfIndex != this->_selfIndex_Temp)
-        {
-            RCLCPP_INFO(
-                this->get_logger(),
-                "set _selfIndex to %d",
-                this->_selfIndex_Temp);
-            this->_selfIndex = this->_selfIndex_Temp;
-        }
-        if (this->_friendOutPostIndex != this->_friendOutPostIndex_Temp)
-        {
-            RCLCPP_INFO(
-                this->get_logger(),
-                "set _friendOutPostIndex to %d",
-                this->_friendOutPostIndex_Temp);
-            this->_friendOutPostIndex = this->_friendOutPostIndex_Temp;
         }
     }
 

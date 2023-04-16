@@ -203,6 +203,7 @@ namespace rdsys
             decision->decide_mode = arrayValue[i]["decide_mode"].asInt();
             decision->decide_wayPoint = arrayValue[i]["decide_wayPoint"].asInt();
             decision->out_post_HP_max = arrayValue[i]["out_post_HP_max"].asInt();
+            decision->base_HP_max = arrayValue[i]["base_HP_max"].asInt();
             decision->if_succession = arrayValue[i]["if_succession"].asBool();
             Json::Value enemyPositionArray = arrayValue[i]["enemyPosition"];
             for (int j = 0; j < int(enemyPositionArray.size()); ++j)
@@ -243,7 +244,7 @@ namespace rdsys
         return this->calculatePosition(pos);
     }
 
-    std::shared_ptr<Decision> RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e)
+    std::shared_ptr<Decision> RobotDecisionSys::decide(int wayPointID, int robot_mode, int _HP, int nowtime, int now_out_post_HP, int now_base_HP, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::vector<int> &availableDecisionID, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e)
     {
         this->myGameHandler->update(nowtime);
         std::vector<std::shared_ptr<Decision>> tempDecision;
@@ -294,6 +295,10 @@ namespace rdsys
                 continue;
             }
             else if (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max)
+            {
+                continue;
+            }
+            else if (it->base_HP_max != -1 && now_base_HP < it->base_HP_max)
             {
                 continue;
             }
@@ -442,6 +447,27 @@ namespace rdsys
         double xx, yy;
         xx = x2 - x1;
         yy = y2 - y1;
+        if (xx == 0.0)
+            angle_temp = CV_PI / 2.0;
+        else
+            angle_temp = atan(fabs(yy / xx));
+        if ((xx < 0.0) && (yy >= 0.0))
+            angle_temp = CV_PI - angle_temp;
+        else if ((xx < 0.0) && (yy < 0.0))
+            angle_temp = CV_PI + angle_temp;
+        else if ((xx >= 0.0) && (yy < 0.0))
+            angle_temp = CV_PI * 2.0 - angle_temp;
+        return CV_2PI - (angle_temp);
+    }
+
+    double RobotDecisionSys::calculateAngle(cv::Point2d p1, cv::Point2d p2)
+    {
+        if (p1.x == p2.x && p1.y == p2.y)
+            return 0;
+        double angle_temp;
+        double xx, yy;
+        xx = p2.x - p1.x;
+        yy = p2.y - p1.y;
         if (xx == 0.0)
             angle_temp = CV_PI / 2.0;
         else
