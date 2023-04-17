@@ -255,7 +255,7 @@ namespace rdsys
         }
         for (auto &it : aimWayPoints)
         {
-            double temp_waypoint_yaw = myDecision->if_reverse ? -it->theta : it->theta;
+            double temp_waypoint_yaw = myDecision->if_reverse ? it->theta + CV_PI : it->theta;
             this->makeNewGoal(it->x, it->y, aim_yaw == -1 ? temp_waypoint_yaw : aim_yaw);
         }
         this->nav_through_poses_goal_.poses = this->acummulated_poses_;

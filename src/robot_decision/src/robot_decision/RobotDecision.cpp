@@ -617,12 +617,12 @@ namespace rdsys
             after_point[i].x = cvRound(x * cos(car_orientation) + y * sin(car_orientation) + center.x);
             after_point[i].y = cvRound(-x * sin(car_orientation) + y * cos(car_orientation) + center.y);
         }
-        for (int j = 0; j < 3; ++j)
+        for (int i = 0; i < 3; ++i)
         {
-            cv::line(img, after_point[j], after_point[j + 1], cv::Scalar(0, 255, 0), 3);
-            if (j == 2)
+            cv::line(img, after_point[i], after_point[i + 1], cv::Scalar(0, 255, 0), 3);
+            if (i == 2)
             {
-                cv::line(img, after_point[j + 1], after_point[0], cv::Scalar(0, 255, 0), 3);
+                cv::line(img, after_point[i + 1], after_point[0], cv::Scalar(0, 255, 0), 3);
             }
         }
         int seek_radius = int(this->_seek_THR / float(this->_REAL_HEIGHT / 1080));

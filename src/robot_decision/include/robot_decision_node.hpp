@@ -213,7 +213,7 @@ namespace rdsys
          * @param decision
          * 决策
          * @param theta
-         * 车辆朝向（弧度制）
+         * 车辆朝向（弧度制）（偏角）
          * @return
          * 决策消息
          */
