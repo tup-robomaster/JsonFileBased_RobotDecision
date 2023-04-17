@@ -29,11 +29,7 @@ namespace rdsys
                 id = it->id;
             }
         }
-        if (distance - this->_distance_THR > 0.)
-        {
-            id = -1;
-        }
-        return id;
+        return distance - this->_distance_THR > 0. ? -1 : id;
     }
 
     std::vector<std::shared_ptr<WayPoint>> RobotDecisionSys::calculatePath(int startWapPointID, int endWapPointID)
@@ -56,10 +52,7 @@ namespace rdsys
                     waypoint_flag.insert(std::make_pair(it, true));
                     container.emplace_back(it);
                     flag2 = true;
-                    if (it == endWapPointID)
-                    {
-                        flag = false;
-                    }
+                    flag = it != endWapPointID;
                 }
                 if (flag2)
                     break;
@@ -82,20 +75,14 @@ namespace rdsys
     cv::Point2i RobotDecisionSys::createEndPointByTheta(double x1, double y1, double theta, int length)
     {
         theta = -theta;
-        if (theta < 0.)
-        {
-            theta = 2. * CV_PI - abs(theta);
-        }
+        theta = theta < 0. ? 2. * CV_PI - abs(theta) : theta;
         return cv::Point2i((int)round(x1 + length * cos(theta)), (int)round(y1 + length * sin(theta)));
     }
 
     cv::Point2i RobotDecisionSys::createEndPointByTheta(cv::Point start, double theta, int length)
     {
         theta = -theta;
-        if (theta < 0.)
-        {
-            theta = 2. * CV_PI - abs(theta);
-        }
+        theta = theta < 0. ? 2. * CV_PI - abs(theta) : theta;
         return cv::Point2i((int)round(start.x + length * cos(theta)), (int)round(start.y + length * sin(theta)));
     }
 
@@ -186,7 +173,6 @@ namespace rdsys
         for (int i = 0; i < int(arrayValue.size()); ++i)
         {
             Decision *decision = new Decision();
-
             decision->id = arrayValue[i]["id"].asInt();
             decision->name = arrayValue[i]["name"].asCString();
             Json::Value wayPointIDArray = arrayValue[i]["wayPointID"];
@@ -205,6 +191,7 @@ namespace rdsys
             decision->out_post_HP_max = arrayValue[i]["out_post_HP_max"].asInt();
             decision->base_HP_max = arrayValue[i]["base_HP_max"].asInt();
             decision->if_succession = arrayValue[i]["if_succession"].asBool();
+            decision->if_reverse = arrayValue[i]["if_reverse"].asBool();
             Json::Value enemyPositionArray = arrayValue[i]["enemyPosition"];
             for (int j = 0; j < int(enemyPositionArray.size()); ++j)
             {
@@ -264,41 +251,20 @@ namespace rdsys
                 bool check = false;
                 for (auto &jt : it->wayPointID)
                 {
-                    if (jt == wayPointID)
-                    {
-                        check = true;
-                    }
+                    check = jt == wayPointID;
                     if (check)
                         break;
                 }
                 if (!check)
                     continue;
             }
-            else if (it->robot_mode != -1 && it->robot_mode != robot_mode)
-            {
-                continue;
-            }
-            else if (it->_maxHP != -1 && _HP > it->_maxHP)
-            {
-                continue;
-            }
-            else if (it->_minHP != -1 && _HP <= it->_maxHP)
-            {
-                continue;
-            }
-            else if (it->end_time != -1 && nowtime > it->end_time)
-            {
-                continue;
-            }
-            else if (it->start_time != -1 && nowtime <= it->start_time)
-            {
-                continue;
-            }
-            else if (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max)
-            {
-                continue;
-            }
-            else if (it->base_HP_max != -1 && now_base_HP < it->base_HP_max)
+            else if ((it->robot_mode != -1 && it->robot_mode != robot_mode) ||
+                     (it->_maxHP != -1 && _HP > it->_maxHP) ||
+                     (it->_minHP != -1 && _HP <= it->_maxHP) ||
+                     (it->end_time != -1 && nowtime > it->end_time) ||
+                     (it->start_time != -1 && nowtime <= it->start_time) ||
+                     (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max) ||
+                     (it->base_HP_max != -1 && now_base_HP < it->base_HP_max))
             {
                 continue;
             }
@@ -664,7 +630,7 @@ namespace rdsys
         cv::Point2i PAN_End = this->createEndPointByTheta(center, yaw, int(seek_radius / 3));
         if (aim_yaw < 0. && aim_yaw != -1.)
         {
-            aim_yaw = 2 * CV_PI - abs(aim_yaw);
+            aim_yaw = 2. * CV_PI - abs(aim_yaw);
         }
         cv::Point2i AIM_YAW_End = this->createEndPointByTheta(center, aim_yaw, seek_radius);
         cv::Point2i Seek_End_s = this->createEndPointByTheta(center, yaw + (this->_CAR_SEEK_FOV / 2.) * CV_PI / 180., seek_radius);

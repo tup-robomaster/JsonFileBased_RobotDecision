@@ -60,6 +60,7 @@ namespace rdsys
         int decide_mode;
         int decide_wayPoint;
         bool if_succession;
+        bool if_reverse;
     } Decision;
 
     enum Mode

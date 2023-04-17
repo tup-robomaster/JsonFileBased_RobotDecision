@@ -48,6 +48,7 @@ class Lier(Node):
     def make_fake(self):
         self.ObjHP_msg = ObjHPMsg()
         self.ObjHP_msg.hp[5] = 500
+        self.ObjHP_msg.hp[6] = 600
         self.ObjHP_msg.hp[7] = 600
         for i in range(-1, 11):
             temp_pos2 = Point2f()

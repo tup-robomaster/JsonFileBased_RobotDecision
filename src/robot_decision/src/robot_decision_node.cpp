@@ -255,7 +255,8 @@ namespace rdsys
         }
         for (auto &it : aimWayPoints)
         {
-            this->makeNewGoal(it->x, it->y, aim_yaw == -1 ? it->theta : aim_yaw);
+            double temp_waypoint_yaw = myDecision->if_reverse ? -it->theta : it->theta;
+            this->makeNewGoal(it->x, it->y, aim_yaw == -1 ? temp_waypoint_yaw : aim_yaw);
         }
         this->nav_through_poses_goal_.poses = this->acummulated_poses_;
         RCLCPP_INFO(

@@ -4,7 +4,7 @@
 
 基于Json文件的机器人决策系统（JsonFileBased RobotDecision），为RoboMaster参赛机器人宏观决策设计。通过修改指定Json文件，快速修改机器人运行逻辑并约束移动区域，提供高自由度、高定制化的机器人决策逻辑定制功能。带有可视化GUI，可直观查看机器人决策状态。另有虚假消息发布者，以模拟虚拟环境来提供离线调试功能。程序运行在ROS2(Robot Operating System 2) Galactic框架下。
 
-# Version：1.1a
+# Version：1.2a
 
 # **节点（Node） 介绍：**
 
@@ -68,64 +68,64 @@ ros2 run fake_msg_publisher fake_msg_publisher_node
 
 # 项目结构
 
-├── images		//图片目录  
-├── LICENSE		//开源协议  
-├── README.md	//项目自述文件  
-└── src			//项目源码目录  
-    ├── fake_msg_publisher							//假消息发布者功能包目录  
-    │   ├── fake_msg_publisher  
-    │   │   ├── fake_msg_publisher_node.py			//节点源码  
-    │   │   ├── init.py  
-    │   │   └── pycache								//python缓存  
-    │   │       ├── fake_msg_publisher_node.cpython-38.pyc  
-    │   │       └── init.cpython-38.pyc  
-    │   ├── package.xml								//功能包依赖xml文件  
-    │   ├── resource								//功能包资源文件  
-    │   │   └── fake_msg_publisher  
-    │   ├── setup.cfg									//ROS2 setup.cfg  
-    │   ├── setup.py									//ROS2 setup.py  
-    │   └── test  
-    │       ├── test_copyright.py  
-    │       ├── test_flake8.py  
-    │       └── test_pep257.py  
-    ├── global_interface			//定义全局通用消息文件  
-    │   ├── CMakeLists.txt			//功能包CMakeLists.txt  
-    │   ├── msg					    //消息目录  
-    │   │   ├── CarPos.msg			//车辆位置消息  
-    │   │   ├── Decision.msg		//决策消息  
-    │   │   ├── DetectionArray.msg	//感知识别消息  
-    │   │   ├── Detection.msg		//自瞄识别消息  
-    │   │   ├── GameInfo.msg		//比赛信息消息  
-    │   │   ├── ObjHP.msg			//血量消息  
-    │   │   ├── Point2f.msg			//2D点消息  
-    │   │   └── Serial.msg			//下位机通讯消息  
-    │   └── package.xml			    //功能包依赖xml文件  
-    └── robot_decision				//决策功能包  
-    ├── CMakeLists.txt				//功能包CMakeLists.txt  
-    ├── include					    //头文件目录  
-    │   ├── Json					//Json处理库头文件  
-    │   │   ├── json-forwards.h  
-    │   │   └── json.h  
-    │   ├── robot_decision			//决策系统头文件目录  
-    │   │   ├── configs.h			//决策系统固定参数设定文件  
-    │   │   ├── public.h			//公共头文件  
-    │   │   ├── RobotDecision.h		//决策系统头文件  
-    │   │   └── structs.h			//结构体定义  
-    │   └── robot_decision_node.hpp	//决策节点头文件  
-    ├── launch					    //launch目录  
-    │   └── decision_node_launch.py	//带参数节点启动launch文件  
-    ├── package.xml				    //功能包依赖xml文件  
-    ├── resources					//资源目录  
-    │   └── RMUL.png				//RMUL赛场障碍图  
-    ├── sample					    //Json样例目录  
-    │   ├── decisions.json			//决策Json样例  
-    │   └── waypoints.json			//路径点Json样例  
-    └── src						    //源码目录  
-    ├── Json					    //Json处理库源码  
-    │   └── jsoncpp.cpp  
-    ├── robot_decision			    //决策系统源码  
-    │   └── RobotDecision.cpp  
-    └── robot_decision_node.cpp	    //决策节点源码  
+├── images		//图片目录
+├── LICENSE		//开源协议
+├── README.md	//项目自述文件
+└── src			//项目源码目录
+    ├── fake_msg_publisher							//假消息发布者功能包目录
+    │   ├── fake_msg_publisher
+    │   │   ├── fake_msg_publisher_node.py			//节点源码
+    │   │   ├── init.py
+    │   │   └── pycache								//python缓存
+    │   │       ├── fake_msg_publisher_node.cpython-38.pyc
+    │   │       └── init.cpython-38.pyc
+    │   ├── package.xml								//功能包依赖xml文件
+    │   ├── resource								//功能包资源文件
+    │   │   └── fake_msg_publisher
+    │   ├── setup.cfg									//ROS2 setup.cfg
+    │   ├── setup.py									//ROS2 setup.py
+    │   └── test
+    │       ├── test_copyright.py
+    │       ├── test_flake8.py
+    │       └── test_pep257.py
+    ├── global_interface			//定义全局通用消息文件
+    │   ├── CMakeLists.txt			//功能包CMakeLists.txt
+    │   ├── msg					    //消息目录
+    │   │   ├── CarPos.msg			//车辆位置消息
+    │   │   ├── Decision.msg		//决策消息
+    │   │   ├── DetectionArray.msg	//感知识别消息
+    │   │   ├── Detection.msg		//自瞄识别消息
+    │   │   ├── GameInfo.msg		//比赛信息消息
+    │   │   ├── ObjHP.msg			//血量消息
+    │   │   ├── Point2f.msg			//2D点消息
+    │   │   └── Serial.msg			//下位机通讯消息
+    │   └── package.xml			    //功能包依赖xml文件
+    └── robot_decision				//决策功能包
+    ├── CMakeLists.txt				//功能包CMakeLists.txt
+    ├── include					    //头文件目录
+    │   ├── Json					//Json处理库头文件
+    │   │   ├── json-forwards.h
+    │   │   └── json.h
+    │   ├── robot_decision			//决策系统头文件目录
+    │   │   ├── configs.h			//决策系统固定参数设定文件
+    │   │   ├── public.h			//公共头文件
+    │   │   ├── RobotDecision.h		//决策系统头文件
+    │   │   └── structs.h			//结构体定义
+    │   └── robot_decision_node.hpp	//决策节点头文件
+    ├── launch					    //launch目录
+    │   └── decision_node_launch.py	//带参数节点启动launch文件
+    ├── package.xml				    //功能包依赖xml文件
+    ├── resources					//资源目录
+    │   └── RMUL.png				//RMUL赛场障碍图
+    ├── sample					    //Json样例目录
+    │   ├── decisions.json			//决策Json样例
+    │   └── waypoints.json			//路径点Json样例
+    └── src						    //源码目录
+    ├── Json					    //Json处理库源码
+    │   └── jsoncpp.cpp
+    ├── robot_decision			    //决策系统源码
+    │   └── RobotDecision.cpp
+    └── robot_decision_node.cpp	    //决策节点源码
 
 # 决策主要流程图
 
@@ -176,41 +176,41 @@ GUI可直观显示车辆当前状态、路径点、决策状态、敌我位置�
 
 ## 决策：
 
-{  
+{
 
-    "data" : [  
+    "data" : [
 
-    {  
+    {
 
-    "id" : 0,				//决策ID  
+    "id" : 0,				//决策ID
 
-    "name" : "test1",		//决策命名  
+    "name" : "test1",		//决策命名
 
-    "wayPointID" : -1,		//决策所属路径点，-1不作判断  
+    "wayPointID" : -1,		//决策所属路径点，-1不作判断
 
-    "weight" : 500,			//决策权重  
+    "weight" : 500,			//决策权重
 
-    "start_time" : -1,		//决策容许时间范围起始，-1不作判断  
+    "start_time" : -1,		//决策容许时间范围起始，-1不作判断
 
-    "end_time" : 420,		//决策容许时间范围结束，-1不作判断  
+    "end_time" : 420,		//决策容许时间范围结束，-1不作判断
 
-    "robot_mode" : 0,		//当前机器人模式，-1不作判断  
+    "robot_mode" : 0,		//当前机器人模式，-1不作判断
 
-    "minHP" : -1,			//决策容许血量范围起始，-1不作判断  
+    "minHP" : -1,			//决策容许血量范围起始，-1不作判断
 
-    "maxHP" : -1,			//决策容许血量范围结束，-1不作判断  
+    "maxHP" : -1,			//决策容许血量范围结束，-1不作判断
 
-    "decide_mode" : 0,		//决策决定机器人模式  
+    "decide_mode" : 0,		//决策决定机器人模式
 
-    "decide_wayPoint" : 0,	//决策决定目标路径点  
+    "decide_wayPoint" : 0,	//决策决定目标路径点
 
-    "out_post_HP_max": 0,	//决策容许前哨站血量线  
+    "out_post_HP_max": 0,	//决策容许前哨站血量线
 
-    "if_succession" : false,		//决策路径是否连续，否为直达  
+    "if_succession" : false,		//决策路径是否连续，否为直达
 
-    "enemyPosition" : [[-1],[-1],[-1],[-1],[-1]],	//敌方车辆当前路径点ID，-1不作判断  
+    "enemyPosition" : [[-1],[-1],[-1],[-1],[-1]],	//敌方车辆当前路径点ID，-1不作判断
 
-    "friendPosition" : [[-1],[-1],[-1],[-1],[-1]]	//友方车辆当前路径点ID，-1不作判断  
+    "friendPosition" : [[-1],[-1],[-1],[-1],[-1]]	//友方车辆当前路径点ID，-1不作判断
 
     },
 
@@ -228,25 +228,25 @@ GUI可直观显示车辆当前状态、路径点、决策状态、敌我位置�
 
     {
 
-    "id": 0,				//路径点ID  
+    "id": 0,				//路径点ID
 
-    "name": "test1",		//路径点命名  
+    "name": "test1",		//路径点命名
 
-    "type": 0,			    //路径点类型  
+    "type": 0,			    //路径点类型
 
-    "x": 1.0,			    //路径点坐标x  
+    "x": 1.0,			    //路径点坐标x
 
-    "y": 1.0,			    //路径点坐标y  
+    "y": 1.0,			    //路径点坐标y
 
-    "angle": 0.0,		    //路径点上车辆朝向  
+    "angle": 0.0,		    //路径点上车辆朝向
 
-    "connect": [			//路径点邻接表  
+    "connect": [			//路径点邻接表
 
     1
 
     ],
 
-    "enemyWeights": [	    //路径点上敌方选择权重，-1不作判断  
+    "enemyWeights": [	    //路径点上敌方选择权重，-1不作判断
 
     -1,
 
