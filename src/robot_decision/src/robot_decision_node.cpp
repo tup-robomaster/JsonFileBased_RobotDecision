@@ -212,6 +212,9 @@ namespace rdsys
                         this->get_logger(),
                         "Failed to get Previous Decision. Try to clean up!");
                     nav_through_poses_action_client_->async_cancel_all_goals();
+                    std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_status);
+                    this->goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
+                    ulk.unlock();
                     return false;
                 }
                 auto myDecision_msg = this->makeDecisionMsg(this->excuting_decision, delta_yaw);
@@ -227,9 +230,9 @@ namespace rdsys
                     {
                         aimWayPoints = this->myRDS->calculatePath(myWayPointID, this->excuting_decision->decide_wayPoint);
                     }
-                    std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
+                    std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_joint_states);
                     this->myRDS->UpdateDecisionMap(this->excuting_decision->id, availableDecisionID, myWayPointID, yaw, cv::Point2f(_x, _y), (this->joint_states_msg != nullptr && !isnan(this->joint_states_msg->position[0])) ? yaw - this->joint_states_msg->position[0] : -1, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
-                    slk_4.unlock();
+                    slk_3.unlock();
                 }
                 return true;
             }
@@ -268,7 +271,7 @@ namespace rdsys
         auto send_goal_options =
             rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
 
-        if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(10)))
+        if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(100)))
         {
             auto future_goal_handle = nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
         }
@@ -282,9 +285,9 @@ namespace rdsys
         this->decision_pub_->publish(myDecision_msg);
         if (this->_IfShowUI)
         {
-            std::shared_lock<std::shared_timed_mutex> slk_4(this->myMutex_joint_states);
+            std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_joint_states);
             this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
-            slk_4.unlock();
+            slk_3.unlock();
         }
         return true;
     }
