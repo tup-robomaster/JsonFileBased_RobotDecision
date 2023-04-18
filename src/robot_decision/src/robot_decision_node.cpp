@@ -212,24 +212,32 @@ namespace rdsys
                         this->get_logger(),
                         "Failed to get Previous Decision. Try to clean up!");
                     nav_through_poses_action_client_->async_cancel_all_goals();
+                    slk_2.unlock();
                     std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_status);
                     this->goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
                     ulk.unlock();
                     return false;
                 }
                 auto myDecision_msg = this->makeDecisionMsg(this->excuting_decision, delta_yaw);
+                std::cout << 1 << std::endl;
                 this->decision_pub_->publish(myDecision_msg);
+                std::cout << 2 << std::endl;
                 if (this->_IfShowUI)
                 {
+                    std::cout << 3 << std::endl;
                     std::vector<std::shared_ptr<WayPoint>> aimWayPoints;
+                    std::cout << 4 << std::endl;
                     if (!this->excuting_decision->if_succession || myWayPointID == this->excuting_decision->decide_wayPoint)
                     {
+                        std::cout << 5 << std::endl;
                         aimWayPoints.emplace_back(this->myRDS->getWayPointByID(this->excuting_decision->decide_wayPoint));
                     }
                     else
                     {
+                        std::cout << 6 << std::endl;
                         aimWayPoints = this->myRDS->calculatePath(myWayPointID, this->excuting_decision->decide_wayPoint);
                     }
+                    std::cout << 7 << std::endl;
                     std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_joint_states);
                     this->myRDS->UpdateDecisionMap(this->excuting_decision->id, availableDecisionID, myWayPointID, yaw, cv::Point2f(_x, _y), (this->joint_states_msg != nullptr && !isnan(this->joint_states_msg->position[0])) ? yaw - this->joint_states_msg->position[0] : -1, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
                     slk_3.unlock();

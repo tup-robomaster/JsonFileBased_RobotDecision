@@ -74,14 +74,12 @@ namespace rdsys
 
     cv::Point2i RobotDecisionSys::createEndPointByTheta(double x1, double y1, double theta, int length)
     {
-        theta = -theta;
         theta = theta < 0. ? 2. * CV_PI - abs(theta) : theta;
         return cv::Point2i((int)round(x1 + length * cos(theta)), (int)round(y1 + length * sin(theta)));
     }
 
     cv::Point2i RobotDecisionSys::createEndPointByTheta(cv::Point start, double theta, int length)
     {
-        theta = -theta;
         theta = theta < 0. ? 2. * CV_PI - abs(theta) : theta;
         return cv::Point2i((int)round(start.x + length * cos(theta)), (int)round(start.y + length * sin(theta)));
     }
@@ -472,6 +470,7 @@ namespace rdsys
         cv::Mat dstMap;
         if (IfShowUI)
         {
+            std::cout << 8 << std::endl;
             if (!IfUIInited)
             {
                 cv::namedWindow("DecisionMapUI", cv::WindowFlags::WINDOW_NORMAL);
@@ -480,32 +479,42 @@ namespace rdsys
         }
         else
         {
+            std::cout << 8.1 << std::endl;
             return;
         }
+        std::cout << 9 << std::endl;
         car_orientation = car_orientation == -1 ? yaw : car_orientation;
+        std::cout << 10 << std::endl;
         cv::Point dst_car_center = this->transformPoint(car_center, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080);
+        std::cout << 11 << std::endl;
         dstMap = this->decisionMap.clone();
+        std::cout << 12 << std::endl;
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
+        std::cout << 13 << std::endl;
         std::vector<int> availableWayPointID;
+        std::cout << 14 << std::endl;
         for (auto &it : availableDecisionID)
         {
             availableWayPointID.emplace_back(this->getDecisionByID(it)->decide_wayPoint);
         }
+        std::cout << 15 << std::endl;
         for (int i = 0; i < int(this->wayPointMap.size()); ++i)
         {
             int temp_id = this->wayPointMap[i]->id;
             cv::Point dst_way_point_center = this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080);
+            std::cout << 15.1 << std::endl;
             if (std::find_if(id_pos_f.begin(), id_pos_f.end(), [temp_id](const auto &item)
                              { return item.second == temp_id; }) != id_pos_f.end())
             {
                 cv::rectangle(dstMap, cv::Point(dst_way_point_center.x - 28, dst_way_point_center.y - 15), cv::Point(dst_way_point_center.x + 28, dst_way_point_center.y + 15), cv::Scalar(0, 255, 0), -1);
             }
+            std::cout << 15.2 << std::endl;
             if (std::find_if(id_pos_e.begin(), id_pos_e.end(), [temp_id](const auto &item)
                              { return item.second == temp_id; }) != id_pos_e.end())
             {
                 cv::rectangle(dstMap, cv::Point(dst_way_point_center.x - 15, dst_way_point_center.y - 28), cv::Point(dst_way_point_center.x + 15, dst_way_point_center.y + 28), cv::Scalar(0, 0, 255), -1);
             }
-
+            std::cout << 15.3 << std::endl;
             if (temp_id == activateWayPointID)
             {
                 this->drawWayPoint(dstMap, dst_way_point_center, temp_id, 2);
@@ -527,7 +536,9 @@ namespace rdsys
                 }
                 this->drawWayPoint(dstMap, dst_way_point_center, temp_id, check_flag ? 1 : 0);
             }
+            std::cout << 15.4 << std::endl;
         }
+        std::cout << 16 << std::endl;
         for (int i = 0; i < int(aimWayPoints.size()); ++i)
         {
             cv::circle(dstMap, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), 3, cv::Scalar(0, 0, 255), -1);
@@ -540,16 +551,20 @@ namespace rdsys
                 cv::line(dstMap, this->transformPoint(aimWayPoints[i - 1]->x, aimWayPoints[i - 1]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
             }
         }
+        std::cout << 17 << std::endl;
         this->drawCar(dstMap, dst_car_center, car_orientation, yaw, aim_yaw);
+        std::cout << 18 << std::endl;
         cv::circle(dstMap, dst_car_center, int(this->_seek_THR / float(this->_REAL_HEIGHT / 1080)), cv::Scalar(255, 0, 0), 1);
         for (auto &it : friendPositions)
         {
             this->drawOthCar(dstMap, this->transformPoint(it.x, it.y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), it.robot_id, 0);
         }
+        std::cout << 19 << std::endl;
         for (auto &it : enemyPositions)
         {
             this->drawOthCar(dstMap, this->transformPoint(it.x, it.y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), it.robot_id, 1);
         }
+        std::cout << 20 << std::endl;
         cv::imshow("DecisionMapUI", dstMap);
         cv::resizeWindow("DecisionMapUI", cv::Size(1280, 720));
         cv::waitKey(1);
