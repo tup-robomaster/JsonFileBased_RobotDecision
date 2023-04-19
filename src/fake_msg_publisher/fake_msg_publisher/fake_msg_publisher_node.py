@@ -20,6 +20,8 @@ class Lier(Node):
             CarPosMsg, '/car_pos', 10)
         self.publisher_GameInfoMsg = self.create_publisher(
             GameInfoMsg, '/game_info', 10)
+        self.publisher_SerialMsg = self.create_publisher(
+            SerialMsg, '/serial_msg', 10)
         timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.carPos_msg = CarPosMsg()
@@ -36,20 +38,21 @@ class Lier(Node):
         temp_pos = Point2f()
         # temp_pos.x = 4.6
         # temp_pos.y = 6.4
-        temp_pos.x = 0.
-        temp_pos.y = 0.
+        temp_pos.x = 5.78
+        temp_pos.y = 4.29
         self.carPos_msg.pos[5] = temp_pos
-        self.publisher_CarHP.publish(self.ObjHP_msg)
+        self.publisher_CarHP.publish(self.objHP_msg)
         self.publisher_CarPosMsg.publish(self.carPos_msg)
         self.publisher_GameInfoMsg.publish(self.gameInfo_msg)
+        self.publisher_SerialMsg.publish(self.serial_msg)
         self.get_logger().info("Publish Fake Msgs")
 
     def make_fake(self):
-        self.ObjHP_msg = ObjHPMsg()
-        self.ObjHP_msg.header.stamp = self.get_clock().now().to_msg()
-        self.ObjHP_msg.hp[5] = 500
-        self.ObjHP_msg.hp[6] = 600
-        self.ObjHP_msg.hp[7] = 600
+        self.objHP_msg = ObjHPMsg()
+        self.objHP_msg.header.stamp = self.get_clock().now().to_msg()
+        self.objHP_msg.hp[5] = 500
+        self.objHP_msg.hp[6] = 600
+        self.objHP_msg.hp[7] = 600
         for i in range(-1, 11):
             temp_pos2 = Point2f()
             # aim_x = random.uniform(self.carPos_msg.pos[i].x - 0.1, self.carPos_msg.pos[i].x + 0.1)
@@ -71,6 +74,8 @@ class Lier(Node):
         self.gameInfo_msg = GameInfoMsg()
         self.gameInfo_msg.header.stamp = self.get_clock().now().to_msg()
         self.gameInfo_msg.game_stage = 4
+        self.serial_msg = SerialMsg()
+        self.serial_msg.header.stamp = self.get_clock().now().to_msg()
 
 
 def main(args=None):

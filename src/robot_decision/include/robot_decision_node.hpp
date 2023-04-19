@@ -37,7 +37,7 @@ namespace rdsys
     private:
         std::string _WayPointsPath;
         std::string _DecisionsPath;
-        float  _INIT_DISTANCE_THR;
+        float _INIT_DISTANCE_THR;
         float _INIT_SEEK_THR;
         bool _INIT_IsBlue;
         bool _INIT_IFSHOWUI;
@@ -225,6 +225,10 @@ namespace rdsys
          * 是否成功
          */
         bool decodeConfig();
+        /**
+         * @brief 清空目标
+         */
+        void clearGoals();
 
     public:
         RobotDecisionNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());

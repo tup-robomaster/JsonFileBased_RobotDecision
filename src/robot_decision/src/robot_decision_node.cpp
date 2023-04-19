@@ -167,8 +167,8 @@ namespace rdsys
         m.getRPY(roll, pitch, yaw);
         RCLCPP_INFO(
             this->get_logger(),
-            "Current pos: x = %lf , y = %lf , yaw = %lf",
-            _x, _y, yaw);
+            "Current status: x = %lf , y = %lf , yaw = %lf, HP: %d , MODE: %d",
+            _x, _y, yaw, _HP, mode);
         double delta_yaw;
         if (aim_yaw != -1)
         {
@@ -186,7 +186,8 @@ namespace rdsys
                 "None Aim Yaw");
         }
 
-        this->acummulated_poses_.clear();
+        this->clearGoals();
+        
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         std::vector<int> availableDecisionID;
         std::map<int, int> id_pos_f, id_pos_e;
@@ -601,6 +602,11 @@ namespace rdsys
             "Publish Aim Yaw : %lf | angle: %lf",
             theta, theta * 180. / CV_PI);
         return myDecision_msg;
+    }
+
+    void RobotDecisionNode::clearGoals()
+    {
+        this->acummulated_poses_.clear();
     }
 }
 

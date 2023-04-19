@@ -256,13 +256,13 @@ namespace rdsys
                 if (!check)
                     continue;
             }
-            else if ((it->robot_mode != -1 && it->robot_mode != robot_mode) ||
-                     (it->_maxHP != -1 && _HP > it->_maxHP) ||
-                     (it->_minHP != -1 && _HP <= it->_maxHP) ||
-                     (it->end_time != -1 && nowtime > it->end_time) ||
-                     (it->start_time != -1 && nowtime <= it->start_time) ||
-                     (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max) ||
-                     (it->base_HP_max != -1 && now_base_HP < it->base_HP_max))
+            if ((it->robot_mode != -1 && it->robot_mode != robot_mode) ||
+                (it->_maxHP != -1 && _HP > it->_maxHP) ||
+                (it->_minHP != -1 && _HP <= it->_minHP) ||
+                (it->end_time != -1 && nowtime > it->end_time) ||
+                (it->start_time != -1 && nowtime <= it->start_time) ||
+                (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max) ||
+                (it->base_HP_max != -1 && now_base_HP < it->base_HP_max))
             {
                 continue;
             }
