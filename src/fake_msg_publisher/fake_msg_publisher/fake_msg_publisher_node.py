@@ -38,8 +38,8 @@ class Lier(Node):
         temp_pos = Point2f()
         # temp_pos.x = 4.6
         # temp_pos.y = 6.4
-        temp_pos.x = 5.78
-        temp_pos.y = 4.29
+        temp_pos.x = 3.82
+        temp_pos.y = 7.0
         self.carPos_msg.pos[5] = temp_pos
         self.publisher_CarHP.publish(self.objHP_msg)
         self.publisher_CarPosMsg.publish(self.carPos_msg)
@@ -50,7 +50,7 @@ class Lier(Node):
     def make_fake(self):
         self.objHP_msg = ObjHPMsg()
         self.objHP_msg.header.stamp = self.get_clock().now().to_msg()
-        self.objHP_msg.hp[5] = 200
+        self.objHP_msg.hp[5] = 500
         self.objHP_msg.hp[6] = 600
         self.objHP_msg.hp[7] = 600
         for i in range(-1, 11):

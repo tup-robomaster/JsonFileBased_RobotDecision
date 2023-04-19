@@ -1,7 +1,7 @@
 {
     "config" : {
         "Debug" : false,
-        "WayPointsPATH" : "waypoints.json",
+        "WayPointsPATH" : "waypoints_0.json",
         "DecisionsPATH" : "decisions.json",
         "MAP_PATH" : "RMUL.png",
         "REAL_WIDTH" : 12.0,

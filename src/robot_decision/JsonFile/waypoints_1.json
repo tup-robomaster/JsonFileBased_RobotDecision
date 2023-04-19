@@ -1,0 +1,59 @@
+{
+    "data": [
+        {
+            "id": 0,
+            "name": "supply",
+            "type": 0,
+            "x": 0.5,
+            "y": 0.5,
+            "angle": 0.0,
+            "connect": [
+                1
+            ],
+            "enemyWeights": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ]
+        },
+        {
+            "id": 1,
+            "name": "INIT",
+            "type": 0,
+            "x": 3.18,
+            "y": 4.91,
+            "angle": 0.0,
+            "connect": [
+                0,
+                2
+            ],
+            "enemyWeights": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ]
+        },
+        {
+            "id": 2,
+            "name": "FirePoint",
+            "type": 0,
+            "x": 3.82,
+            "y": 7.0,
+            "angle": 0.0,
+            "connect": [
+                1
+            ],
+            "enemyWeights": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+            ]
+        }
+    ]
+}
