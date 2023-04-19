@@ -165,6 +165,10 @@ namespace rdsys
         }
         tf2::Matrix3x3 m(nv2_quat);
         m.getRPY(roll, pitch, yaw);
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Current pos: x = %lf , y = %lf , yaw = %lf",
+            _x, _y, yaw);
         double delta_yaw;
         if (aim_yaw != -1)
         {
@@ -212,34 +216,14 @@ namespace rdsys
                         this->get_logger(),
                         "Failed to get Previous Decision. Try to clean up!");
                     nav_through_poses_action_client_->async_cancel_all_goals();
-                    slk_2.unlock();
-                    std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_status);
-                    this->goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
-                    ulk.unlock();
                     return false;
                 }
                 auto myDecision_msg = this->makeDecisionMsg(this->excuting_decision, delta_yaw);
-                std::cout << 1 << std::endl;
                 this->decision_pub_->publish(myDecision_msg);
-                std::cout << 2 << std::endl;
                 if (this->_IfShowUI)
                 {
-                    std::cout << 3 << std::endl;
-                    std::vector<std::shared_ptr<WayPoint>> aimWayPoints;
-                    std::cout << 4 << std::endl;
-                    if (!this->excuting_decision->if_succession || myWayPointID == this->excuting_decision->decide_wayPoint)
-                    {
-                        std::cout << 5 << std::endl;
-                        aimWayPoints.emplace_back(this->myRDS->getWayPointByID(this->excuting_decision->decide_wayPoint));
-                    }
-                    else
-                    {
-                        std::cout << 6 << std::endl;
-                        aimWayPoints = this->myRDS->calculatePath(myWayPointID, this->excuting_decision->decide_wayPoint);
-                    }
-                    std::cout << 7 << std::endl;
                     std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_joint_states);
-                    this->myRDS->UpdateDecisionMap(this->excuting_decision->id, availableDecisionID, myWayPointID, yaw, cv::Point2f(_x, _y), (this->joint_states_msg != nullptr && !isnan(this->joint_states_msg->position[0])) ? yaw - this->joint_states_msg->position[0] : -1, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
+                    this->myRDS->UpdateDecisionMap(this->excuting_decision->id, availableDecisionID, myWayPointID, yaw, cv::Point2f(_x, _y), (this->joint_states_msg != nullptr && !isnan(this->joint_states_msg->position[0])) ? yaw + this->joint_states_msg->position[0] : -1, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e);
                     slk_3.unlock();
                 }
                 return true;
@@ -256,9 +240,11 @@ namespace rdsys
         {
             aimWayPoints = this->myRDS->calculatePath(myWayPointID, myDecision->decide_wayPoint);
         }
-
         if (aimWayPoints.empty())
         {
+            RCLCPP_ERROR(
+                this->get_logger(),
+                "Failed to calculatePath");
             return false;
         }
         for (auto &it : aimWayPoints)
@@ -295,7 +281,7 @@ namespace rdsys
         if (this->_IfShowUI)
         {
             std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_joint_states);
-            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e, aimWayPoints);
+            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? yaw + this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e);
             slk_3.unlock();
         }
         return true;
@@ -593,7 +579,7 @@ namespace rdsys
         myDecision_msg.header.stamp = this->get_clock()->now();
         myDecision_msg.set__decision_id(decision->id);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
-        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < this->_TIME_THR && decision->decide_mode < 2)
+        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < this->_TIME_THR && decision->decide_mode < 2 && !this->autoaim_msg->is_target_lost)
         {
             myDecision_msg.set__mode(Mode::AUTOAIM);
         }

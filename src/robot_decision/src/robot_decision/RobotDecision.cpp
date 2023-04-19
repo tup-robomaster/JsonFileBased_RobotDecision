@@ -421,7 +421,7 @@ namespace rdsys
             angle_temp = CV_PI + angle_temp;
         else if ((xx >= 0.0) && (yy < 0.0))
             angle_temp = CV_PI * 2.0 - angle_temp;
-        return CV_2PI - (angle_temp);
+        return angle_temp;
     }
 
     double RobotDecisionSys::calculateAngle(cv::Point2d p1, cv::Point2d p2)
@@ -442,7 +442,7 @@ namespace rdsys
             angle_temp = CV_PI + angle_temp;
         else if ((xx >= 0.0) && (yy < 0.0))
             angle_temp = CV_PI * 2.0 - angle_temp;
-        return CV_2PI - (angle_temp);
+        return angle_temp;
     }
 
     float RobotDecisionSys::getDistanceTHR()
@@ -465,12 +465,11 @@ namespace rdsys
         this->_seek_THR = thr;
     }
 
-    void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e, std::vector<std::shared_ptr<WayPoint>> &aimWayPoints)
+    void RobotDecisionSys::UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e)
     {
         cv::Mat dstMap;
         if (IfShowUI)
         {
-            std::cout << 8 << std::endl;
             if (!IfUIInited)
             {
                 cv::namedWindow("DecisionMapUI", cv::WindowFlags::WINDOW_NORMAL);
@@ -479,42 +478,31 @@ namespace rdsys
         }
         else
         {
-            std::cout << 8.1 << std::endl;
             return;
         }
-        std::cout << 9 << std::endl;
         car_orientation = car_orientation == -1 ? yaw : car_orientation;
-        std::cout << 10 << std::endl;
         cv::Point dst_car_center = this->transformPoint(car_center, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080);
-        std::cout << 11 << std::endl;
         dstMap = this->decisionMap.clone();
-        std::cout << 12 << std::endl;
         int activateWayPointID = this->getDecisionByID(activateDecisionID)->decide_wayPoint;
-        std::cout << 13 << std::endl;
         std::vector<int> availableWayPointID;
-        std::cout << 14 << std::endl;
         for (auto &it : availableDecisionID)
         {
             availableWayPointID.emplace_back(this->getDecisionByID(it)->decide_wayPoint);
         }
-        std::cout << 15 << std::endl;
         for (int i = 0; i < int(this->wayPointMap.size()); ++i)
         {
             int temp_id = this->wayPointMap[i]->id;
             cv::Point dst_way_point_center = this->transformPoint(this->wayPointMap[i]->x, this->wayPointMap[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080);
-            std::cout << 15.1 << std::endl;
             if (std::find_if(id_pos_f.begin(), id_pos_f.end(), [temp_id](const auto &item)
                              { return item.second == temp_id; }) != id_pos_f.end())
             {
                 cv::rectangle(dstMap, cv::Point(dst_way_point_center.x - 28, dst_way_point_center.y - 15), cv::Point(dst_way_point_center.x + 28, dst_way_point_center.y + 15), cv::Scalar(0, 255, 0), -1);
             }
-            std::cout << 15.2 << std::endl;
             if (std::find_if(id_pos_e.begin(), id_pos_e.end(), [temp_id](const auto &item)
                              { return item.second == temp_id; }) != id_pos_e.end())
             {
                 cv::rectangle(dstMap, cv::Point(dst_way_point_center.x - 15, dst_way_point_center.y - 28), cv::Point(dst_way_point_center.x + 15, dst_way_point_center.y + 28), cv::Scalar(0, 0, 255), -1);
             }
-            std::cout << 15.3 << std::endl;
             if (temp_id == activateWayPointID)
             {
                 this->drawWayPoint(dstMap, dst_way_point_center, temp_id, 2);
@@ -536,35 +524,17 @@ namespace rdsys
                 }
                 this->drawWayPoint(dstMap, dst_way_point_center, temp_id, check_flag ? 1 : 0);
             }
-            std::cout << 15.4 << std::endl;
         }
-        std::cout << 16 << std::endl;
-        for (int i = 0; i < int(aimWayPoints.size()); ++i)
-        {
-            cv::circle(dstMap, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), 3, cv::Scalar(0, 0, 255), -1);
-            if (i == 0)
-            {
-                cv::line(dstMap, dst_car_center, this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
-            }
-            else
-            {
-                cv::line(dstMap, this->transformPoint(aimWayPoints[i - 1]->x, aimWayPoints[i - 1]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), this->transformPoint(aimWayPoints[i]->x, aimWayPoints[i]->y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), cv::Scalar(0, 0, 255), 1);
-            }
-        }
-        std::cout << 17 << std::endl;
         this->drawCar(dstMap, dst_car_center, car_orientation, yaw, aim_yaw);
-        std::cout << 18 << std::endl;
         cv::circle(dstMap, dst_car_center, int(this->_seek_THR / float(this->_REAL_HEIGHT / 1080)), cv::Scalar(255, 0, 0), 1);
         for (auto &it : friendPositions)
         {
             this->drawOthCar(dstMap, this->transformPoint(it.x, it.y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), it.robot_id, 0);
         }
-        std::cout << 19 << std::endl;
         for (auto &it : enemyPositions)
         {
             this->drawOthCar(dstMap, this->transformPoint(it.x, it.y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), it.robot_id, 1);
         }
-        std::cout << 20 << std::endl;
         cv::imshow("DecisionMapUI", dstMap);
         cv::resizeWindow("DecisionMapUI", cv::Size(1280, 720));
         cv::waitKey(1);
@@ -629,8 +599,8 @@ namespace rdsys
         {
             int x = point[i].x - center.x;
             int y = point[i].y - center.y;
-            after_point[i].x = cvRound(x * cos(car_orientation) + y * sin(car_orientation) + center.x);
-            after_point[i].y = cvRound(-x * sin(car_orientation) + y * cos(car_orientation) + center.y);
+            after_point[i].x = cvRound(x * cos(-car_orientation) + y * sin(-car_orientation) + center.x);
+            after_point[i].y = cvRound(-x * sin(-car_orientation) + y * cos(-car_orientation) + center.y);
         }
         for (int i = 0; i < 3; ++i)
         {

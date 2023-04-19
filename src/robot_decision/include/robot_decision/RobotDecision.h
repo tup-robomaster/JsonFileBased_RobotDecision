@@ -313,7 +313,7 @@ namespace rdsys
          * @param aimWayPoints
          * 决策路径点的集合
          */
-        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e, std::vector<std::shared_ptr<WayPoint>> &aimWayPoints);
+        void UpdateDecisionMap(int &activateDecisionID, std::vector<int> &availableDecisionID, int &nowWayPoint, double yaw, cv::Point2f car_center, double car_orientation, double aim_yaw, std::vector<RobotPosition> &friendPositions, std::vector<RobotPosition> &enemyPositions, std::map<int, int> &id_pos_f, std::map<int, int> &id_pos_e);
 
     private:
         /**
