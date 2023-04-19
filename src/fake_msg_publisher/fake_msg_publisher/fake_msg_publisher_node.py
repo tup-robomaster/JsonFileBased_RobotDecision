@@ -50,7 +50,7 @@ class Lier(Node):
     def make_fake(self):
         self.objHP_msg = ObjHPMsg()
         self.objHP_msg.header.stamp = self.get_clock().now().to_msg()
-        self.objHP_msg.hp[5] = 500
+        self.objHP_msg.hp[5] = 200
         self.objHP_msg.hp[6] = 600
         self.objHP_msg.hp[7] = 600
         for i in range(-1, 11):
