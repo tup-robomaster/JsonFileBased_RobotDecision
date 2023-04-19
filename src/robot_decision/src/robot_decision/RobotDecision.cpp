@@ -186,8 +186,8 @@ namespace rdsys
             decision->_maxHP = arrayValue[i]["maxHP"].asInt();
             decision->decide_mode = arrayValue[i]["decide_mode"].asInt();
             decision->decide_wayPoint = arrayValue[i]["decide_wayPoint"].asInt();
-            decision->out_post_HP_max = arrayValue[i]["out_post_HP_max"].asInt();
-            decision->base_HP_max = arrayValue[i]["base_HP_max"].asInt();
+            decision->out_post_HP_min = arrayValue[i]["out_post_HP_min"].asInt();
+            decision->base_HP_min = arrayValue[i]["base_HP_min"].asInt();
             decision->if_succession = arrayValue[i]["if_succession"].asBool();
             decision->if_reverse = arrayValue[i]["if_reverse"].asBool();
             Json::Value enemyPositionArray = arrayValue[i]["enemyPosition"];
@@ -261,8 +261,8 @@ namespace rdsys
                 (it->_minHP != -1 && _HP <= it->_minHP) ||
                 (it->end_time != -1 && nowtime > it->end_time) ||
                 (it->start_time != -1 && nowtime <= it->start_time) ||
-                (it->out_post_HP_max != -1 && now_out_post_HP < it->out_post_HP_max) ||
-                (it->base_HP_max != -1 && now_base_HP < it->base_HP_max))
+                (it->out_post_HP_min != -1 && now_out_post_HP < it->out_post_HP_min) ||
+                (it->base_HP_min != -1 && now_base_HP < it->base_HP_min))
             {
                 continue;
             }

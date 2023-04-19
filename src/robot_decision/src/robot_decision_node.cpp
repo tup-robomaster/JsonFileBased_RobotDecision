@@ -97,7 +97,7 @@ namespace rdsys
         this->serial_sub_.subscribe(this, "/serial_msg", qos.get_rmw_qos_profile());
 
         this->joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", qos, std::bind(&RobotDecisionNode::jointStateCallBack, this, _1));
-        this->autoaim_sub_ = this->create_subscription<global_interface::msg::Autoaim>("/armor_info", qos, std::bind(&RobotDecisionNode::autoaimCallBack, this, _1));
+        this->autoaim_sub_ = this->create_subscription<global_interface::msg::Autoaim>("/armor_detector/armor_msg", qos, std::bind(&RobotDecisionNode::autoaimCallBack, this, _1));
         this->detectionArray_sub_ = this->create_subscription<global_interface::msg::DetectionArray>("perception_detector/perception_array", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->objHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));

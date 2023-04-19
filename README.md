@@ -24,6 +24,7 @@ ros2 run robot_decision robot_decision_node
 | perception_detector/perception_array    | global_interface::msg::DetectionArray                          | 感知识别信息          |
 | navigate_through_poses/_action/feedback | nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage | Nav2 Action反馈信息   |
 | navigate_through_poses/_action/status   | action_msgs::msg::GoalStatusArray                              | Nav2 Action Goal 状态 |
+| /armor_detector/armor_msg               | global_interface::msg::Autoaim                                 | 自瞄检测信息          |
 
 ### 发布：
 
@@ -66,7 +67,7 @@ ros2 run fake_msg_publisher fake_msg_publisher_node
 
 ![1681056559470](image/README/1681056559470.png)
 
-# 项目结构
+# 项目结构 （OUT-OF-DATA）
 
 ├── images		//图片目录
 ├── LICENSE		//开源协议
@@ -184,13 +185,13 @@ GUI可直观显示车辆当前状态、路径点、决策状态、敌我位置�
 
     "id" : 0,				//决策ID
 
-    "name" : "test1",		//决策命名
+    "name" : "test1",			//决策命名
 
-    "wayPointID" : -1,		//决策所属路径点，-1不作判断
+    "wayPointID" : [-1],		//决策所属路径点，填写多个时，只要当前路径点在列表内，便通过判断，-1不作判断
 
-    "weight" : 500,			//决策权重
+    "weight" : 500,			//决策权重，符合条件的决策中优先取权重大的，大权重决策可覆盖正在执行的决策
 
-    "start_time" : -1,		//决策容许时间范围起始，-1不作判断
+    "start_time" : -1,			//决策容许时间范围起始，-1不作判断
 
     "end_time" : 420,		//决策容许时间范围结束，-1不作判断
 
@@ -200,17 +201,19 @@ GUI可直观显示车辆当前状态、路径点、决策状态、敌我位置�
 
     "maxHP" : -1,			//决策容许血量范围结束，-1不作判断
 
-    "decide_mode" : 0,		//决策决定机器人模式
+    "decide_mode" : 0,		//决策决定机器人模式[6：正常巡航，7：扭腰巡航，8：自瞄]
 
-    "decide_wayPoint" : 0,	//决策决定目标路径点
+    "decide_wayPoint" : 0,		//决策决定目标路径点（id）
 
-    "out_post_HP_max": 0,	//决策容许前哨站血量线
+    "out_post_HP_min": 0,		//决策容许前哨站血量线，-1不作判断
 
     "if_succession" : false,		//决策路径是否连续，否为直达
 
-    "enemyPosition" : [[-1],[-1],[-1],[-1],[-1]],	//敌方车辆当前路径点ID，-1不作判断
+    "if_reverse" : true,		//是否返程
 
-    "friendPosition" : [[-1],[-1],[-1],[-1],[-1]]	//友方车辆当前路径点ID，-1不作判断
+    "enemyPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]],	//敌方车辆当前路径点ID，填写多个时，只要目标单位所在路径点在列表内，便通过判断，-1不作判断 顺序： 英雄 工程 3，4，5步兵，哨兵（UNTESTED）
+
+    "friendPosition" : [[-1],[-1],[-1],[-1],[-1],[-1]]	//友方车辆当前路径点ID，填写多个时，只要目标单位所在路径点在列表内，便通过判断，-1不作判断 顺序： 英雄 工程 3，4，5步兵，哨兵（UNTESTED）
 
     },
 
@@ -232,21 +235,21 @@ GUI可直观显示车辆当前状态、路径点、决策状态、敌我位置�
 
     "name": "test1",		//路径点命名
 
-    "type": 0,			    //路径点类型
+    "type": 0,			    //路径点类型（UNUSED）
 
-    "x": 1.0,			    //路径点坐标x
+    "x": 1.0,			    //路径点坐标x（真实坐标）
 
-    "y": 1.0,			    //路径点坐标y
+    "y": 1.0,			    //路径点坐标y（真实坐标）
 
-    "angle": 0.0,		    //路径点上车辆朝向
+    "angle": 0.0,		    //路径点上车辆朝向（弧度制）（UNTESTED）
 
-    "connect": [			//路径点邻接表
+    "connect": [			   //路径点邻接表（配合决策if_succession使用）
 
     1
 
     ],
 
-    "enemyWeights": [	    //路径点上敌方选择权重，-1不作判断
+    "enemyWeights": [	    //路径点上敌方选择权重，-1不作判断（UNUSED）
 
     -1,
 
@@ -267,3 +270,52 @@ GUI可直观显示车辆当前状态、路径点、决策状态、敌我位置�
     ]
 
 }
+
+## CONFIG 配置文件：
+
+
+"Debug" : false,						//是否Debug（UNUSED）
+
+"WayPointsPATH" : "waypoints.json",		//shared/JsonFile文件夹下路径点文件命名
+
+"DecisionsPATH" : "decisions.json",			//shared/JsonFile文件夹下决策文件命名
+
+"MAP_PATH" : "RMUL.png",				//shared/resources文件夹下map命名
+
+"REAL_WIDTH" : 12.0,					//场地真实宽度
+
+"REAL_HEIGHT": 8.0,					//场地真实高度
+
+"GOAL_TIME_THR_SEC" : 2,				//目标执行时间阈值（UNUSED）
+
+"TIME_THR" : 1,						//消息有效时间（秒）
+
+"CAR_SEEK_FOV" : 70.0,					//车辆自瞄FOV
+
+"INIT_DISTANCE_THR" : 1.0,				//路径点判断用距离阈值（米）
+
+"INIT_SEEK_THR" : 5.0,					//索敌圈半径（米）
+
+"INIT_ISBLUE" : false,					//红蓝方判断标志位 *赛前修改  ！important*
+
+"INIT_IFSHOWUI" : true,					//是否显示UI
+
+"INIT_SELFINDEX" : 5,					//车辆当前索引（0-5）
+
+"INIT_FRIENDOUTPOSTINDEX" : 6,			//前哨站当前索引（0-7）
+
+"INIT_FRIENDBASEINDEX" : 7,				//基地当前索引（0-7）
+
+"STEP_DISTANCE" : 0.1,					//障碍判断步进（米）
+
+"GAME_TIME" : 420						//比赛持续时间（秒）
+
+## 决策、路径文件编写注意事项：
+
+1.对于红蓝方，路径点文件应编写两个以适应场地换向
+
+2.不论决策还是路径点文件，每次修改后应执行install以更新shared目录
+
+3.不论决策还是路径点文件，决策与路径点的ID应唯一
+
+4.应尽量少的使用-1来跳过判断，避免出现意料外的情况

@@ -52,8 +52,8 @@ namespace rdsys
         int end_time;
         int _minHP;
         int _maxHP;
-        int out_post_HP_max;
-        int base_HP_max;
+        int out_post_HP_min;
+        int base_HP_min;
         std::vector<std::vector<int>> enemy_position;
         std::vector<std::vector<int>> friend_position;
         // decision
