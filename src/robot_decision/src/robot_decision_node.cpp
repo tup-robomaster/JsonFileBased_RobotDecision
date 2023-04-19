@@ -580,7 +580,7 @@ namespace rdsys
         myDecision_msg.header.stamp = this->get_clock()->now();
         myDecision_msg.set__decision_id(decision->id);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
-        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < this->_TIME_THR && decision->decide_mode < 8 && !this->autoaim_msg->is_target_lost)
+        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < this->_TIME_THR && decision->decide_mode < Mode::AUTOAIM && !this->autoaim_msg->is_target_lost)
         {
             myDecision_msg.set__mode(Mode::AUTOAIM);
         }
