@@ -535,7 +535,7 @@ namespace rdsys
         this->get_parameter("distance_thr", this->_distance_THR_Temp);
         this->get_parameter("seek_thr", this->_seek_THR_Temp);
         this->get_parameter("IfShowUI", this->_IfShowUI_Temp);
-        this->get_parameter("IsRed", this->_IsBlue_Temp);
+        this->get_parameter("IsBlue", this->_IsBlue_Temp);
 
         if (this->myRDS->getDistanceTHR() != this->_distance_THR_Temp)
         {

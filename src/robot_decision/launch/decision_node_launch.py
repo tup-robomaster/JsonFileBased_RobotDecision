@@ -19,10 +19,8 @@ def generate_launch_description():
         executable="robot_decision_node",
         parameters=[{'distance_thr', 5.0},
                     {'seek_thr', 5.0},
-                    {'IsRed', False},
-                    {'IfShowUI', False},
-                    {'SelfIndex', 0},
-                    {'friendOutPostIndex', 0}],
+                    {'IsBlue', False},
+                    {'IfShowUI', False}],
         output="screen"
     )
 

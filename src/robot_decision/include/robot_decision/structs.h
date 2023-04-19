@@ -65,9 +65,9 @@ namespace rdsys
 
     enum Mode
     {
-        AUTOAIM = 2,
-        CRUISE = 1,
-        ADVANCEDCRUISE = 0
+        AUTOAIM = 8,
+        CRUISE = 7,
+        ADVANCEDCRUISE = 6
     };
 
     enum GameStage
