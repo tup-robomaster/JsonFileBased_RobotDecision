@@ -70,62 +70,116 @@ ros2 run fake_msg_publisher fake_msg_publisher_node
 # 项目结构 （OUT-OF-DATA）
 
 ├── images		//图片目录
+
 ├── LICENSE		//开源协议
+
 ├── README.md	//项目自述文件
+
 └── src			//项目源码目录
+
     ├── fake_msg_publisher							//假消息发布者功能包目录
+
     │   ├── fake_msg_publisher
+
     │   │   ├── fake_msg_publisher_node.py			//节点源码
+
     │   │   ├── init.py
+
     │   │   └── pycache								//python缓存
+
     │   │       ├── fake_msg_publisher_node.cpython-38.pyc
+
     │   │       └── init.cpython-38.pyc
+
     │   ├── package.xml								//功能包依赖xml文件
+
     │   ├── resource								//功能包资源文件
+
     │   │   └── fake_msg_publisher
     │   ├── setup.cfg									//ROS2 setup.cfg
+
     │   ├── setup.py									//ROS2 setup.py
+
     │   └── test
     │       ├── test_copyright.py
+
     │       ├── test_flake8.py
+
     │       └── test_pep257.py
+
     ├── global_interface			//定义全局通用消息文件
+
     │   ├── CMakeLists.txt			//功能包CMakeLists.txt
+
     │   ├── msg					    //消息目录
+
     │   │   ├── CarPos.msg			//车辆位置消息
+
     │   │   ├── Decision.msg		//决策消息
+
     │   │   ├── DetectionArray.msg	//感知识别消息
+
     │   │   ├── Detection.msg		//自瞄识别消息
+
     │   │   ├── GameInfo.msg		//比赛信息消息
+
     │   │   ├── ObjHP.msg			//血量消息
+
     │   │   ├── Point2f.msg			//2D点消息
+
     │   │   └── Serial.msg			//下位机通讯消息
+
     │   └── package.xml			    //功能包依赖xml文件
+
     └── robot_decision				//决策功能包
+
     ├── CMakeLists.txt				//功能包CMakeLists.txt
+
     ├── include					    //头文件目录
+
     │   ├── Json					//Json处理库头文件
+
     │   │   ├── json-forwards.h
+
     │   │   └── json.h
+
     │   ├── robot_decision			//决策系统头文件目录
-    │   │   ├── configs.h			//决策系统固定参数设定文件
+
     │   │   ├── public.h			//公共头文件
+
     │   │   ├── RobotDecision.h		//决策系统头文件
+
     │   │   └── structs.h			//结构体定义
+
     │   └── robot_decision_node.hpp	//决策节点头文件
+
     ├── launch					    //launch目录
+
     │   └── decision_node_launch.py	//带参数节点启动launch文件
+
     ├── package.xml				    //功能包依赖xml文件
+
     ├── resources					//资源目录
+
     │   └── RMUL.png				//RMUL赛场障碍图
+
     ├── sample					    //Json样例目录
+
     │   ├── decisions.json			//决策Json样例
+
     │   └── waypoints.json			//路径点Json样例
+
     └── src						    //源码目录
+
     ├── Json					    //Json处理库源码
+
     │   └── jsoncpp.cpp
+
+
     ├── robot_decision			    //决策系统源码
+
     │   └── RobotDecision.cpp
+
     └── robot_decision_node.cpp	    //决策节点源码
 
 # 决策主要流程图

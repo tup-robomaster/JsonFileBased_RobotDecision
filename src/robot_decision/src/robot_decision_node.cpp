@@ -45,7 +45,7 @@ namespace rdsys
         this->_DecisionsPath = package_share_directory + "/JsonFile/" + arrayValue["DecisionsPATH"].asCString();
         this->_INIT_DISTANCE_THR = arrayValue["INIT_DISTANCE_THR"].asFloat();
         this->_INIT_SEEK_THR = arrayValue["INIT_SEEK_THR"].asFloat();
-        this->_INIT_IsBlue = arrayValue["INIT_IsBlue"].asBool();
+        this->_INIT_IsBlue = arrayValue["INIT_ISBLUE"].asBool();
         this->_INIT_IFSHOWUI = arrayValue["INIT_IFSHOWUI"].asBool();
         this->_INIT_SELFINDEX = arrayValue["INIT_SELFINDEX"].asInt();
         this->_INIT_FRIENDOUTPOSTINDEX = arrayValue["INIT_FRIENDOUTPOSTINDEX"].asInt();
@@ -65,7 +65,7 @@ namespace rdsys
     {
         this->declare_parameter<float>("distance_thr", this->_INIT_DISTANCE_THR);
         this->declare_parameter<float>("seek_thr", this->_INIT_SEEK_THR);
-        this->declare_parameter<bool>("IsRed", this->_INIT_IsBlue);
+        this->declare_parameter<bool>("IsBlue", this->_INIT_IsBlue);
         this->declare_parameter<bool>("IfShowUI", this->_INIT_IFSHOWUI);
 
         this->_selfIndex = this->_INIT_SELFINDEX;
@@ -139,7 +139,7 @@ namespace rdsys
                 _x = transformStamped->transform.translation.x;
                 _y = transformStamped->transform.translation.y;
             }
-            else if (this->_transformStamped != nullptr && this->get_clock()->now().seconds() - this->_transformStamped->header.stamp.sec < this->_TIME_THR)
+            else if (this->_transformStamped != nullptr && abs(this->get_clock()->now().seconds() - this->_transformStamped->header.stamp.sec) < this->_TIME_THR)
             {
                 _x = this->_transformStamped->transform.translation.x;
                 _y = this->_transformStamped->transform.translation.y;
@@ -282,7 +282,7 @@ namespace rdsys
         if (this->_IfShowUI)
         {
             std::shared_lock<std::shared_timed_mutex> slk_3(this->myMutex_joint_states);
-            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, this->joint_states_msg != nullptr ? yaw + this->joint_states_msg->position[0] : -1, cv::Point2f(_x, _y), yaw, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e);
+            this->myRDS->UpdateDecisionMap(myDecision->id, availableDecisionID, myWayPointID, yaw, cv::Point2f(_x, _y), this->joint_states_msg != nullptr ? yaw + this->joint_states_msg->position[0] : -1, aim_yaw, friendPositions, enemyPositions, id_pos_f, id_pos_e);
             slk_3.unlock();
         }
         return true;
@@ -408,7 +408,7 @@ namespace rdsys
             transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map_decision", "base_link", tf2::TimePointZero));
             this->_transformStamped = transformStamped;
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-            if (this->detectionArray_msg != nullptr && this->get_clock()->now().seconds() - this->detectionArray_msg->header.stamp.sec <= this->_TIME_THR)
+            if (this->detectionArray_msg != nullptr && abs(this->get_clock()->now().seconds() - this->detectionArray_msg->header.stamp.sec) <= this->_TIME_THR)
             {
                 for (auto it : this->detectionArray_msg->detections)
                 {
