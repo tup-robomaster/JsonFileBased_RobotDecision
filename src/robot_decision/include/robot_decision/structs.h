@@ -67,7 +67,9 @@ namespace rdsys
     {
         AUTOAIM = 8,
         CRUISE = 7,
-        ADVANCEDCRUISE = 6
+        ADVANCEDCRUISE = 6,
+        MANUAL_ATTACK = 10,
+        MANUAL_BACKDEFENSE = 11
     };
 
     enum GameStage

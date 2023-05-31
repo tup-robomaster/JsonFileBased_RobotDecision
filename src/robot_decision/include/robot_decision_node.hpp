@@ -34,6 +34,7 @@ namespace rdsys
     {
     public:
         bool _Debug = false;
+        bool _auto_mode = true;
 
     private:
         std::string _WayPointsPath;
@@ -149,7 +150,7 @@ namespace rdsys
          * @param theta
          * 目标theta角
          */
-        void makeNewGoal(double x, double y, double &theta);
+        void makeNewGoal(double x, double y, double theta);
         /**
          * @brief 将消息位置转换成RobotPosition结构体
          * @param pos
@@ -225,7 +226,20 @@ namespace rdsys
          * 决策消息
          */
         global_interface::msg::Decision makeDecisionMsg(std::shared_ptr<Decision> decision, double &theta);
-
+        /**
+         * @brief 手动创建决策消息
+         * @param mode
+         * 决策模式
+         * @param theta
+         * 车辆朝向（弧度制）（偏角）
+         * @param _x
+         * 决策x坐标
+         * @param _y
+         * 决策y坐标
+         * @return
+         * 决策消息
+         */
+        global_interface::msg::Decision makeDecisionMsg(int mode, double theta, float _x, float _y);
         /**
          * @brief 载入配置信息
          * @return
