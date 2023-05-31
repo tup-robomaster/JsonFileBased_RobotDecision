@@ -231,18 +231,24 @@ namespace rdsys
 
         /**
          * @brief 决策打击目标
+         * @param _IsBlue
+         * 是否是蓝方
          * @param mypos
          * 当前机器人位置
          * @param enemyPositions
          * 敌方机器人位置
          * @param detectedEnemy
          * 检测到的敌方目标ID
-         * @param myWayPointID
-         * 当前机器人所在路径点ID
-         * @return
-         * 目标机器人id
+         * @param enemyHP
+         * 敌方血量(仅填入车辆血量)
+         * @param distance_weight
+         * 距离权重
+         * @param hp_weight
+         * 血量权重
+         * @return 
+         * 打击权重
          */
-        int decideAimTarget(RobotPosition &mypos, std::vector<RobotPosition> &enemyPositions, std::vector<int> &detectedEnemy, int &myWayPointID);
+        std::map<int, float> decideAimTarget(bool _IsBlue, RobotPosition &mypos, std::vector<RobotPosition> &enemyPositions, std::vector<int> &enemyHP, float distance_weight_ratio, float hp_weight_ratio, bool enemyOutpostDown);
         /**
          * @brief 决策yaw轴角度，通用坐标系
          * @param _x

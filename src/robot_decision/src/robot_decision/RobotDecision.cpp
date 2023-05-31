@@ -340,42 +340,45 @@ namespace rdsys
         return nullptr;
     }
 
-    int RobotDecisionSys::decideAimTarget(RobotPosition &mypos, std::vector<RobotPosition> &enemyPositions, std::vector<int> &detectedEnemy, int &myWayPointID)
+    std::map<int, float> RobotDecisionSys::decideAimTarget(bool _IsBlue, RobotPosition &mypos, std::vector<RobotPosition> &enemyPositions, std::vector<int> &enemyHP, float distance_weight_ratio, float hp_weight_ratio, bool enemyOutpostDown)
     {
+        std::map<int, float> result;
+        float max_distance = 0.0000001;
         std::map<int, float> distances;
+        std::map<int, float> distance_weight;
         for (auto &it : enemyPositions)
         {
             float tempDistance = sqrtf(powf(double(it.x - mypos.x), 2) + powf(double(it.y - mypos.y), 2));
             distances[it.robot_id] = tempDistance;
+            if (tempDistance > max_distance)
+                max_distance = tempDistance;
         }
-        std::shared_ptr<WayPoint> myWayPoint = this->getWayPointByID(myWayPointID);
-        if (myWayPoint == nullptr)
-            return -1;
-        int baseWeight = 0;
-        int selectId = -1;
-        for (auto &it : detectedEnemy)
+        std::map<int, float>::iterator iter_distance_weight;
+        for (iter_distance_weight = distances.begin(); iter_distance_weight != distances.end(); iter_distance_weight++)
         {
-            auto iter = myWayPoint->enemyWeights.find(it);
-            if (iter != myWayPoint->enemyWeights.end())
-            {
-                if (iter->second > baseWeight)
-                {
-                    selectId = iter->first;
-                    baseWeight = iter->second;
-                }
-                else if (iter->second == baseWeight)
-                {
-                    auto iterA = distances.find(selectId);
-                    auto iterB = distances.find(iter->first);
-                    if (iterA != distances.end() && iterB != distances.end() && iterB->second - iterA->second < 0)
-                    {
-                        selectId = iter->first;
-                        baseWeight = iter->second;
-                    }
-                }
-            }
+            distance_weight[iter_distance_weight->first] = (1. - (iter_distance_weight->second / max_distance)) * distance_weight_ratio;
         }
-        return selectId;
+        float max_hp = 0.0000001;
+        std::map<int, float> hps;
+        std::map<int, float> hp_weight;
+        for (int i = 0; i < int(enemyHP.size()); ++i)
+        {
+            hps[_IsBlue * 6 + i] = float(enemyHP[i]);
+            if (enemyHP[i] > max_hp)
+                max_hp = float(enemyHP[i]);
+        }
+        std::map<int, float>::iterator iter_hp_weight;
+        for (iter_hp_weight = hps.begin(); iter_hp_weight != hps.end(); iter_hp_weight++)
+        {
+            hp_weight[iter_hp_weight->first] = (1. - (iter_hp_weight->second / max_hp)) * hp_weight_ratio;
+        }
+        for (int i = 0; i < CARPOS_NUM; ++i)
+        {
+            result[i] = (hp_weight.find(_IsBlue * 6 + i) != hp_weight.end() ? hp_weight.find(_IsBlue * 6 + i)->second : -0.5) + (distance_weight.find(_IsBlue * 6 + i) != distance_weight.end() ? distance_weight.find(_IsBlue * 6 + i)->second : -0.5);
+        }
+        if (!enemyOutpostDown)
+            result[_IsBlue * 6 + 5] = 0;
+        return result;
     }
 
     double RobotDecisionSys::decideAngleByEnemyPos(float _x, float _y, std::vector<RobotPosition> &enemyPositions)

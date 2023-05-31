@@ -325,7 +325,7 @@ namespace rdsys
 
     std::vector<RobotPosition> RobotDecisionNode::point2f2Position(std::array<global_interface::msg::Point2f, 12UL> pos)
     {
-        if (pos.size() != 12)
+        if (pos.size() != CARPOS_NUM * 2)
         {
             RCLCPP_ERROR(
                 this->get_logger(),
