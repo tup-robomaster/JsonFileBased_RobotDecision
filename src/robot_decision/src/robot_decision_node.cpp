@@ -526,17 +526,25 @@ namespace rdsys
         int mode = msg->mode;
         float _x = msg->x;
         float _y = msg->y;
+        std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
+        slk.unlock();
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_modeSet);
         global_interface::msg::Decision newDecision_msg;
         rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions send_goal_options;
         switch (mode)
         {
-        case 0:
+        case 1:
             this->_auto_mode = true;
             break;
-        case 1:
+        case 2:
             this->_auto_mode = false;
             newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_ATTACK, -1, msg->x, msg->y);
+            slk.lock();
+            if (this->autoaim_msg != nullptr && abs(rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec) < this->_TIME_THR && !this->autoaim_msg->is_target_lost)
+            {
+                newDecision_msg.set__mode(Mode::AUTOAIM);
+            }
+            slk.unlock();
             this->decision_pub_->publish(newDecision_msg);
             this->makeNewGoal(_x, _y, 0);
             this->nav_through_poses_goal_.poses = this->acummulated_poses_;
@@ -564,7 +572,7 @@ namespace rdsys
                     "Action server still not available !");
             }
             break;
-        case 2:
+        case 3:
             this->_auto_mode = false;
             newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_BACKDEFENSE, -1, msg->x, msg->y);
             this->decision_pub_->publish(newDecision_msg);
@@ -598,7 +606,7 @@ namespace rdsys
                     "Action server still not available !");
             }
             break;
-        case 3:
+        case 4:
             this->_auto_mode = false;
             /* code */
             break;
