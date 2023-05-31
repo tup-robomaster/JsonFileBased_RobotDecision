@@ -20,5 +20,7 @@
 #include <std_msgs/msg/float64.hpp>
 
 #include "opencv2/opencv.hpp"
-
 #include "../../include/Json/json.h"
+
+#define OBJHP_NUM (int)8
+#define CARPOS_NUM (int)6

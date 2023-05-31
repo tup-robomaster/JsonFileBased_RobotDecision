@@ -99,6 +99,7 @@ namespace rdsys
         this->joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", qos, std::bind(&RobotDecisionNode::jointStateCallBack, this, _1));
         this->autoaim_sub_ = this->create_subscription<global_interface::msg::Autoaim>("/armor_detector/armor_msg", qos, std::bind(&RobotDecisionNode::autoaimCallBack, this, _1));
         this->detectionArray_sub_ = this->create_subscription<global_interface::msg::DetectionArray>("perception_detector/perception_array", qos, std::bind(&RobotDecisionNode::detectionArrayCallBack, this, _1));
+        this->modeSet_sub_ = this->create_subscription<global_interface::msg::ModeSet>("/mode_set", qos, std::bind(&RobotDecisionNode::modeSetCallBack, this, _1));
 
         this->TS_sync_.reset(new message_filters::Synchronizer<ApproximateSyncPolicy>(ApproximateSyncPolicy(10), this->objHP_sub_, this->carPos_sub_, this->gameInfo_sub_, this->serial_sub_));
         this->TS_sync_->registerCallback(std::bind(&RobotDecisionNode::messageCallBack, this, _1, _2, _3, _4));
@@ -118,12 +119,16 @@ namespace rdsys
             this->get_logger(),
             "Starting action_client");
         this->nav_through_poses_action_client_ = rclcpp_action::create_client<nav2_msgs::action::NavigateThroughPoses>(this, "navigate_through_poses");
-        if (!nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(5)))
+        if (!this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::seconds(5)))
         {
             RCLCPP_ERROR(
                 this->get_logger(),
                 "Action server not available after waiting");
             return;
+        }
+        else
+        {
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
         }
     }
 
@@ -382,10 +387,10 @@ namespace rdsys
         int currentSelfIndex_hp = this->_selfIndex;
         if (this->_IsBlue)
         {
-            currentSelfIndex_hp = this->_selfIndex + 8;
-            currentFriendOutpostIndex_hp = this->_friendOutPostIndex + 8;
-            currentBaseIndex_hp = this->_friendBaseIndex + 8;
-            currentSelfIndex = this->_selfIndex + 6;
+            currentSelfIndex_hp = this->_selfIndex + OBJHP_NUM;
+            currentFriendOutpostIndex_hp = this->_friendOutPostIndex + OBJHP_NUM;
+            currentBaseIndex_hp = this->_friendBaseIndex + OBJHP_NUM;
+            currentSelfIndex = this->_selfIndex + CARPOS_NUM;
         }
         if (gameInfo_msg_->game_stage != GameStage::IN_BATTLE && !this->_Debug)
         {
@@ -437,7 +442,7 @@ namespace rdsys
             {
                 continue;
             }
-            if (i < 6)
+            if (i < CARPOS_NUM)
             {
                 if (this->_IsBlue)
                     enemyPositions.emplace_back(allPositions[i]);
@@ -498,6 +503,30 @@ namespace rdsys
             this->get_logger(),
             "Detection Array Recived: %d || %d",
             msg->header.stamp.sec, msg->header.stamp.nanosec);
+    }
+
+    void RobotDecisionNode::modeSetCallBack(const global_interface::msg::ModeSet::SharedPtr msg)
+    {
+        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_modeSet);
+        switch (msg->mode)
+        {
+        case 0:
+            /* code */
+            break;
+        case 1:
+            /* code */
+            break;
+        case 2:
+            /* code */
+            break;
+        case 3:
+            /* code */
+            break;
+            
+        default:
+            break;
+        }
+        ulk.unlock();
     }
 
     void RobotDecisionNode::nav2FeedBackCallBack(const nav2_msgs::action::NavigateThroughPoses::Impl::FeedbackMessage::SharedPtr msg)
@@ -580,7 +609,7 @@ namespace rdsys
         myDecision_msg.header.stamp = this->get_clock()->now();
         myDecision_msg.set__decision_id(decision->id);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
-        if (this->autoaim_msg != nullptr && rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec < this->_TIME_THR && decision->decide_mode < Mode::AUTOAIM && !this->autoaim_msg->is_target_lost)
+        if (this->autoaim_msg != nullptr && abs(rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec) < this->_TIME_THR && decision->decide_mode < Mode::AUTOAIM && !this->autoaim_msg->is_target_lost)
         {
             myDecision_msg.set__mode(Mode::AUTOAIM);
         }

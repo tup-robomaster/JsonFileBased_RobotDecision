@@ -7,6 +7,7 @@
 #include "global_interface/msg/detection_array.hpp"
 #include "global_interface/msg/decision.hpp"
 #include "global_interface/msg/autoaim.hpp"
+#include "global_interface/msg/mode_set.hpp"
 
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose.hpp"
@@ -89,6 +90,7 @@ namespace rdsys
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
         rclcpp::Subscription<global_interface::msg::Autoaim>::SharedPtr autoaim_sub_;
         rclcpp::Subscription<global_interface::msg::DetectionArray>::SharedPtr detectionArray_sub_;
+        rclcpp::Subscription<global_interface::msg::ModeSet>::SharedPtr modeSet_sub_;
 
         typedef message_filters::sync_policies::ApproximateTime<global_interface::msg::ObjHP,
                                                                 global_interface::msg::CarPos,
@@ -120,6 +122,7 @@ namespace rdsys
         std::shared_timed_mutex myMutex_NTP_FeedBack;
         std::shared_timed_mutex myMutex_joint_states;
         std::shared_timed_mutex myMutex_detectionArray;
+        std::shared_timed_mutex myMutex_modeSet;
         std::shared_timed_mutex myMutex_autoaim;
 
         int8_t goal_status = action_msgs::msg::GoalStatus::STATUS_UNKNOWN;
@@ -174,6 +177,10 @@ namespace rdsys
          * @brief 检测目标消息回调
          */
         void detectionArrayCallBack(const global_interface::msg::DetectionArray::SharedPtr msg);
+        /**
+         * @brief 云台手模式设置消息回调
+         */
+        void modeSetCallBack(const global_interface::msg::ModeSet::SharedPtr msg);
         /**
          * @brief nav2反馈回调
          */

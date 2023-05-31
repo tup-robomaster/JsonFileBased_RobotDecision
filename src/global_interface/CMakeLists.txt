@@ -38,6 +38,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DetectionArray.msg"
   "msg/Decision.msg"
   "msg/Autoaim.msg"
+  "msg/ModeSet.msg"
   DEPENDENCIES
   builtin_interfaces
   std_msgs

@@ -22,7 +22,7 @@ def generate_launch_description():
                     'IsBlue', False,
                     'IfShowUI', False}],
         respawn=True,
-        output="screen"
+        output="log"
     )
 
     ld.add_action(robot_decision_node)
