@@ -114,7 +114,7 @@ namespace rdsys
             std::bind(&RobotDecisionNode::nav2GoalStatusCallBack, this, _1));
 
         this->decision_pub_ = this->create_publisher<global_interface::msg::Decision>("robot_decision/decision", qos);
-
+        this->strikeLicensing_pub_ = this->create_publisher<global_interface::msg::StrikeLicensing>("robot_decision/strikeLicensing", qos);
         RCLCPP_INFO(
             this->get_logger(),
             "Starting action_client");
@@ -399,12 +399,14 @@ namespace rdsys
             serial_msg_->mode, serial_msg_->theta);
         int currentSelfIndex = this->_selfIndex;
         int currentFriendOutpostIndex_hp = this->_friendOutPostIndex;
+        int currentEnemyOutpostIndex_hp = this->_friendOutPostIndex + OBJHP_NUM;
         int currentBaseIndex_hp = this->_friendBaseIndex;
         int currentSelfIndex_hp = this->_selfIndex;
         if (this->_IsBlue)
         {
             currentSelfIndex_hp = this->_selfIndex + OBJHP_NUM;
             currentFriendOutpostIndex_hp = this->_friendOutPostIndex + OBJHP_NUM;
+            currentEnemyOutpostIndex_hp = this->_friendOutPostIndex;
             currentBaseIndex_hp = this->_friendBaseIndex + OBJHP_NUM;
             currentSelfIndex = this->_selfIndex + CARPOS_NUM;
         }
@@ -422,7 +424,14 @@ namespace rdsys
         int nowTime = this->_GAME_TIME - gameInfo_msg_->timestamp;
         int mode = serial_msg_->mode;
         int now_out_post_HP = objHP_msg_->hp[currentFriendOutpostIndex_hp];
+        int now_out_post_HP_enemy = objHP_msg_->hp[currentEnemyOutpostIndex_hp];
+        bool _if_enemy_outpost_down = now_out_post_HP_enemy == 0;
         int now_base_hp = objHP_msg_->hp[currentBaseIndex_hp];
+        std::vector<int> _car_hps;
+        for (auto &it : this->_car_ids)
+        {
+            _car_hps.emplace_back(objHP_msg_->hp[it + !this->_IsBlue * OBJHP_NUM]);
+        }
         std::vector<RobotPosition> allPositions = this->point2f2Position(objPos_msg_->pos);
         try
         {
@@ -473,6 +482,21 @@ namespace rdsys
                     enemyPositions.emplace_back(allPositions[i]);
             }
         }
+        RobotPosition myPos;
+        myPos.robot_id = 5 + this->_IsBlue * 6;
+        myPos.x = myPos_x_;
+        myPos.y = myPos_y_;
+        std::map<int, float> target_weights = this->myRDS->decideAimTarget(_IsBlue, myPos, enemyPositions, _car_hps, 0.5, 0.5, _if_enemy_outpost_down);
+        global_interface::msg::StrikeLicensing strikeLicensing_msg;
+        strikeLicensing_msg.header.stamp = this->get_clock()->now();
+        strikeLicensing_msg.header.frame_id = "decision";
+        int ids = 0;
+        for (auto iter_target_weights = target_weights.begin(); iter_target_weights != target_weights.end(); iter_target_weights++)
+        {
+            strikeLicensing_msg.weights[ids] = iter_target_weights->second;
+            ++ids;
+        }
+        this->strikeLicensing_pub_->publish(strikeLicensing_msg);
         if (!this->process_once(myHP, mode, myPos_x_, myPos_y_, nowTime, now_out_post_HP, now_base_hp, friendPositions, enemyPositions, transformStamped))
         {
             RCLCPP_WARN(

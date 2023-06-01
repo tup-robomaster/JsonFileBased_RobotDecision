@@ -8,6 +8,7 @@
 #include "global_interface/msg/decision.hpp"
 #include "global_interface/msg/autoaim.hpp"
 #include "global_interface/msg/mode_set.hpp"
+#include "global_interface/msg/strike_licensing.hpp"
 
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose.hpp"
@@ -82,6 +83,8 @@ namespace rdsys
                                                     std::map<std::string, int>::value_type("B5", 10),
                                                     std::map<std::string, int>::value_type("B7", 11)};
 
+        const std::vector<int> _car_ids = {0, 1, 2, 3, 4, 6};
+
     private:
         message_filters::Subscriber<global_interface::msg::ObjHP> objHP_sub_;
         message_filters::Subscriber<global_interface::msg::CarPos> carPos_sub_;
@@ -118,6 +121,8 @@ namespace rdsys
 
         rclcpp::Publisher<global_interface::msg::Decision>::SharedPtr
             decision_pub_;
+        rclcpp::Publisher<global_interface::msg::StrikeLicensing>::SharedPtr
+            strikeLicensing_pub_;
 
         std::shared_timed_mutex myMutex_status;
         std::shared_timed_mutex myMutex_NTP_FeedBack;
