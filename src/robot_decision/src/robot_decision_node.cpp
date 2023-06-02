@@ -192,7 +192,7 @@ namespace rdsys
                 "None Aim Yaw");
         }
 
-        this->clearGoals();
+        
 
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         std::vector<int> availableDecisionID;
@@ -270,6 +270,7 @@ namespace rdsys
                 "Failed to calculatePath");
             return false;
         }
+        this->clearGoals();
         for (auto &it : aimWayPoints)
         {
             double temp_waypoint_yaw = myDecision->if_reverse ? it->theta + CV_PI : it->theta;
@@ -590,6 +591,7 @@ namespace rdsys
             }
             slk.unlock();
             this->decision_pub_->publish(newDecision_msg);
+            this->clearGoals();
             this->makeNewGoal(_x, _y, 0);
             this->nav_through_poses_goal_.poses = this->acummulated_poses_;
             RCLCPP_INFO(
@@ -621,6 +623,7 @@ namespace rdsys
             this->_auto_mode = false;
             newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_BACKDEFENSE, -1, msg->x, msg->y);
             this->decision_pub_->publish(newDecision_msg);
+            this->clearGoals();
             this->makeNewGoal(_x, _y, 0);
             this->nav_through_poses_goal_.poses = this->acummulated_poses_;
             RCLCPP_INFO(
