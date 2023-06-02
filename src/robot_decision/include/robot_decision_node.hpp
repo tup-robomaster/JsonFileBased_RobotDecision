@@ -137,6 +137,7 @@ namespace rdsys
         sensor_msgs::msg::JointState::SharedPtr joint_states_msg = nullptr;
         global_interface::msg::Autoaim::SharedPtr autoaim_msg = nullptr;
         global_interface::msg::DetectionArray::SharedPtr detectionArray_msg = nullptr;
+        global_interface::msg::ModeSet::SharedPtr modeSet_msg = nullptr;
 
         std::shared_ptr<Decision> excuting_decision = nullptr;
 

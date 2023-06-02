@@ -192,8 +192,6 @@ namespace rdsys
                 "None Aim Yaw");
         }
 
-        
-
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         std::vector<int> availableDecisionID;
         std::map<int, int> id_pos_f, id_pos_e;
@@ -569,9 +567,15 @@ namespace rdsys
             this->get_logger(),
             "Manual mode: %d x:%lf y:%lf",
             mode, _x, _y);
+        if (mode == 0)
+            return;
+        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_modeSet);
+        if (this->modeSet_msg == nullptr || this->modeSet_msg->mode == mode)
+            return;
+        else
+            this->modeSet_msg = msg;
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
         slk.unlock();
-        std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_modeSet);
         global_interface::msg::Decision newDecision_msg;
         rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions send_goal_options;
         switch (mode)
