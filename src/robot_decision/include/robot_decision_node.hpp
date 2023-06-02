@@ -33,6 +33,9 @@ namespace rdsys
 
     class RobotDecisionNode : public rclcpp::Node
     {
+    private:
+        int aim_target = -1;
+    
     public:
         bool _Debug = false;
         bool _auto_mode = true;

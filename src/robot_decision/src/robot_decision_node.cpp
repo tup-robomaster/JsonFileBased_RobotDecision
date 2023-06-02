@@ -4,6 +4,11 @@ using namespace std::placeholders;
 
 namespace rdsys
 {
+    bool cmp_value(const std::pair<int, int> left, const std::pair<int, int> right)
+    {
+        return left.second < right.second;
+    }
+
     RobotDecisionNode::RobotDecisionNode(const rclcpp::NodeOptions &options)
         : rclcpp::Node("robot_decision_node", options)
     {
@@ -158,7 +163,7 @@ namespace rdsys
                 return false;
             }
         }
-        double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
+        double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions, this->aim_target);
         double roll, pitch, yaw;
         tf2::Quaternion nv2_quat;
         if (transformStamped != nullptr)
@@ -201,10 +206,10 @@ namespace rdsys
             return false;
         }
         bool auto_flag = true;
-        std::unique_lock<std::shared_timed_mutex> slk_modeSet(this->myMutex_modeSet);
+        std::shared_lock<std::shared_timed_mutex> slk_modeSet(this->myMutex_modeSet);
         if (!this->_auto_mode)
         {
-            RCLCPP_DEBUG(
+            RCLCPP_WARN(
                 this->get_logger(),
                 "Not in Auto mode, wait.");
             auto_flag = false;
@@ -490,6 +495,7 @@ namespace rdsys
         myPos.x = myPos_x_;
         myPos.y = myPos_y_;
         std::map<int, float> target_weights = this->myRDS->decideAimTarget(_IsBlue, myPos, enemyPositions, _car_hps, 0.5, 0.5, _if_enemy_outpost_down);
+        this->aim_target = std::max_element(target_weights.begin(), target_weights.end(), cmp_value)->first;
         RCLCPP_INFO(
             this->get_logger(),
             "Publish StrikeLicensing: ");
@@ -570,7 +576,9 @@ namespace rdsys
         if (mode == 0)
             return;
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_modeSet);
-        if (this->modeSet_msg == nullptr || this->modeSet_msg->mode == mode)
+        if (this->modeSet_msg == nullptr)
+            this->modeSet_msg = msg;
+        else if (this->modeSet_msg != nullptr && this->modeSet_msg->mode == mode && this->modeSet_msg->x == _x && this->modeSet_msg->y == _y && this->get_clock()->now().seconds() - this->modeSet_msg->header.stamp.sec <= 3)
             return;
         else
             this->modeSet_msg = msg;
@@ -581,12 +589,12 @@ namespace rdsys
         switch (mode)
         {
         case 1:
-            this->nav_through_poses_action_client_->async_cancel_all_goals();
             this->_auto_mode = true;
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
             break;
         case 2:
-            this->nav_through_poses_action_client_->async_cancel_all_goals();
             this->_auto_mode = false;
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
             newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_ATTACK, -1, msg->x, msg->y);
             slk.lock();
             if (this->autoaim_msg != nullptr && abs(rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec) < this->_TIME_THR && !this->autoaim_msg->is_target_lost)
@@ -623,8 +631,8 @@ namespace rdsys
             }
             break;
         case 3:
-            this->nav_through_poses_action_client_->async_cancel_all_goals();
             this->_auto_mode = false;
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
             newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_BACKDEFENSE, -1, msg->x, msg->y);
             this->decision_pub_->publish(newDecision_msg);
             this->clearGoals();
@@ -659,8 +667,9 @@ namespace rdsys
             }
             break;
         case 4:
-            this->nav_through_poses_action_client_->async_cancel_all_goals();
             this->_auto_mode = false;
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
+
             /* code */
             break;
 

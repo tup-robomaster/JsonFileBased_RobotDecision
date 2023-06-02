@@ -44,7 +44,7 @@ class Lier(Node):
         temp_pos.x = 3.82
         temp_pos.y = 7.0
         modeSet_msg = ModeSet()
-        modeSet_msg.mode = 1
+        modeSet_msg.mode = 3
         modeSet_msg.x = 3.
         modeSet_msg.y = 4.
         self.carPos_msg.pos[5] = temp_pos
@@ -58,9 +58,9 @@ class Lier(Node):
     def make_fake(self):
         self.objHP_msg = ObjHPMsg()
         self.objHP_msg.header.stamp = self.get_clock().now().to_msg()
-        self.objHP_msg.hp[5] = 500
-        self.objHP_msg.hp[6] = 600
-        self.objHP_msg.hp[7] = 600
+        # self.objHP_msg.hp[5] = 500
+        # self.objHP_msg.hp[6] = 600
+        self.objHP_msg.hp[5] = 600
         for i in range(-1, 11):
             temp_pos2 = Point2f()
             aim_x = random.uniform(self.carPos_msg.pos[i].x - 0.1, self.carPos_msg.pos[i].x + 0.1)

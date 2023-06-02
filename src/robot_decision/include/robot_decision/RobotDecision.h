@@ -245,7 +245,7 @@ namespace rdsys
          * 距离权重
          * @param hp_weight
          * 血量权重
-         * @return 
+         * @return
          * 打击权重
          */
         std::map<int, float> decideAimTarget(bool _IsBlue, RobotPosition &mypos, std::vector<RobotPosition> &enemyPositions, std::vector<int> &enemyHP, float distance_weight_ratio, float hp_weight_ratio, bool enemyOutpostDown);
@@ -257,10 +257,12 @@ namespace rdsys
          * 当前机器人y轴坐标（真实坐标）
          * @param enemyPositions
          * 敌方机器人位置（真实坐标）
+         * @param aim_target
+         * 指定目标ID
          * @return
          * yaw轴角度
          */
-        double decideAngleByEnemyPos(float _x, float _y, std::vector<RobotPosition> &enemyPositions);
+        double decideAngleByEnemyPos(float _x, float _y, std::vector<RobotPosition> &enemyPositions, int aim_target);
 
         /**
          * @brief 获取距离阈值，用于计算路径点
