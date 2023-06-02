@@ -7,6 +7,7 @@ from global_interface.msg import CarPos as CarPosMsg
 from global_interface.msg import GameInfo as GameInfoMsg
 from global_interface.msg import Serial as SerialMsg
 from global_interface.msg import Point2f
+from global_interface.msg import ModeSet
 import random
 
 
@@ -22,6 +23,8 @@ class Lier(Node):
             GameInfoMsg, '/game_info', 10)
         self.publisher_SerialMsg = self.create_publisher(
             SerialMsg, '/serial_msg', 10)
+        self.publisher_ModeSet = self.create_publisher(
+            ModeSet, '/mode_set', 10)
         timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.carPos_msg = CarPosMsg()
@@ -40,11 +43,16 @@ class Lier(Node):
         # temp_pos.y = 6.4
         temp_pos.x = 3.82
         temp_pos.y = 7.0
+        modeSet_msg = ModeSet()
+        modeSet_msg.mode = 1
+        modeSet_msg.x = 3.
+        modeSet_msg.y = 4.
         self.carPos_msg.pos[5] = temp_pos
         self.publisher_CarHP.publish(self.objHP_msg)
         self.publisher_CarPosMsg.publish(self.carPos_msg)
         self.publisher_GameInfoMsg.publish(self.gameInfo_msg)
         self.publisher_SerialMsg.publish(self.serial_msg)
+        self.publisher_ModeSet.publish(modeSet_msg)
         self.get_logger().info("Publish Fake Msgs")
 
     def make_fake(self):
