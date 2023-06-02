@@ -363,7 +363,7 @@ namespace rdsys
         std::map<int, float> hp_weight;
         for (int i = 0; i < int(enemyHP.size()); ++i)
         {
-            hps[_IsBlue * 6 + i] = float(enemyHP[i]);
+            hps[!_IsBlue * CARPOS_NUM + i] = float(enemyHP[i]);
             if (enemyHP[i] > max_hp)
                 max_hp = float(enemyHP[i]);
         }
@@ -374,10 +374,10 @@ namespace rdsys
         }
         for (int i = 0; i < CARPOS_NUM; ++i)
         {
-            result[i] = (hp_weight.find(_IsBlue * 6 + i) != hp_weight.end() ? hp_weight.find(_IsBlue * 6 + i)->second : -0.5) + (distance_weight.find(_IsBlue * 6 + i) != distance_weight.end() ? distance_weight.find(_IsBlue * 6 + i)->second : -0.5);
+            result[i] = (hp_weight.find(!_IsBlue * CARPOS_NUM + i) != hp_weight.end() ? hp_weight.find(!_IsBlue * CARPOS_NUM + i)->second : -0.5) + (distance_weight.find(!_IsBlue * CARPOS_NUM + i) != distance_weight.end() ? distance_weight.find(!_IsBlue * CARPOS_NUM + i)->second : -0.5) + 0.000001;
         }
         if (!enemyOutpostDown)
-            result[_IsBlue * 6 + 5] = 0;
+            result[5] = 0;
         return result;
     }
 

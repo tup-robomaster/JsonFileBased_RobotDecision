@@ -21,6 +21,7 @@ namespace rdsys
             abort();
         }
         this->init();
+        assert(CARPOS_NUM == this->type_id.size() / 2);
     }
 
     RobotDecisionNode::~RobotDecisionNode()
@@ -345,6 +346,10 @@ namespace rdsys
                                             const std::shared_ptr<global_interface::msg::GameInfo const> &gameInfo_msg_,
                                             const std::shared_ptr<global_interface::msg::Serial const> &serial_msg_)
     {
+        RCLCPP_INFO(
+            this->get_logger(),
+            "----------------------------------------------------------------------------------------[ONCE PROCESS]"
+        );
         auto start_t = std::chrono::system_clock::now().time_since_epoch();
         geometry_msgs::msg::TransformStamped::SharedPtr transformStamped = nullptr;
         for (int i = 0; i < int(objHP_msg_->hp.size()); ++i)
@@ -483,10 +488,20 @@ namespace rdsys
             }
         }
         RobotPosition myPos;
-        myPos.robot_id = 5 + this->_IsBlue * 6;
+        myPos.robot_id = this->_IsBlue ? this->type_id.find("B7")->second : this->type_id.find("R7")->second;
         myPos.x = myPos_x_;
         myPos.y = myPos_y_;
         std::map<int, float> target_weights = this->myRDS->decideAimTarget(_IsBlue, myPos, enemyPositions, _car_hps, 0.5, 0.5, _if_enemy_outpost_down);
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Publish StrikeLicensing: ");
+        for (auto iter_target_weights = target_weights.begin(); iter_target_weights != target_weights.end(); iter_target_weights++)
+        {
+            RCLCPP_INFO(
+                this->get_logger(),
+                "       (id=%d, %lf)",
+                iter_target_weights->first, iter_target_weights->second);
+        }
         global_interface::msg::StrikeLicensing strikeLicensing_msg;
         strikeLicensing_msg.header.stamp = this->get_clock()->now();
         strikeLicensing_msg.header.frame_id = "decision";

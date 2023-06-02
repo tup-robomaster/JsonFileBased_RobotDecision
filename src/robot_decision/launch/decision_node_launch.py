@@ -17,14 +17,14 @@ def generate_launch_description():
         name="robot_decision",
         package="robot_decision",
         executable="robot_decision_node",
-        parameters=[{'distance_thr', 1.0,
-                    'seek_thr', 5.0,
-                    'IsBlue', False,
-                    'IfShowUI', False}],
+        parameters=[{'distance_thr', "1.0",
+                    'seek_thr', "5.0",
+                    'IsBlue', "False",
+                    'IfShowUI', "False"}],
         respawn=True,
-        output="log"
+        output="screen"
     )
 
     ld.add_action(robot_decision_node)
 
-    return
+    return ld
