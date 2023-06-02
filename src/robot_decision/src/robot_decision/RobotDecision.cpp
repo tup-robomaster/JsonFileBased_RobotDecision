@@ -133,7 +133,7 @@ namespace rdsys
         std::vector<WayPoint> tempwayPointMap;
         for (int i = 0; i < int(arrayValue.size()); ++i)
         {
-            WayPoint *wayPoint = new WayPoint();
+            std::shared_ptr<WayPoint> wayPoint = std::make_shared<WayPoint>(WayPoint());
             wayPoint->id = arrayValue[i]["id"].asInt();
             wayPoint->type = arrayValue[i]["type"].asInt();
             wayPoint->x = arrayValue[i]["x"].asFloat();
@@ -170,7 +170,7 @@ namespace rdsys
         Json::Value arrayValue = jsonValue["data"];
         for (int i = 0; i < int(arrayValue.size()); ++i)
         {
-            Decision *decision = new Decision();
+            std::shared_ptr<Decision> decision = std::make_shared<Decision>(Decision());
             decision->id = arrayValue[i]["id"].asInt();
             decision->name = arrayValue[i]["name"].asCString();
             Json::Value wayPointIDArray = arrayValue[i]["wayPointID"];

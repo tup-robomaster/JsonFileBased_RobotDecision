@@ -348,8 +348,7 @@ namespace rdsys
     {
         RCLCPP_INFO(
             this->get_logger(),
-            "----------------------------------------------------------------------------------------[ONCE PROCESS]"
-        );
+            "----------------------------------------------------------------------------------------[ONCE PROCESS]");
         auto start_t = std::chrono::system_clock::now().time_since_epoch();
         geometry_msgs::msg::TransformStamped::SharedPtr transformStamped = nullptr;
         for (int i = 0; i < int(objHP_msg_->hp.size()); ++i)
@@ -565,6 +564,10 @@ namespace rdsys
         int mode = msg->mode;
         float _x = msg->x;
         float _y = msg->y;
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Manual mode: %d x:%lf y:%lf",
+            mode, _x, _y);
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
         slk.unlock();
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_modeSet);
@@ -573,9 +576,11 @@ namespace rdsys
         switch (mode)
         {
         case 1:
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
             this->_auto_mode = true;
             break;
         case 2:
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
             this->_auto_mode = false;
             newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_ATTACK, -1, msg->x, msg->y);
             slk.lock();
@@ -612,6 +617,7 @@ namespace rdsys
             }
             break;
         case 3:
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
             this->_auto_mode = false;
             newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_BACKDEFENSE, -1, msg->x, msg->y);
             this->decision_pub_->publish(newDecision_msg);
@@ -646,6 +652,7 @@ namespace rdsys
             }
             break;
         case 4:
+            this->nav_through_poses_action_client_->async_cancel_all_goals();
             this->_auto_mode = false;
             /* code */
             break;
