@@ -340,7 +340,7 @@ namespace rdsys
         std::vector<RobotPosition> result;
         for (int i = 0; i < int(pos.size()); ++i)
         {
-            result.emplace_back(RobotPosition(i, pos[i].x, pos[i].y));
+            result.emplace_back(RobotPosition(i, pos[i].x, abs(15. - pos[i].y)));
         }
         return result;
     }
@@ -566,6 +566,7 @@ namespace rdsys
 
     void RobotDecisionNode::modeSetCallBack(const global_interface::msg::ModeSet::SharedPtr msg)
     {
+        msg->y = abs(15. - msg->y);
         int mode = msg->mode;
         float _x = msg->x;
         float _y = msg->y;
