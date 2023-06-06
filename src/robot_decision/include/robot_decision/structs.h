@@ -65,11 +65,11 @@ namespace rdsys
 
     enum Mode
     {
-        AUTOAIM = 8,
-        CRUISE = 7,
-        ADVANCEDCRUISE = 6,
-        MANUAL_ATTACK = 10,
-        MANUAL_BACKDEFENSE = 11
+        AUTOAIM = 8,    //原地小陀螺自瞄
+        CRUISE = 7,     //巡航
+        ADVANCEDCRUISE = 6, //小陀螺巡航
+        MANUAL_ATTACK = 10, //到达目标点（沿途遇敌进入小陀螺自瞄，直到目标脱离）
+        MANUAL_BACKDEFENSE = 11 //自瞄，优先到达目标位置，不停止
     };
 
     enum GameStage

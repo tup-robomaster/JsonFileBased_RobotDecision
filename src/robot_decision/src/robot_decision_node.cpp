@@ -596,12 +596,6 @@ namespace rdsys
             this->_auto_mode = false;
             this->nav_through_poses_action_client_->async_cancel_all_goals();
             newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_ATTACK, -1, msg->x, msg->y);
-            slk.lock();
-            if (this->autoaim_msg != nullptr && abs(rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec) < this->_TIME_THR && !this->autoaim_msg->is_target_lost)
-            {
-                newDecision_msg.set__mode(Mode::AUTOAIM);
-            }
-            slk.unlock();
             this->decision_pub_->publish(newDecision_msg);
             this->clearGoals();
             this->makeNewGoal(_x, _y, 0);
@@ -618,7 +612,11 @@ namespace rdsys
             }
             send_goal_options =
                 rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
-
+            send_goal_options.result_callback = [this, msg](auto)
+            {
+                global_interface::msg::Decision newDecision_msg = this->makeDecisionMsg(Mode::AUTOAIM, -1, msg->x, msg->y);
+                this->decision_pub_->publish(newDecision_msg);
+            };
             if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(100)))
             {
                 auto future_goal_handle = nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
