@@ -53,6 +53,7 @@ namespace rdsys
         int _minHP;
         int _maxHP;
         int out_post_HP_min;
+        int out_post_HP_max;
         int base_HP_min;
         std::vector<std::vector<int>> enemy_position;
         std::vector<std::vector<int>> friend_position;
@@ -65,11 +66,9 @@ namespace rdsys
 
     enum Mode
     {
-        AUTOAIM = 8,    //原地小陀螺自瞄
-        CRUISE = 7,     //巡航
-        ADVANCEDCRUISE = 6, //小陀螺巡航
-        MANUAL_ATTACK = 10, //到达目标点（沿途遇敌进入小陀螺自瞄，直到目标脱离）
-        MANUAL_BACKDEFENSE = 11 //自瞄，优先到达目标位置，不停止
+        AUTOAIM = 8,
+        MANUAL_ATTACK = 8,
+        MANUAL_BACKDEFENSE = 11
     };
 
     enum GameStage

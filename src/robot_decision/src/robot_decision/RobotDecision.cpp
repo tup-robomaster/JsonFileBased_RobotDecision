@@ -187,6 +187,7 @@ namespace rdsys
             decision->decide_mode = arrayValue[i]["decide_mode"].asInt();
             decision->decide_wayPoint = arrayValue[i]["decide_wayPoint"].asInt();
             decision->out_post_HP_min = arrayValue[i]["out_post_HP_min"].asInt();
+            decision->out_post_HP_max = arrayValue[i]["out_post_HP_max"].asInt();
             decision->base_HP_min = arrayValue[i]["base_HP_min"].asInt();
             decision->if_succession = arrayValue[i]["if_succession"].asBool();
             decision->if_reverse = arrayValue[i]["if_reverse"].asBool();
@@ -261,7 +262,8 @@ namespace rdsys
                 (it->_minHP != -1 && _HP <= it->_minHP) ||
                 (it->end_time != -1 && nowtime > it->end_time) ||
                 (it->start_time != -1 && nowtime <= it->start_time) ||
-                (it->out_post_HP_min != -1 && now_out_post_HP < it->out_post_HP_min) ||
+                (it->out_post_HP_min != -1 && now_out_post_HP <= it->out_post_HP_min) ||
+                (it->out_post_HP_max != -1 && now_out_post_HP > it->out_post_HP_max) ||
                 (it->base_HP_min != -1 && now_base_HP < it->base_HP_min))
             {
                 continue;
@@ -376,53 +378,35 @@ namespace rdsys
         {
             result[i] = (hp_weight.find(!_IsBlue * CARPOS_NUM + i) != hp_weight.end() ? hp_weight.find(!_IsBlue * CARPOS_NUM + i)->second : -0.5) + (distance_weight.find(!_IsBlue * CARPOS_NUM + i) != distance_weight.end() ? distance_weight.find(!_IsBlue * CARPOS_NUM + i)->second : -0.5) + 0.000001;
         }
-        if (!enemyOutpostDown)
+        // if (!enemyOutpostDown)
             result[5] = 0;
         return result;
     }
 
-    double RobotDecisionSys::decideAngleByEnemyPos(float _x, float _y, std::vector<RobotPosition> &enemyPositions, int aim_target)
+    double RobotDecisionSys::decideAngleByEnemyPos(float _x, float _y, std::vector<RobotPosition> &enemyPositions)
     {
         int index = -1;
-        bool check = true;
-        if(aim_target != -1)
+        float min_distance = MAXFLOAT;
+        for (int i = 0; i < int(enemyPositions.size()); ++i)
         {
-            double angle = this->calculateAngle(_x, _y, enemyPositions[aim_target].x, enemyPositions[aim_target].y);
-            float distance = sqrtf(powf(double(enemyPositions[aim_target].x - _x), 2) + powf(double(enemyPositions[aim_target].y - _y), 2));
-            if (this->checkBlock(this->transformPoint(_x, _y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), angle, int(distance * (1080. / this->_REAL_HEIGHT))))
-                check = false;
-            if (distance > this->_seek_THR)
-                check = false;
-            if (_x == enemyPositions[aim_target].x && _y == enemyPositions[aim_target].y)
-                check = false;
-            if (enemyPositions[aim_target].x == 0 || enemyPositions[aim_target].y == 0)
-                check = false;
-        }
-        if (!check)
-        {
-            float min_distance = MAXFLOAT;
-            for (int i = 0; i < int(enemyPositions.size()); ++i)
+            // if(i == 5 || i == 10)
+            //     continue;
+            if (_x == enemyPositions[i].x && _y == enemyPositions[i].y)
+                continue;
+            if (enemyPositions[i].x == 0 || enemyPositions[i].y == 0)
+                continue;
+            float temp_distance = sqrtf(powf(double(enemyPositions[i].x - _x), 2) + powf(double(enemyPositions[i].y - _y), 2));
+            if (temp_distance > this->_seek_THR)
+                continue;
+            double temp_angle = this->calculateAngle(_x, _y, enemyPositions[i].x, enemyPositions[i].y);
+            // if (this->checkBlock(this->transformPoint(_x, _y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), temp_angle, int(temp_distance * (1080. / this->_REAL_HEIGHT))))
+            //     continue;
+            if (temp_distance < min_distance)
             {
-                if (_x == enemyPositions[i].x && _y == enemyPositions[i].y)
-                    continue;
-                if (enemyPositions[i].x == 0 || enemyPositions[i].y == 0)
-                    continue;
-                float temp_distance = sqrtf(powf(double(enemyPositions[i].x - _x), 2) + powf(double(enemyPositions[i].y - _y), 2));
-                if (temp_distance > this->_seek_THR)
-                    continue;
-                double temp_angle = this->calculateAngle(_x, _y, enemyPositions[i].x, enemyPositions[i].y);
-                if (this->checkBlock(this->transformPoint(_x, _y, this->_REAL_WIDTH, this->_REAL_HEIGHT, int((this->_REAL_WIDTH / this->_REAL_HEIGHT) * 1080), 1080), temp_angle, int(temp_distance * (1080. / this->_REAL_HEIGHT))))
-                    continue;
-                if (temp_distance < min_distance)
-                {
-                    min_distance = temp_distance;
-                    index = i;
-                }
+                min_distance = temp_distance;
+                index = i;
             }
-        }
-        else
-        {
-            index = aim_target;
+            
         }
         return index == -1 ? -1 : this->calculateAngle(_x, _y, enemyPositions[index].x, enemyPositions[index].y);
     }

@@ -33,12 +33,11 @@ namespace rdsys
 
     class RobotDecisionNode : public rclcpp::Node
     {
-    private:
-        int aim_target = -1;
-    
     public:
         bool _Debug = false;
         bool _auto_mode = true;
+
+        double delta_yaw = 0.;
 
     private:
         std::string _WayPointsPath;
@@ -47,6 +46,7 @@ namespace rdsys
         float _INIT_SEEK_THR;
         bool _INIT_IsBlue;
         bool _INIT_IFSHOWUI;
+        bool _INIT_IFUSEMANUAL;
         int _INIT_SELFINDEX;
         int _INIT_FRIENDOUTPOSTINDEX;
         int _INIT_FRIENDBASEINDEX;

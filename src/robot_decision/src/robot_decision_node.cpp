@@ -4,11 +4,6 @@ using namespace std::placeholders;
 
 namespace rdsys
 {
-    bool cmp_value(const std::pair<int, int> left, const std::pair<int, int> right)
-    {
-        return left.second < right.second;
-    }
-
     RobotDecisionNode::RobotDecisionNode(const rclcpp::NodeOptions &options)
         : rclcpp::Node("robot_decision_node", options)
     {
@@ -53,6 +48,7 @@ namespace rdsys
         this->_INIT_SEEK_THR = arrayValue["INIT_SEEK_THR"].asFloat();
         this->_INIT_IsBlue = arrayValue["INIT_ISBLUE"].asBool();
         this->_INIT_IFSHOWUI = arrayValue["INIT_IFSHOWUI"].asBool();
+        this->_INIT_IFUSEMANUAL = arrayValue["INIT_IFUSEMANUAL"].asBool();
         this->_INIT_SELFINDEX = arrayValue["INIT_SELFINDEX"].asInt();
         this->_INIT_FRIENDOUTPOSTINDEX = arrayValue["INIT_FRIENDOUTPOSTINDEX"].asInt();
         this->_INIT_FRIENDBASEINDEX = arrayValue["INIT_FRIENDBASEINDEX"].asInt();
@@ -80,7 +76,7 @@ namespace rdsys
 
         this->myRDS = std::make_shared<RobotDecisionSys>(RobotDecisionSys(this->_distance_THR_Temp, this->_seek_THR_Temp, this->_REAL_WIDTH, this->_REAL_HEIGHT, this->_MAP_PATH, this->_STEP_DISTANCE, this->_CAR_SEEK_FOV));
 
-        this->timer_ = this->create_wall_timer(1000ms, std::bind(&RobotDecisionNode::respond, this));
+        this->timer_ = this->create_wall_timer(200ms, std::bind(&RobotDecisionNode::respond, this));
 
         if (!this->myRDS->decodeWayPoints(this->_WayPointsPath))
             RCLCPP_ERROR(
@@ -163,7 +159,7 @@ namespace rdsys
                 return false;
             }
         }
-        double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions, this->aim_target);
+        double aim_yaw = this->myRDS->decideAngleByEnemyPos(_x, _y, enemyPositions);
         double roll, pitch, yaw;
         tf2::Quaternion nv2_quat;
         if (transformStamped != nullptr)
@@ -180,23 +176,24 @@ namespace rdsys
             this->get_logger(),
             "Current status: x = %lf , y = %lf , yaw = %lf, HP: %d , MODE: %d",
             _x, _y, yaw, _HP, mode);
-        double delta_yaw;
+
         if (aim_yaw != -1)
         {
-            delta_yaw = double(aim_yaw - yaw);
-            if (delta_yaw > CV_PI)
+            this->delta_yaw = double(aim_yaw - yaw);
+            if (this->delta_yaw > CV_PI)
             {
-                delta_yaw = -(2 * CV_PI - delta_yaw);
+                this->delta_yaw = -(2 * CV_PI - this->delta_yaw);
             }
+            
         }
         else
         {
-            delta_yaw = 0.;
+            this->delta_yaw = 0.;
             RCLCPP_WARN(
                 this->get_logger(),
                 "None Aim Yaw");
         }
-
+        
         int myWayPointID = this->myRDS->checkNowWayPoint(_x, _y);
         std::vector<int> availableDecisionID;
         std::map<int, int> id_pos_f, id_pos_e;
@@ -205,11 +202,18 @@ namespace rdsys
         {
             return false;
         }
+        // RCLCPP_WARN(
+        //                 this->get_logger(),
+        //                 "Aim Yaw: %lf",delta_yaw);
+        // this->delta_yaw = abs(this->delta_yaw) > 1.2217 && myDecision->decide_mode == 6 ? 0. : this->delta_yaw;
+        // RCLCPP_WARN(
+        //                 this->get_logger(),
+        //                 "Aim Yaw AFTER: %lf",delta_yaw);
         bool auto_flag = true;
-        std::shared_lock<std::shared_timed_mutex> slk_modeSet(this->myMutex_modeSet);
+        std::unique_lock<std::shared_timed_mutex> slk_modeSet(this->myMutex_modeSet);
         if (!this->_auto_mode)
         {
-            RCLCPP_WARN(
+            RCLCPP_DEBUG(
                 this->get_logger(),
                 "Not in Auto mode, wait.");
             auto_flag = false;
@@ -244,7 +248,7 @@ namespace rdsys
                     nav_through_poses_action_client_->async_cancel_all_goals();
                     return false;
                 }
-                auto myDecision_msg = this->makeDecisionMsg(this->excuting_decision, delta_yaw);
+                auto myDecision_msg = this->makeDecisionMsg(this->excuting_decision, this->delta_yaw);
                 this->decision_pub_->publish(myDecision_msg);
                 if (this->_IfShowUI)
                 {
@@ -303,7 +307,7 @@ namespace rdsys
                 this->get_logger(),
                 "Action server still not available !");
         }
-        global_interface::msg::Decision myDecision_msg = this->makeDecisionMsg(myDecision, delta_yaw);
+        global_interface::msg::Decision myDecision_msg = this->makeDecisionMsg(myDecision, this->delta_yaw);
         this->decision_pub_->publish(myDecision_msg);
         if (this->_IfShowUI)
         {
@@ -340,7 +344,7 @@ namespace rdsys
         std::vector<RobotPosition> result;
         for (int i = 0; i < int(pos.size()); ++i)
         {
-            result.emplace_back(RobotPosition(i, pos[i].x, abs(15. - pos[i].y)));
+            result.emplace_back(RobotPosition(i, pos[i].x, pos[i].y));
         }
         return result;
     }
@@ -446,7 +450,7 @@ namespace rdsys
             transformStamped = std::make_shared<geometry_msgs::msg::TransformStamped>(this->tf_buffer_->lookupTransform("map_decision", "base_link", tf2::TimePointZero));
             this->_transformStamped = transformStamped;
             std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_detectionArray);
-            if (this->detectionArray_msg != nullptr && abs(this->get_clock()->now().seconds() - this->detectionArray_msg->header.stamp.sec) <= this->_TIME_THR)
+            if (this->detectionArray_msg != nullptr && this->get_clock()->now().seconds() - this->detectionArray_msg->header.stamp.sec <= this->_TIME_THR)
             {
                 for (auto it : this->detectionArray_msg->detections)
                 {
@@ -495,7 +499,6 @@ namespace rdsys
         myPos.x = myPos_x_;
         myPos.y = myPos_y_;
         std::map<int, float> target_weights = this->myRDS->decideAimTarget(_IsBlue, myPos, enemyPositions, _car_hps, 0.5, 0.5, _if_enemy_outpost_down);
-        this->aim_target = std::max_element(target_weights.begin(), target_weights.end(), cmp_value)->first;
         RCLCPP_INFO(
             this->get_logger(),
             "Publish StrikeLicensing: ");
@@ -566,7 +569,8 @@ namespace rdsys
 
     void RobotDecisionNode::modeSetCallBack(const global_interface::msg::ModeSet::SharedPtr msg)
     {
-        msg->y = abs(15. - msg->y);
+        if(!_INIT_IFUSEMANUAL)
+            return;
         int mode = msg->mode;
         float _x = msg->x;
         float _y = msg->y;
@@ -576,13 +580,21 @@ namespace rdsys
             mode, _x, _y);
         if (mode == 0)
             return;
+        bool check = true;
         std::unique_lock<std::shared_timed_mutex> ulk(this->myMutex_modeSet);
         if (this->modeSet_msg == nullptr)
+        {
             this->modeSet_msg = msg;
-        else if (this->modeSet_msg != nullptr && this->modeSet_msg->mode == mode && this->modeSet_msg->x == _x && this->modeSet_msg->y == _y && this->get_clock()->now().seconds() - this->modeSet_msg->header.stamp.sec <= 3)
-            return;
+            check = true;
+        }
+        else if (this->modeSet_msg != nullptr && this->modeSet_msg->mode == mode && this->modeSet_msg->x == _x && this->modeSet_msg->y == _y)
+            check = false;
+            // return;
         else
+        {
             this->modeSet_msg = msg;
+            check = true;
+        }
         std::shared_lock<std::shared_timed_mutex> slk(this->myMutex_autoaim);
         slk.unlock();
         global_interface::msg::Decision newDecision_msg;
@@ -590,85 +602,101 @@ namespace rdsys
         switch (mode)
         {
         case 1:
-            this->_auto_mode = true;
             this->nav_through_poses_action_client_->async_cancel_all_goals();
+            this->_auto_mode = true;
             break;
         case 2:
-            this->_auto_mode = false;
             this->nav_through_poses_action_client_->async_cancel_all_goals();
-            newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_ATTACK, -1, msg->x, msg->y);
-            this->decision_pub_->publish(newDecision_msg);
-            this->clearGoals();
-            this->makeNewGoal(_x, _y, 0);
-            this->nav_through_poses_goal_.poses = this->acummulated_poses_;
-            RCLCPP_INFO(
-                this->get_logger(),
-                "Sending a path of %zu waypoints:",
-                this->nav_through_poses_goal_.poses.size());
-            for (auto waypoint : this->nav_through_poses_goal_.poses)
+            this->_auto_mode = false;
+            newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_ATTACK, this->delta_yaw, msg->x, msg->y);
+            slk.lock();
+            if (this->autoaim_msg != nullptr && abs(rclcpp::Clock().now().seconds() - this->autoaim_msg->header.stamp.sec) < this->_TIME_THR && !this->autoaim_msg->is_target_lost)
             {
-                RCLCPP_INFO(
-                    this->get_logger(),
-                    "\t(%lf, %lf)", waypoint.pose.position.x, waypoint.pose.position.y);
-            }
-            send_goal_options =
-                rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
-            send_goal_options.result_callback = [this, msg](auto)
-            {
-                global_interface::msg::Decision newDecision_msg = this->makeDecisionMsg(Mode::AUTOAIM, -1, msg->x, msg->y);
-                this->decision_pub_->publish(newDecision_msg);
-            };
-            if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(100)))
-            {
-                auto future_goal_handle = nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
+                newDecision_msg.set__mode(Mode::AUTOAIM);
             }
             else
             {
-                RCLCPP_WARN(
-                    this->get_logger(),
-                    "Action server still not available !");
+                newDecision_msg.set__mode(Mode::MANUAL_ATTACK);
             }
+            slk.unlock();
+            this->decision_pub_->publish(newDecision_msg);
+            if (check)
+            {
+                this->clearGoals();
+                this->makeNewGoal(_x, _y, 0);
+                this->nav_through_poses_goal_.poses = this->acummulated_poses_;
+                RCLCPP_INFO(
+                    this->get_logger(),
+                    "Sending a path of %zu waypoints:",
+                    this->nav_through_poses_goal_.poses.size());
+                for (auto waypoint : this->nav_through_poses_goal_.poses)
+                {
+                    RCLCPP_INFO(
+                        this->get_logger(),
+                        "\t(%lf, %lf)", waypoint.pose.position.x, waypoint.pose.position.y);
+                }
+                send_goal_options =
+                    rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
+                // send_goal_options.result_callback = [this, msg](auto)
+                // {
+                //     global_interface::msg::Decision newDecision_msg = this->makeDecisionMsg(Mode::AUTOAIM, 0, msg->x, msg->y);
+                //     this->decision_pub_->publish(newDecision_msg);
+                // };
+                if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(100)))
+                {
+                    auto future_goal_handle = nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
+                }
+                else
+                {
+                    RCLCPP_WARN(
+                        this->get_logger(),
+                        "Action server still not available !");
+                }
+            }
+
             break;
         case 3:
-            this->_auto_mode = false;
             this->nav_through_poses_action_client_->async_cancel_all_goals();
-            newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_BACKDEFENSE, -1, msg->x, msg->y);
+            this->_auto_mode = false;
+            newDecision_msg = this->makeDecisionMsg(Mode::MANUAL_BACKDEFENSE, 0., msg->x, msg->y);
             this->decision_pub_->publish(newDecision_msg);
-            this->clearGoals();
-            this->makeNewGoal(_x, _y, 0);
-            this->nav_through_poses_goal_.poses = this->acummulated_poses_;
-            RCLCPP_INFO(
-                this->get_logger(),
-                "Sending a path of %zu waypoints:",
-                this->nav_through_poses_goal_.poses.size());
-            for (auto waypoint : this->nav_through_poses_goal_.poses)
+            if (check)
             {
+                this->clearGoals();
+                this->makeNewGoal(_x, _y, 0);
+                this->nav_through_poses_goal_.poses = this->acummulated_poses_;
                 RCLCPP_INFO(
                     this->get_logger(),
-                    "\t(%lf, %lf)", waypoint.pose.position.x, waypoint.pose.position.y);
-            }
-            send_goal_options =
-                rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
-            send_goal_options.result_callback = [this, msg](auto)
-            {
-                global_interface::msg::Decision newDecision_msg = this->makeDecisionMsg(Mode::AUTOAIM, -1, msg->x, msg->y);
-                this->decision_pub_->publish(newDecision_msg);
-            };
-            if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(100)))
-            {
-                auto future_goal_handle = nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
-            }
-            else
-            {
-                RCLCPP_WARN(
-                    this->get_logger(),
-                    "Action server still not available !");
+                    "Sending a path of %zu waypoints:",
+                    this->nav_through_poses_goal_.poses.size());
+                for (auto waypoint : this->nav_through_poses_goal_.poses)
+                {
+                    RCLCPP_INFO(
+                        this->get_logger(),
+                        "\t(%lf, %lf)", waypoint.pose.position.x, waypoint.pose.position.y);
+                }
+                send_goal_options =
+                    rclcpp_action::Client<nav2_msgs::action::NavigateThroughPoses>::SendGoalOptions();
+                send_goal_options.result_callback = [this, msg](auto)
+                {
+                    global_interface::msg::Decision newDecision_msg = this->makeDecisionMsg(Mode::AUTOAIM, this->delta_yaw, msg->x, msg->y);
+                    this->decision_pub_->publish(newDecision_msg);
+                };
+                if (this->nav_through_poses_action_client_->wait_for_action_server(std::chrono::microseconds(100)))
+                {
+                    auto future_goal_handle = nav_through_poses_action_client_->async_send_goal(nav_through_poses_goal_, send_goal_options);
+                }
+                else
+                {
+                    RCLCPP_WARN(
+                        this->get_logger(),
+                        "Action server still not available !");
+                }
             }
             break;
         case 4:
-            this->_auto_mode = false;
             this->nav_through_poses_action_client_->async_cancel_all_goals();
-
+            this->_auto_mode = false;
             /* code */
             break;
 
